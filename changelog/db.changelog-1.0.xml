@@ -1,0 +1,69 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.9.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+  <changeSet id="1" author="John Watson">
+    <tagDatabase tag="v1.0.0" />
+  </changeSet>
+  <changeSet id="2" author="John Watson">
+    <createTable tableName="statements">
+      <column autoIncrement="true" name="statementId" type="INTEGER">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="statementId_pkey" />
+      </column>
+      <column name="frn" type="BIGINT" />
+      <column name="sbi" type="INTEGER" />
+      <column name="businessName" type="VARCHAR(127)" />
+      <column name="addressLine1" type="VARCHAR(127)" />
+      <column name="addressLine2" type="VARCHAR(127)" />
+      <column name="addressLine3" type="VARCHAR(127)" />
+      <column name="addressLine4" type="VARCHAR(127)" />
+      <column name="addressLine5" type="VARCHAR(127)" />
+      <column name="postcode" type="VARCHAR(8)" />
+      <column name="email" type="VARCHAR(127)" />
+      <column name="filename" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="received" type="TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet id="3" author="John Watson">
+    <createTable tableName="deliveries">
+      <column autoIncrement="true" name="deliveryId" type="INTEGER">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="deliveryId_pkey" />
+      </column>
+      <column name="statementId" type="INTEGER" >
+        <constraints nullable="false" />
+      </column>
+      <column name="method" type="VARCHAR(6)" >
+        <constraints nullable="false" />
+      </column>
+      <column name="reference" type="UUID" >
+        <constraints nullable="false" />
+      </column>
+      <column name="requested" type="TIMESTAMP" >
+        <constraints nullable="false" />
+      </column>
+      <column name="completed" type="TIMESTAMP" />
+    </createTable>
+  </changeSet>
+  <changeSet id="4" author="John Watson">
+    <createTable tableName="failures">
+      <column autoIncrement="true" name="failureId" type="INTEGER">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="failureId_pkey" />
+      </column>
+      <column name="deliveryId" type="INTEGER" >
+        <constraints nullable="false" />
+      </column>
+      <column name="failed" type="TIMESTAMP" >
+        <constraints nullable="false" />
+      </column>
+      <column name="reason" type="VARCHAR(50)" >
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet id="5" author="John Watson">
+    <addForeignKeyConstraint baseTableName="failures" baseColumnNames="deliveryId" constraintName="failure_delivery_fkey" referencedTableName="deliveries" referencedColumnNames="deliveryId" />
+    <addForeignKeyConstraint baseTableName="deliveries" baseColumnNames="statementId" constraintName="delivery_statement_fkey" referencedTableName="statements" referencedColumnNames="statementId" />
+  </changeSet>
+</databaseChangeLog>

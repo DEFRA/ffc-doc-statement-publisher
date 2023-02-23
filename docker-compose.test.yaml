@@ -1,0 +1,32 @@
+version: '3.8'
+# This override file should be used when running automated tests so
+# that test output is saved to the host
+
+services:
+  ffc-pay-statement-publisher:
+    build:
+      target: development
+    image: ffc-pay-statement-publisher-development
+    container_name: ffc-pay-statement-publisher-test
+    command: npm run test
+    volumes:
+      - ./app:/home/node/app
+      - ./test:/home/node/test
+      - ./test-output:/home/node/test-output
+      - ./jest.config.js:/home/node/jest.config.js
+      - ./package.json:/home/node/package.json
+    environment:
+      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://ffc-pay-statement-azurite:10000/devstoreaccount1;
+      NOTIFY_API_KEY: A_TEST_KEY
+      NOTIFY_EMAIL_TEMPLATE_KEY: A_TEST_KEY
+
+  ffc-pay-statement-publisher-postgres:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  ffc-pay-statement-azurite:
+    labels:
+      com.docker.compose.pay.role: test
+
+volumes:
+  postgres_data:

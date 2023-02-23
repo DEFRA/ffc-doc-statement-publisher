@@ -1,0 +1,56 @@
+environment: development
+environmentCode:
+name: ffc-pay-statement-publisher
+namespace: ffc-pay
+workstream: ffc-pay
+image: ffc-pay-statement-publisher
+
+labels: {}
+
+appInsights:
+  key:
+
+containerConfigMap:
+  name: ffc-pay-statement-publisher-config-map
+
+containerSecret:
+  name: ffc-pay-statement-publisher-container-secret
+  type: Opaque
+
+deployment:
+  minReplicas: 1
+  maxReplicas: 1
+  cpuThreshold: 80
+  memoryThreshold: 80
+  minReadySeconds: 0
+
+container:
+  requestMemory: 150Mi
+  requestCpu: 120m
+  limitMemory: 150Mi
+  limitCpu: 120m
+  messageQueueHost: namespace.servicebus.windows.net
+  publishTopicAddress: ffc-pay-statement-publish
+  publishSubscriptionAddress: ffc-pay-statement-publisher
+  crmTopicAddress: ffc-pay-statement-crm
+  azureStorageAccountName: ffcpay
+  azureStorageConnectionString: dummy
+  azureStorageUseConnectionString: false
+  azureStorageCreateContainers: false
+  storageContainer: statements
+  storageFolder: outbound
+  notifyApiKey:
+  notifyEmailTemplateKey:
+
+postgresService:
+  postgresDb: ffc_pay_statement_publisher
+  postgresqlHost: ffc-pay-statement-publisher-postgres
+  postgresPort: 5432
+  postgresSchema: public
+  postgresUser: postgres
+
+aadPodIdentity: true
+
+azureIdentity:
+  clientID: not-a-real-clientID
+  resourceID: not-a-real-resourceID

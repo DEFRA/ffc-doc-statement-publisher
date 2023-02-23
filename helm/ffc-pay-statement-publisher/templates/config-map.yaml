@@ -1,0 +1,26 @@
+{{- include "ffc-helm-library.container-config-map" (list . "ffc-pay-statement-publisher.config-map") -}}
+{{- define "ffc-pay-statement-publisher.config-map" -}}
+data:
+  NODE_ENV: {{ quote .Values.environment }}
+  APPINSIGHTS_CLOUDROLE: {{ quote .Values.name }}
+  MESSAGE_QUEUE_HOST: {{ quote .Values.container.messageQueueHost }}
+  {{- if and (.Values.environmentCode) (not .Values.pr) }}
+  PUBLISH_TOPIC_ADDRESS: {{ .Values.container.publishTopicAddress }}-{{ .Values.environmentCode }}
+  CRM_TOPIC_ADDRESS: {{ .Values.container.crmTopicAddress }}-{{ .Values.environmentCode }}
+  {{ else }}
+  PUBLISH_TOPIC_ADDRESS: {{ .Values.container.publishTopicAddress }}
+  CRM_TOPIC_ADDRESS: {{ .Values.container.crmTopicAddress }}
+  {{- end }}
+  PUBLISH_SUBSCRIPTION_ADDRESS: {{ quote .Values.container.publishSubscriptionAddress }}
+  POSTGRES_DB: {{ quote .Values.postgresService.postgresDb }}
+  POSTGRES_HOST: {{ quote .Values.postgresService.postgresqlHost }}
+  POSTGRES_PORT: {{ quote .Values.postgresService.postgresPort }}
+  POSTGRES_SCHEMA_NAME: {{ quote .Values.postgresService.postgresSchema }}
+  AZURE_STORAGE_ACCOUNT_NAME: {{ quote .Values.container.azureStorageAccountName }}
+  AZURE_STORAGE_CONNECTION_STRING: {{ quote .Values.container.azureStorageConnectionString }}
+  AZURE_STORAGE_USE_CONNECTION_STRING: {{ quote .Values.container.azureStorageUseConnectionString }}
+  AZURE_STORAGE_USE_CONNECTION_STRING: {{ quote .Values.container.azureStorageUseConnectionString }}
+  AZURE_STORAGE_CREATE_CONTAINERS: {{ quote .Values.container.azureStorageCreateContainers }}
+  AZURE_STORAGE_CONTAINER: {{ quote .Values.container.storageContainer }}
+  AZURE_STORAGE_FOLDER: {{ quote .Values.container.storageFolder }}
+{{- end -}}

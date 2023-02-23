@@ -1,0 +1,161 @@
+asyncapi: 2.5.0
+info:
+  title: FFC Payment Statement Publisher
+  version: 1.0.0
+  description: Publish PDF payment statements for Future Farming
+channels:
+  payment-statement/publish:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PublishRequest'
+  payment-statement/crm:
+    publish:
+      message:
+        $ref: '#/components/messages/CrmInvalidEmailResponse'
+components:
+  messages:
+    CrmInvalidEmailResponse:
+      name: Payment statement invalid email response
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CrmInvalidEmailResponse'
+    PublishRequest:
+      name: Payment statement publish request
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PublishRequest'
+  schemas:
+    CrmInvalidEmailResponse:
+      type: object
+      required:
+        - email
+        - errorMessage
+        - frn
+      properties:
+        email:
+          $ref: '#/components/schemas/Email'
+        errorMessage:
+          $ref: '#/components/schemas/ErrorMessage'
+        frn:
+          $ref: '#/components/schemas/FRN'
+    PublishRequest:
+      type: object
+      required:
+        - address
+        - businessName
+        - filename
+        - frn
+        - sbi
+        - scheme
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        businessName:
+          $ref: '#/components/schemas/BusinessName'
+        email:
+          $ref: '#/components/schemas/Email'
+        filename:
+          $ref: '#/components/schemas/Filename'
+        frn:
+          $ref: '#/components/schemas/FRN'
+        sbi:
+          $ref: '#/components/schemas/SBI'
+        scheme:
+          $ref: '#/components/schemas/Scheme'
+    Address:
+      type: object
+      properties:
+        line1:
+          type: string
+          description: The first line of the address
+          example: 1 The Street
+        line2:
+          type: string
+          description: The second line of the address
+          example: The Area
+        line3:
+          type: string
+          description: The third line of the address
+          example: The Town
+        line4:
+          type: string
+          description: The fourth line of the address
+          example: The Region
+        line5:
+          type: string
+          description: The fifth line of the address
+          example: The County
+        postcode:
+          type: string
+          description: The postcode
+          example: AB1 2CD
+    AgreementNumber:
+      type: string
+      description: The agreement number
+      example: SFI1234567
+    BusinessName:
+      type: string
+      description: The business name
+      example: FFC Ltd
+    Email:
+      type: string
+      description: The business email address
+      example: farm@farms.com
+    ErrorMessage:
+      type: string
+      description: The invalid email reasoning
+      enum:
+        - The statement cannot be emailed as no email address was provided.
+        - We failed to send the statement because the email address provided was invalid.
+      example: We failed to send the statement because the email address provided was invalid.
+    FRN:
+      type: number
+      description: Firm Reference Number
+      minimum: 1000000000
+      maximum: 9999999999
+      example: 1234567890
+    Filename:
+      type: string
+      description: PDF filename
+      example: FFC_PaymentStatement_SFI_2022_1234567890_2022080515300000.pdf
+    SBI:
+      type: number
+      description: Single Business Identifier
+      minimum: 105000000
+      maximum: 999999999
+      example: 123456789
+    Scheme:
+      type: object
+      required:
+        - agreementNumber
+        - frequency
+        - name
+        - shortName        
+        - year
+      properties:
+        agreementNumber:
+          $ref: '#/components/schemas/AgreementNumber'
+        frequency:
+          $ref: '#/components/schemas/SchemeFrequency'
+        name:
+          $ref: '#/components/schemas/SchemeName'
+        shortName:
+          $ref: '#/components/schemas/SchemeShortName'
+        year:
+          $ref: '#/components/schemas/SchemeYear'
+    SchemeName:
+      type: string
+      description: The name of the scheme
+      example: Sustainable Farming Incentive
+    SchemeShortName:
+      type: string
+      description: The short name of the scheme
+      example: SFI
+    SchemeYear:
+      type: string
+      description: The marketing year
+      example: '2022'
+    SchemeFrequency:
+      type: string
+      description: The frequency of payments
+      example: Quarterly

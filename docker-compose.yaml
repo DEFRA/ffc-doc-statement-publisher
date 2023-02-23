@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  ffc-pay-statement-publisher:
+    build:
+      context: .
+      target: production
+    image: ffc-pay-statement-publisher
+    container_name: ffc-pay-statement-publisher
+    depends_on:
+      - ffc-pay-statement-azurite
+      - ffc-pay-statement-publisher-postgres
+    environment:
+      APPINSIGHTS_CLOUDROLE: ffc-pay-statement-publisher-local
+      APPINSIGHTS_INSTRUMENTATIONKEY: ${APPINSIGHTS_INSTRUMENTATIONKEY}
+      MESSAGE_QUEUE_HOST: ${MESSAGE_QUEUE_HOST}
+      MESSAGE_QUEUE_PASSWORD: ${MESSAGE_QUEUE_PASSWORD}
+      MESSAGE_QUEUE_USER: ${MESSAGE_QUEUE_USER}
+      PUBLISH_TOPIC_ADDRESS: ${PUBLISH_TOPIC_ADDRESS:-ffc-pay-statement-publish}${MESSAGE_QUEUE_SUFFIX}
+      PUBLISH_SUBSCRIPTION_ADDRESS: ${PUBLISH_SUBSCRIPTION_ADDRESS:-ffc-pay-statement-publisher}${MESSAGE_QUEUE_SUFFIX}
+      CRM_TOPIC_ADDRESS: ${CRM_TOPIC_ADDRESS:-ffc-pay-statement-crm}${MESSAGE_QUEUE_SUFFIX}
+      POSTGRES_DB: ffc_pay_statement_publisher
+      POSTGRES_HOST: ${POSTGRES_HOST:-ffc-pay-statement-publisher-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SCHEMA_PASSWORD:-ppp}
+      POSTGRES_PORT: 5432
+      POSTGRES_SCHEMA_NAME: ${POSTGRES_SCHEMA_NAME:-public}
+      POSTGRES_USERNAME: ${POSTGRES_SCHEMA_USERNAME:-postgres}
+      AZURE_STORAGE_ACCOUNT_NAME: ${AZURE_STORAGE_ACCOUNT_NAME:-devstoreaccount1}
+      AZURE_STORAGE_USE_CONNECTION_STRING: "true"
+      NOTIFY_API_KEY: ${NOTIFY_API_KEY}
+      NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
+
+  ffc-pay-statement-publisher-postgres:
+    image: postgres:11.4-alpine
+    environment:
+      POSTGRES_DB: ffc_pay_statement_publisher
+      POSTGRES_PASSWORD: ppp
+      POSTGRES_USERNAME: postgres
+
+  ffc-pay-statement-azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.17.1
+    command: "azurite-blob --loose --blobHost 0.0.0.0"
+    labels:
+      com.docker.compose.pay.role: ffc-pay-statement-azurite
