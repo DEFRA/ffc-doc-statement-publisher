@@ -39,8 +39,8 @@ container:
   azureStorageCreateContainers: false
   storageContainer: statements
   storageFolder: outbound
-  notifyApiKey:
-  notifyEmailTemplateKey:
+  notifyApiKey: dummy
+  notifyEmailTemplateKey: dummy
 
 postgresService:
   postgresDb: ffc_doc_statement_publisher
