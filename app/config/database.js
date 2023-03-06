@@ -24,13 +24,13 @@ const retry = {
 }
 
 const dbConfig = {
-  database: process.env.POSTGRES_DB || 'ffc_pay_statement_publisher',
+  database: process.env.POSTGRES_DB || 'ffc_doc_statement_publisher',
   dialect: 'postgres',
   dialectOptions: {
     ssl: isProd()
   },
   hooks,
-  host: process.env.POSTGRES_HOST || 'ffc-pay-statement-publisher-postgres',
+  host: process.env.POSTGRES_HOST || 'ffc-doc-statement-publisher-postgres',
   password: process.env.POSTGRES_PASSWORD,
   port: process.env.POSTGRES_PORT || 5432,
   logging: process.env.POSTGRES_LOGGING || false,

@@ -1,8 +1,8 @@
-{{- include "ffc-helm-library.deployment" (list . "ffc-pay-statement-publisher.deployment") -}}
-{{- define "ffc-pay-statement-publisher.deployment" -}}
+{{- include "ffc-helm-library.deployment" (list . "ffc-doc-statement-publisher.deployment") -}}
+{{- define "ffc-doc-statement-publisher.deployment" -}}
 spec:
   template:
     spec:
       containers:
-      - {{ include "ffc-helm-library.container" (list . "ffc-pay-statement-publisher.container") }}
+      - {{ include "ffc-helm-library.container" (list . "ffc-doc-statement-publisher.container") }}
 {{- end -}}

@@ -1,9 +1,9 @@
 environment: development
 environmentCode:
-name: ffc-pay-statement-publisher
-namespace: ffc-pay
-workstream: ffc-pay
-image: ffc-pay-statement-publisher
+name: ffc-doc-statement-publisher
+namespace: ffc-doc
+workstream: ffc-doc
+image: ffc-doc-statement-publisher
 
 labels: {}
 
@@ -11,10 +11,10 @@ appInsights:
   key:
 
 containerConfigMap:
-  name: ffc-pay-statement-publisher-config-map
+  name: ffc-doc-statement-publisher-config-map
 
 containerSecret:
-  name: ffc-pay-statement-publisher-container-secret
+  name: ffc-doc-statement-publisher-container-secret
   type: Opaque
 
 deployment:
@@ -30,9 +30,9 @@ container:
   limitMemory: 150Mi
   limitCpu: 120m
   messageQueueHost: namespace.servicebus.windows.net
-  publishTopicAddress: ffc-pay-statement-publish
-  publishSubscriptionAddress: ffc-pay-statement-publisher
-  crmTopicAddress: ffc-pay-statement-crm
+  publishTopicAddress: ffc-doc-statement-publish
+  publishSubscriptionAddress: ffc-doc-statement-publisher
+  crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: ffcpay
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
@@ -43,8 +43,8 @@ container:
   notifyEmailTemplateKey:
 
 postgresService:
-  postgresDb: ffc_pay_statement_publisher
-  postgresqlHost: ffc-pay-statement-publisher-postgres
+  postgresDb: ffc_doc_statement_publisher
+  postgresqlHost: ffc-doc-statement-publisher-postgres
   postgresPort: 5432
   postgresSchema: public
   postgresUser: postgres

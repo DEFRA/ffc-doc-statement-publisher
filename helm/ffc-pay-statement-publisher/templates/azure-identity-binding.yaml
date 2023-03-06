@@ -1,5 +1,5 @@
 {{- if .Values.aadPodIdentity }}
-{{- include "ffc-helm-library.azure-identity-binding" (list . "ffc-pay-statement-publisher.azure-identity-binding") -}}
+{{- include "ffc-helm-library.azure-identity-binding" (list . "ffc-doc-statement-publisher.azure-identity-binding") -}}
 {{- end }}
-{{- define "ffc-pay-statement-publisher.azure-identity-binding" -}}
+{{- define "ffc-doc-statement-publisher.azure-identity-binding" -}}
 {{- end -}}

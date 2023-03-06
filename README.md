@@ -1,4 +1,4 @@
-# FFC Statement publisher
+# FFC Document Statement publisher
 
 ## Prerequisites
 

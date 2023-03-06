@@ -1,2 +1,2 @@
-{{- define "ffc-pay-statement-publisher.container" -}}
+{{- define "ffc-doc-statement-publisher.container" -}}
 {{- end -}}

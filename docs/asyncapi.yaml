@@ -1,14 +1,14 @@
 asyncapi: 2.5.0
 info:
-  title: FFC Payment Statement Publisher
+  title: FFC Document Statement Publisher
   version: 1.0.0
-  description: Publish PDF payment statements for Future Farming
+  description: Publish PDF statements for Future Farming
 channels:
-  payment-statement/publish:
+  ffc-doc-statement-publish/ffc-doc-statement-publisher:
     subscribe:
       message:
         $ref: '#/components/messages/PublishRequest'
-  payment-statement/crm:
+  ffc-doc-statement-crm:
     publish:
       message:
         $ref: '#/components/messages/CrmInvalidEmailResponse'
