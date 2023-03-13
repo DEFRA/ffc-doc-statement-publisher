@@ -1,0 +1,2 @@
+{{- define "ffc-doc-statement-publisher.container" -}}
+{{- end -}}

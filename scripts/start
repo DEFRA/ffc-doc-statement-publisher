@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
-if [ -z "$(docker network ls --filter name=^ffc-pay$ --format={{.Name}})" ]; then
-  echo "Creating ffc-pay Docker network"
-  docker network create ffc-pay
+if [ -z "$(docker network ls --filter name=^ffc-doc$ --format={{.Name}})" ]; then
+  echo "Creating ffc-doc Docker network"
+  docker network create ffc-doc
 fi
 
-if [ -n "$(docker container ls --filter label=com.docker.compose.pay.role=ffc-pay-statement-azurite --format={{.ID}})" ]; then
+if [ -n "$(docker container ls --filter label=com.docker.compose.pay.role=ffc-doc-statement-azurite --format={{.ID}})" ]; then
   echo "Azurite container already exists, skipping creation"
-  args="--scale ffc-pay-statement-azurite=0"
+  args="--scale ffc-doc-statement-azurite=0"
 fi
 
 set -e

@@ -1,6 +1,6 @@
 apiVersion: v2
 description: Publish statements
-name: ffc-pay-statement-publisher
+name: ffc-doc-statement-publisher
 # this version is automatically updated in the build pipeline
 version: 1.0.0
 dependencies:

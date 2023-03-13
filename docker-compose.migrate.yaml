@@ -1,7 +1,7 @@
 version: '3.8'
 
 x-common-migration: &common-migration
-  POSTGRES_HOST: ${POSTGRES_HOST:-ffc-pay-statement-publisher-postgres}
+  POSTGRES_HOST: ${POSTGRES_HOST:-ffc-doc-statement-publisher-postgres}
   SCHEMA_ROLE: ${POSTGRES_SCHEMA_ROLE:-postgres}
   SCHEMA_USERNAME: ${POSTGRES_SCHEMA_USERNAME:-postgres}
   SCHEMA_PASSWORD: ${POSTGRES_SCHEMA_PASSWORD:-ppp}
@@ -9,7 +9,7 @@ x-common-migration: &common-migration
 
 x-common-postgres: &common-postgres
   POSTGRES_PORT: 5432
-  POSTGRES_DB: ${POSTGRES_DB:-ffc_pay_statement_publisher}
+  POSTGRES_DB: ${POSTGRES_DB:-ffc_doc_statement_publisher}
   POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-ppp}
   POSTGRES_USERNAME: ${POSTGRES_ADMIN_USERNAME:-postgres}
 
@@ -22,7 +22,7 @@ services:
     entrypoint: >
       sh -c "/scripts/migration/database-up"
     depends_on:
-      - ffc-pay-statement-publisher-postgres
+      - ffc-doc-statement-publisher-postgres
     volumes:
       - ./changelog:/liquibase/changelog
       - ./scripts:/scripts
@@ -35,12 +35,12 @@ services:
     entrypoint: >
       sh -c "/scripts/migration/database-down"
     depends_on:
-      - ffc-pay-statement-publisher-postgres
+      - ffc-doc-statement-publisher-postgres
     volumes:
       - ./changelog:/liquibase/changelog
       - ./scripts:/scripts
 
-  ffc-pay-statement-publisher-postgres:
+  ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine
     environment: *common-postgres
     volumes:

@@ -1,0 +1,8 @@
+{{- include "ffc-helm-library.deployment" (list . "ffc-doc-statement-publisher.deployment") -}}
+{{- define "ffc-doc-statement-publisher.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "ffc-helm-library.container" (list . "ffc-doc-statement-publisher.container") }}
+{{- end -}}

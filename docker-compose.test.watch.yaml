@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  ffc-pay-statement-publisher:
+  ffc-doc-statement-publisher:
     command: >
       sh -c "npm run test:watch"
     volumes:

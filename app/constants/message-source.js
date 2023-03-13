@@ -1,1 +1,1 @@
-module.exports = 'ffc-pay-statement-publisher'
+module.exports = 'ffc-doc-statement-publisher'
