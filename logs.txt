@@ -1,0 +1,987 @@
+2023-03-06T13:54:08.453287708Z ApplicationInsights:APPINSIGHTS_INSTRUMENTATIONKEY is in path of deprecation, please use APPLICATIONINSIGHTS_CONNECTION_STRING env variable to setup the SDK. []
+2023-03-06T13:54:12.952695514Z App Insights Running
+2023-03-06T13:54:16.551691805Z [2023-03-06T13:54:16.551Z] Using DefaultAzureCredential for BlobServiceClient
+2023-03-06T13:54:22.650360374Z [2023-03-06T13:54:22.650Z] Ready to publish payment statements
+2023-03-06T13:54:41.748549087Z /home/node/node_modules/@azure/core-http/dist/index.js:2684
+2023-03-06T13:54:41.748627888Z                 throw new RestError(fetchError.message, RestError.REQUEST_SEND_ERROR, undefined, httpRequest);
+2023-03-06T13:54:41.748710588Z                       ^
+2023-03-06T13:54:41.748717788Z 
+2023-03-06T13:54:41.748744088Z RestError: request to https://ffcpay.blob.core.windows.net/statements/outbound%2Fdefault.txt failed, reason: getaddrinfo ENOTFOUND ffcpay.blob.core.windows.net
+2023-03-06T13:54:41.748777988Z     at NodeFetchHttpClient.sendRequest (/home/node/node_modules/@azure/core-http/dist/index.js:2684:23)
+2023-03-06T13:54:41.748787988Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-03-06T13:54:41.748795388Z     at async StorageBearerTokenChallengeAuthenticationPolicy.sendRequest (/home/node/node_modules/@azure/storage-blob/dist/index.js:15135:30)
+2023-03-06T13:54:41.748806288Z     at async StorageRetryPolicy.attemptSendRequest (/home/node/node_modules/@azure/storage-blob/dist/index.js:14637:24)
+2023-03-06T13:54:41.748811488Z     at async TracingPolicy.sendRequest (/home/node/node_modules/@azure/core-http/dist/index.js:4555:30)
+2023-03-06T13:54:41.748816688Z     at async StorageClientContext.sendOperationRequest (/home/node/node_modules/@azure/core-http/dist/index.js:4893:31)
+2023-03-06T13:54:41.748821888Z     at async BlockBlobClient.upload (/home/node/node_modules/@azure/storage-blob/dist/index.js:20923:20)
+2023-03-06T13:54:41.748827188Z     at async initialiseFolders (/home/node/app/storage.js:30:3)
+2023-03-06T13:54:41.748860588Z     at async initialiseContainers (/home/node/app/storage.js:23:3) {
+2023-03-06T13:54:41.748868488Z   code: 'REQUEST_SEND_ERROR',
+2023-03-06T13:54:41.748873488Z   statusCode: undefined,
+2023-03-06T13:54:41.748879088Z   request: WebResource {
+2023-03-06T13:54:41.748884288Z     streamResponseBody: undefined,
+2023-03-06T13:54:41.748889588Z     streamResponseStatusCodes: Set(0) {},
+2023-03-06T13:54:41.748896288Z     url: 'https://ffcpay.blob.core.windows.net/statements/outbound%2Fdefault.txt',
+2023-03-06T13:54:41.748901788Z     method: 'PUT',
+2023-03-06T13:54:41.748926288Z     headers: HttpHeaders {
+2023-03-06T13:54:41.748931688Z       _headersMap: {
+2023-03-06T13:54:41.748936888Z         'x-ms-version': { name: 'x-ms-version', value: '2021-06-08' },
+2023-03-06T13:54:41.748942488Z         'content-length': { name: 'Content-Length', value: '11' },
+2023-03-06T13:54:41.748947888Z         'content-type': { name: 'Content-Type', value: 'application/octet-stream' },
+2023-03-06T13:54:41.748953788Z         accept: { name: 'Accept', value: 'application/xml' },
+2023-03-06T13:54:41.748959188Z         'x-ms-blob-type': { name: 'x-ms-blob-type', value: 'BlockBlob' },
+2023-03-06T13:54:41.748965988Z         traceparent: {
+2023-03-06T13:54:41.748971288Z           name: 'traceparent',
+2023-03-06T13:54:41.748976488Z           value: '00-3b1f285db3ecb69c2f23674fe56d4cf3-4ca2e10d04a85b5a-01'
+2023-03-06T13:54:41.749248689Z         },
+2023-03-06T13:54:41.749255689Z         'user-agent': {
+2023-03-06T13:54:41.749261189Z           name: 'User-Agent',
+2023-03-06T13:54:41.749266789Z           value: 'azsdk-js-storageblob/12.10.0 (NODE-VERSION v18.11.0; Linux 5.4.0-1080-azure)'
+2023-03-06T13:54:41.749287989Z         },
+2023-03-06T13:54:41.749293689Z         'x-ms-client-request-id': {
+2023-03-06T13:54:41.749316889Z           name: 'x-ms-client-request-id',
+2023-03-06T13:54:41.749322889Z           value: 'acefcd1f-da74-4f31-9b4e-cc29e4cf02ad'
+2023-03-06T13:54:41.749328389Z         },
+2023-03-06T13:54:41.749333089Z         authorization: {
+2023-03-06T13:54:41.749338289Z           name: 'authorization',
+2023-03-06T13:54:41.749542189Z           value: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL3N0b3JhZ2UuYXp1cmUuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvYzlkNzQwOTAtYjRlNi00YjA0LTk4MWQtZTY3NTdhMTYwODEyLyIsImlhdCI6MTY3ODExMDIyNiwibmJmIjoxNjc4MTEwMjI2LCJleHAiOjE2NzgxOTY5MjYsImFpbyI6IkUyWmdZQ2dTQ0kzS1c3K3JTWTZ4MDhoVG9DNERBQT09IiwiYXBwaWQiOiI3NTNhNjYwYy0xMjkyLTQ4NWMtYTY1ZS1kYzUxNTI5YTg2YWUiLCJhcHBpZGFjciI6IjIiLCJpZHAiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9jOWQ3NDA5MC1iNGU2LTRiMDQtOTgxZC1lNjc1N2ExNjA4MTIvIiwib2lkIjoiZWQ0YmRmZDItYjJlOS00NjI5LTg2NjktMTMzMjZkZmFhNTBiIiwicmgiOiIwLkFBQUFrRURYeWVhMEJFdVlIZVoxZWhZSUVvR21CdVRVODZoQ2tMYkNzQ2xKZXZGSEFBQS4iLCJzdWIiOiJlZDRiZGZkMi1iMmU5LTQ2MjktODY2OS0xMzMyNmRmYWE1MGIiLCJ0aWQiOiJjOWQ3NDA5MC1iNGU2LTRiMDQtOTgxZC1lNjc1N2ExNjA4MTIiLCJ1dGkiOiJ0VWU4a2JlRFkwU0w5LXNuRDNZNEFRIiwidmVyIjoiMS4wIiwieG1zX2F6X3JpZCI6Ii9zdWJzY3JpcHRpb25zL2NkNGU5YTAwLTk5ZDgtNDVhMi05OGJiLTc2NDhlZjEyYzI2ZC9yZXNvdXJjZWdyb3Vwcy9NQ19TTkRGRkNBS1NSRzEwMDFfU05ERkZDQUtTQ0wxMDAxX25vcnRoZXVyb3BlL3Byb3ZpZGVycy9NaWNyb3NvZnQuQ29tcHV0ZS92aXJ0dWFsTWFjaGluZVNjYWxlU2V0cy9ha3MtYWdlbnRwb29sLTE0NjU0MTgzLXZtc3MiLCJ4bXNfbWlyaWQiOiIvc3Vic2NyaXB0aW9ucy9jZDRlOWEwMC05OWQ4LTQ1YTItOThiYi03NjQ4ZWYxMmMyNmQvcmVzb3VyY2Vncm91cHMvU05ERkZDQUtTUkcxMDAxL3Byb3ZpZGVycy9NaWNyb3NvZnQuTWFuYWdlZElkZW50aXR5L3VzZXJBc3NpZ25lZElkZW50aXRpZXMvZmZjLXNuZC1wci1yb2xlIn0.ow6tLyOvyqUp9nkyUoB9pMJBiA9-0I4U9B8z4De3p9ypOhLUpR34v-WgtKISe7G97hxBvUqvlBZUSgSEREblURLMdUFONx1vFVoDTAgFP-Rq9ttR-X8f6m11rJdgGzWanCUk-btbF1-tOHcYdqU4Szipl_7sJpvvnBd3Vn5SFmBItT0F2AZLQEXJFQFdVXklzYOVxVZBJjoEwFzFR01n2xOnbAQa0T0w5JefESkcAb8z4HGCapSe2y4j8SY8oF-PuOk7EUYuhRVY8K-xV1SaMIhJt-_dJegrYpmtkb9GHRU341CJZhVDfnoPTgLM-FuePItk5IvF20YRu0cw-XLa7g'
+2023-03-06T13:54:41.749574489Z         },
+2023-03-06T13:54:41.749582289Z         cookie: { name: 'Cookie', value: '' }
+2023-03-06T13:54:41.749604189Z       }
+2023-03-06T13:54:41.749608989Z     },
+2023-03-06T13:54:41.749613789Z     body: 'Placeholder',
+2023-03-06T13:54:41.749618889Z     query: undefined,
+2023-03-06T13:54:41.749623889Z     formData: undefined,
+2023-03-06T13:54:41.749628989Z     withCredentials: false,
+2023-03-06T13:54:41.749633989Z     abortSignal: undefined,
+2023-03-06T13:54:41.749638990Z     timeout: 0,
+2023-03-06T13:54:41.749643990Z     onUploadProgress: undefined,
+2023-03-06T13:54:41.749648790Z     onDownloadProgress: undefined,
+2023-03-06T13:54:41.749654290Z     proxySettings: undefined,
+2023-03-06T13:54:41.749659290Z     keepAlive: true,
+2023-03-06T13:54:41.749664090Z     decompressResponse: false,
+2023-03-06T13:54:41.749687090Z     requestId: 'acefcd1f-da74-4f31-9b4e-cc29e4cf02ad',
+2023-03-06T13:54:41.749692290Z     operationSpec: {
+2023-03-06T13:54:41.749697190Z       path: '/{containerName}/{blob}',
+2023-03-06T13:54:41.749702490Z       httpMethod: 'PUT',
+2023-03-06T13:54:41.749707590Z       responses: {
+2023-03-06T13:54:41.749712490Z         '201': {
+2023-03-06T13:54:41.749717790Z           headersMapper: { serializedName: 'BlockBlob_uploadHeaders', type: [Object] }
+2023-03-06T13:54:41.749723090Z         },
+2023-03-06T13:54:41.749728090Z         default: {
+2023-03-06T13:54:41.749733190Z           bodyMapper: { serializedName: 'StorageError', type: [Object] },
+2023-03-06T13:54:41.749738590Z           headersMapper: {
+2023-03-06T13:54:41.749744290Z             serializedName: 'BlockBlob_uploadExceptionHeaders',
+2023-03-06T13:54:41.749756590Z             type: [Object]
+2023-03-06T13:54:41.749762390Z           }
+2023-03-06T13:54:41.749767590Z         }
+2023-03-06T13:54:41.749772490Z       },
+2023-03-06T13:54:41.749777690Z       requestBody: {
+2023-03-06T13:54:41.749798890Z         parameterPath: 'body',
+2023-03-06T13:54:41.749803690Z         mapper: {
+2023-03-06T13:54:41.749808790Z           serializedName: 'body',
+2023-03-06T13:54:41.749813290Z           required: true,
+2023-03-06T13:54:41.749818290Z           xmlName: 'body',
+2023-03-06T13:54:41.749823290Z           type: { name: 'Stream' }
+2023-03-06T13:54:41.749827990Z         }
+2023-03-06T13:54:41.749833090Z       },
+2023-03-06T13:54:41.749837590Z       queryParameters: [
+2023-03-06T13:54:41.749842290Z         {
+2023-03-06T13:54:41.749846890Z           parameterPath: [ 'options', 'timeoutInSeconds' ],
+2023-03-06T13:54:41.749851890Z           mapper: {
+2023-03-06T13:54:41.749856590Z             constraints: [Object],
+2023-03-06T13:54:41.749861590Z             serializedName: 'timeout',
+2023-03-06T13:54:41.749866190Z             xmlName: 'timeout',
+2023-03-06T13:54:41.749870990Z             type: [Object]
+2023-03-06T13:54:41.749875890Z           }
+2023-03-06T13:54:41.749880790Z         }
+2023-03-06T13:54:41.749890090Z       ],
+2023-03-06T13:54:41.749894490Z       urlParameters: [
+2023-03-06T13:54:41.749899490Z         {
+2023-03-06T13:54:41.749903990Z           parameterPath: 'url',
+2023-03-06T13:54:41.749908790Z           mapper: {
+2023-03-06T13:54:41.749913590Z             serializedName: 'url',
+2023-03-06T13:54:41.749918390Z             required: true,
+2023-03-06T13:54:41.749923090Z             xmlName: 'url',
+2023-03-06T13:54:41.749927990Z             type: [Object]
+2023-03-06T13:54:41.749933290Z           },
+2023-03-06T13:54:41.749937990Z           skipEncoding: true
+2023-03-06T13:54:41.749942790Z         }
+2023-03-06T13:54:41.749947390Z       ],
+2023-03-06T13:54:41.749951890Z       headerParameters: [
+2023-03-06T13:54:41.749956690Z         {
+2023-03-06T13:54:41.749962790Z           parameterPath: 'version',
+2023-03-06T13:54:41.749969290Z           mapper: {
+2023-03-06T13:54:41.749974190Z             defaultValue: '2021-06-08',
+2023-03-06T13:54:41.749979090Z             isConstant: true,
+2023-03-06T13:54:41.749983890Z             serializedName: 'x-ms-version',
+2023-03-06T13:54:41.749988790Z             type: [Object]
+2023-03-06T13:54:41.749993490Z           }
+2023-03-06T13:54:41.749998090Z         },
+2023-03-06T13:54:41.750002790Z         {
+2023-03-06T13:54:41.750007590Z           parameterPath: [ 'options', 'requestId' ],
+2023-03-06T13:54:41.750012290Z           mapper: {
+2023-03-06T13:54:41.750017290Z             serializedName: 'x-ms-client-request-id',
+2023-03-06T13:54:41.750022190Z             xmlName: 'x-ms-client-request-id',
+2023-03-06T13:54:41.750027190Z             type: [Object]
+2023-03-06T13:54:41.750031890Z           }
+2023-03-06T13:54:41.750036790Z         },
+2023-03-06T13:54:41.750041690Z         {
+2023-03-06T13:54:41.750046390Z           parameterPath: 'contentLength',
+2023-03-06T13:54:41.750051090Z           mapper: {
+2023-03-06T13:54:41.750056290Z             serializedName: 'Content-Length',
+2023-03-06T13:54:41.750060990Z             required: true,
+2023-03-06T13:54:41.750065990Z             xmlName: 'Content-Length',
+2023-03-06T13:54:41.750083790Z             type: [Object]
+2023-03-06T13:54:41.750089590Z           }
+2023-03-06T13:54:41.750094290Z         },
+2023-03-06T13:54:41.750103390Z         {
+2023-03-06T13:54:41.750108390Z           parameterPath: [ 'options', 'metadata' ],
+2023-03-06T13:54:41.750113390Z           mapper: {
+2023-03-06T13:54:41.750118490Z             serializedName: 'x-ms-meta',
+2023-03-06T13:54:41.750123690Z             xmlName: 'x-ms-meta',
+2023-03-06T13:54:41.750128590Z             type: [Object],
+2023-03-06T13:54:41.750133390Z             headerCollectionPrefix: 'x-ms-meta-'
+2023-03-06T13:54:41.750140390Z           }
+2023-03-06T13:54:41.750144991Z         },
+2023-03-06T13:54:41.750149891Z         {
+2023-03-06T13:54:41.750155491Z           parameterPath: [ 'options', 'leaseAccessConditions', 'leaseId' ],
+2023-03-06T13:54:41.750160591Z           mapper: {
+2023-03-06T13:54:41.750165391Z             serializedName: 'x-ms-lease-id',
+2023-03-06T13:54:41.750172591Z             xmlName: 'x-ms-lease-id',
+2023-03-06T13:54:41.750177591Z             type: [Object]
+2023-03-06T13:54:41.750182591Z           }
+2023-03-06T13:54:41.750187491Z         },
+2023-03-06T13:54:41.750192091Z         {
+2023-03-06T13:54:41.750196991Z           parameterPath: [ 'options', 'modifiedAccessConditions', 'ifModifiedSince' ],
+2023-03-06T13:54:41.750202191Z           mapper: {
+2023-03-06T13:54:41.750206891Z             serializedName: 'If-Modified-Since',
+2023-03-06T13:54:41.750212191Z             xmlName: 'If-Modified-Since',
+2023-03-06T13:54:41.750216991Z             type: [Object]
+2023-03-06T13:54:41.750221891Z           }
+2023-03-06T13:54:41.750226491Z         },
+2023-03-06T13:54:41.750231191Z         {
+2023-03-06T13:54:41.750237491Z           parameterPath: [
+2023-03-06T13:54:41.750242491Z             'options',
+2023-03-06T13:54:41.750247391Z             'modifiedAccessConditions',
+2023-03-06T13:54:41.750252291Z             'ifUnmodifiedSince'
+2023-03-06T13:54:41.750257191Z           ],
+2023-03-06T13:54:41.750261891Z           mapper: {
+2023-03-06T13:54:41.750266891Z             serializedName: 'If-Unmodified-Since',
+2023-03-06T13:54:41.750271991Z             xmlName: 'If-Unmodified-Since',
+2023-03-06T13:54:41.750276591Z             type: [Object]
+2023-03-06T13:54:41.750281591Z           }
+2023-03-06T13:54:41.750286191Z         },
+2023-03-06T13:54:41.750290691Z         {
+2023-03-06T13:54:41.750295691Z           parameterPath: [ 'options', 'cpkInfo', 'encryptionKey' ],
+2023-03-06T13:54:41.750300891Z           mapper: {
+2023-03-06T13:54:41.750305591Z             serializedName: 'x-ms-encryption-key',
+2023-03-06T13:54:41.750310491Z             xmlName: 'x-ms-encryption-key',
+2023-03-06T13:54:41.750315591Z             type: [Object]
+2023-03-06T13:54:41.750320291Z           }
+2023-03-06T13:54:41.750324791Z         },
+2023-03-06T13:54:41.750329191Z         {
+2023-03-06T13:54:41.750333791Z           parameterPath: [ 'options', 'cpkInfo', 'encryptionKeySha256' ],
+2023-03-06T13:54:41.750338891Z           mapper: {
+2023-03-06T13:54:41.750343391Z             serializedName: 'x-ms-encryption-key-sha256',
+2023-03-06T13:54:41.750348391Z             xmlName: 'x-ms-encryption-key-sha256',
+2023-03-06T13:54:41.750353091Z             type: [Object]
+2023-03-06T13:54:41.750357591Z           }
+2023-03-06T13:54:41.750362091Z         },
+2023-03-06T13:54:41.750366391Z         {
+2023-03-06T13:54:41.750370791Z           parameterPath: [ 'options', 'cpkInfo', 'encryptionAlgorithm' ],
+2023-03-06T13:54:41.750378991Z           mapper: {
+2023-03-06T13:54:41.750383691Z             serializedName: 'x-ms-encryption-algorithm',
+2023-03-06T13:54:41.750388391Z             xmlName: 'x-ms-encryption-algorithm',
+2023-03-06T13:54:41.750393191Z             type: [Object]
+2023-03-06T13:54:41.750400791Z           }
+2023-03-06T13:54:41.750405391Z         },
+2023-03-06T13:54:41.750412191Z         {
+2023-03-06T13:54:41.750416891Z           parameterPath: [ 'options', 'modifiedAccessConditions', 'ifMatch' ],
+2023-03-06T13:54:41.750421591Z           mapper: {
+2023-03-06T13:54:41.750426391Z             serializedName: 'If-Match',
+2023-03-06T13:54:41.750431291Z             xmlName: 'If-Match',
+2023-03-06T13:54:41.750435791Z             type: [Object]
+2023-03-06T13:54:41.750440291Z           }
+2023-03-06T13:54:41.750446491Z         },
+2023-03-06T13:54:41.750451091Z         {
+2023-03-06T13:54:41.750456791Z           parameterPath: [ 'options', 'modifiedAccessConditions', 'ifNoneMatch' ],
+2023-03-06T13:54:41.750461591Z           mapper: {
+2023-03-06T13:54:41.750466691Z             serializedName: 'If-None-Match',
+2023-03-06T13:54:41.750471591Z             xmlName: 'If-None-Match',
+2023-03-06T13:54:41.750477091Z             type: [Object]
+2023-03-06T13:54:41.750481691Z           }
+2023-03-06T13:54:41.750486391Z         },
+2023-03-06T13:54:41.750491891Z         {
+2023-03-06T13:54:41.750497891Z           parameterPath: [ 'options', 'modifiedAccessConditions', 'ifTags' ],
+2023-03-06T13:54:41.750503391Z           mapper: {
+2023-03-06T13:54:41.750509191Z             serializedName: 'x-ms-if-tags',
+2023-03-06T13:54:41.750514191Z             xmlName: 'x-ms-if-tags',
+2023-03-06T13:54:41.750519391Z             type: [Object]
+2023-03-06T13:54:41.750524191Z           }
+2023-03-06T13:54:41.750528891Z         },
+2023-03-06T13:54:41.750534191Z         {
+2023-03-06T13:54:41.750539291Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobCacheControl' ],
+2023-03-06T13:54:41.750544291Z           mapper: {
+2023-03-06T13:54:41.750549391Z             serializedName: 'x-ms-blob-cache-control',
+2023-03-06T13:54:41.750554291Z             xmlName: 'x-ms-blob-cache-control',
+2023-03-06T13:54:41.750559091Z             type: [Object]
+2023-03-06T13:54:41.750563691Z           }
+2023-03-06T13:54:41.750568791Z         },
+2023-03-06T13:54:41.750573291Z         {
+2023-03-06T13:54:41.750578191Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobContentType' ],
+2023-03-06T13:54:41.750582991Z           mapper: {
+2023-03-06T13:54:41.750588091Z             serializedName: 'x-ms-blob-content-type',
+2023-03-06T13:54:41.750592991Z             xmlName: 'x-ms-blob-content-type',
+2023-03-06T13:54:41.750598191Z             type: [Object]
+2023-03-06T13:54:41.750602791Z           }
+2023-03-06T13:54:41.750607891Z         },
+2023-03-06T13:54:41.750612491Z         {
+2023-03-06T13:54:41.750617591Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobContentMD5' ],
+2023-03-06T13:54:41.750622691Z           mapper: {
+2023-03-06T13:54:41.750627591Z             serializedName: 'x-ms-blob-content-md5',
+2023-03-06T13:54:41.750632491Z             xmlName: 'x-ms-blob-content-md5',
+2023-03-06T13:54:41.750637191Z             type: [Object]
+2023-03-06T13:54:41.750641991Z           }
+2023-03-06T13:54:41.750646591Z         },
+2023-03-06T13:54:41.750651292Z         {
+2023-03-06T13:54:41.750656192Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobContentEncoding' ],
+2023-03-06T13:54:41.750660992Z           mapper: {
+2023-03-06T13:54:41.750665892Z             serializedName: 'x-ms-blob-content-encoding',
+2023-03-06T13:54:41.750670792Z             xmlName: 'x-ms-blob-content-encoding',
+2023-03-06T13:54:41.750675692Z             type: [Object]
+2023-03-06T13:54:41.750680392Z           }
+2023-03-06T13:54:41.750688092Z         },
+2023-03-06T13:54:41.750693092Z         {
+2023-03-06T13:54:41.750697892Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobContentLanguage' ],
+2023-03-06T13:54:41.750702892Z           mapper: {
+2023-03-06T13:54:41.750707792Z             serializedName: 'x-ms-blob-content-language',
+2023-03-06T13:54:41.750712692Z             xmlName: 'x-ms-blob-content-language',
+2023-03-06T13:54:41.750717692Z             type: [Object]
+2023-03-06T13:54:41.750728492Z           }
+2023-03-06T13:54:41.750733192Z         },
+2023-03-06T13:54:41.750737892Z         {
+2023-03-06T13:54:41.750742992Z           parameterPath: [ 'options', 'blobHttpHeaders', 'blobContentDisposition' ],
+2023-03-06T13:54:41.750747792Z           mapper: {
+2023-03-06T13:54:41.750752792Z             serializedName: 'x-ms-blob-content-disposition',
+2023-03-06T13:54:41.750764192Z             xmlName: 'x-ms-blob-content-disposition',
+2023-03-06T13:54:41.750769392Z             type: [Object]
+2023-03-06T13:54:41.750774292Z           }
+2023-03-06T13:54:41.750778992Z         },
+2023-03-06T13:54:41.750783492Z         {
+2023-03-06T13:54:41.750788492Z           parameterPath: [ 'options', 'immutabilityPolicyExpiry' ],
+2023-03-06T13:54:41.750793692Z           mapper: {
+2023-03-06T13:54:41.750798692Z             serializedName: 'x-ms-immutability-policy-until-date',
+2023-03-06T13:54:41.750803792Z             xmlName: 'x-ms-immutability-policy-until-date',
+2023-03-06T13:54:41.750808592Z             type: [Object]
+2023-03-06T13:54:41.750815092Z           }
+2023-03-06T13:54:41.750819892Z         },
+2023-03-06T13:54:41.750824492Z         {
+2023-03-06T13:54:41.750829592Z           parameterPath: [ 'options', 'immutabilityPolicyMode' ],
+2023-03-06T13:54:41.750834792Z           mapper: {
+2023-03-06T13:54:41.750839692Z             serializedName: 'x-ms-immutability-policy-mode',
+2023-03-06T13:54:41.750844892Z             xmlName: 'x-ms-immutability-policy-mode',
+2023-03-06T13:54:41.750849592Z             type: [Object]
+2023-03-06T13:54:41.750854392Z           }
+2023-03-06T13:54:41.750859992Z         },
+2023-03-06T13:54:41.750864692Z         {
+2023-03-06T13:54:41.750869792Z           parameterPath: [ 'options', 'encryptionScope' ],
+2023-03-06T13:54:41.750874792Z           mapper: {
+2023-03-06T13:54:41.750880392Z             serializedName: 'x-ms-encryption-scope',
+2023-03-06T13:54:41.750885292Z             xmlName: 'x-ms-encryption-scope',
+2023-03-06T13:54:41.750890092Z             type: [Object]
+2023-03-06T13:54:41.750894992Z           }
+2023-03-06T13:54:41.750899692Z         },
+2023-03-06T13:54:41.750904592Z         {
+2023-03-06T13:54:41.750922492Z           parameterPath: [ 'options', 'tier' ],
+2023-03-06T13:54:41.750928192Z           mapper: {
+2023-03-06T13:54:41.750933492Z             serializedName: 'x-ms-access-tier',
+2023-03-06T13:54:41.750938292Z             xmlName: 'x-ms-access-tier',
+2023-03-06T13:54:41.750943192Z             type: [Object]
+2023-03-06T13:54:41.750947992Z           }
+2023-03-06T13:54:41.750953092Z         },
+2023-03-06T13:54:41.750957692Z         {
+2023-03-06T13:54:41.750962492Z           parameterPath: [ 'options', 'blobTagsString' ],
+2023-03-06T13:54:41.750968192Z           mapper: {
+2023-03-06T13:54:41.750972992Z             serializedName: 'x-ms-tags',
+2023-03-06T13:54:41.750977992Z             xmlName: 'x-ms-tags',
+2023-03-06T13:54:41.750983192Z             type: [Object]
+2023-03-06T13:54:41.750988092Z           }
+2023-03-06T13:54:41.750992992Z         },
+2023-03-06T13:54:41.750997692Z         {
+2023-03-06T13:54:41.751008092Z           parameterPath: [ 'options', 'legalHold' ],
+2023-03-06T13:54:41.751013692Z           mapper: {
+2023-03-06T13:54:41.751018492Z             serializedName: 'x-ms-legal-hold',
+2023-03-06T13:54:41.751023492Z             xmlName: 'x-ms-legal-hold',
+2023-03-06T13:54:41.751028292Z             type: [Object]
+2023-03-06T13:54:41.751033892Z           }
+2023-03-06T13:54:41.751038592Z         },
+2023-03-06T13:54:41.751043392Z         {
+2023-03-06T13:54:41.751048292Z           parameterPath: [ 'options', 'transactionalContentMD5' ],
+2023-03-06T13:54:41.751053192Z           mapper: {
+2023-03-06T13:54:41.751058092Z             serializedName: 'Content-MD5',
+2023-03-06T13:54:41.751062892Z             xmlName: 'Content-MD5',
+2023-03-06T13:54:41.751067692Z             type: [Object]
+2023-03-06T13:54:41.751072492Z           }
+2023-03-06T13:54:41.751077092Z         },
+2023-03-06T13:54:41.751081792Z         {
+2023-03-06T13:54:41.751086392Z           parameterPath: [ 'options', 'contentType' ],
+2023-03-06T13:54:41.751091892Z           mapper: {
+2023-03-06T13:54:41.751096692Z             defaultValue: 'application/octet-stream',
+2023-03-06T13:54:41.751102092Z             isConstant: true,
+2023-03-06T13:54:41.751107192Z             serializedName: 'Content-Type',
+2023-03-06T13:54:41.751112292Z             type: [Object]
+2023-03-06T13:54:41.751117292Z           }
+2023-03-06T13:54:41.751121892Z         },
+2023-03-06T13:54:41.751126292Z         {
+2023-03-06T13:54:41.751150192Z           parameterPath: 'accept',
+2023-03-06T13:54:41.751155593Z           mapper: {
+2023-03-06T13:54:41.751160893Z             defaultValue: 'application/xml',
+2023-03-06T13:54:41.751165993Z             isConstant: true,
+2023-03-06T13:54:41.751170993Z             serializedName: 'Accept',
+2023-03-06T13:54:41.751176193Z             type: [Object]
+2023-03-06T13:54:41.751181393Z           }
+2023-03-06T13:54:41.751186993Z         },
+2023-03-06T13:54:41.751191793Z         {
+2023-03-06T13:54:41.751215493Z           parameterPath: 'blobType',
+2023-03-06T13:54:41.751221093Z           mapper: {
+2023-03-06T13:54:41.751226093Z             defaultValue: 'BlockBlob',
+2023-03-06T13:54:41.751231193Z             isConstant: true,
+2023-03-06T13:54:41.751236793Z             serializedName: 'x-ms-blob-type',
+2023-03-06T13:54:41.751241993Z             type: [Object]
+2023-03-06T13:54:41.751247193Z           }
+2023-03-06T13:54:41.751252193Z         }
+2023-03-06T13:54:41.751257193Z       ],
+2023-03-06T13:54:41.751262493Z       mediaType: 'binary',
+2023-03-06T13:54:41.751267593Z       serializer: Serializer {
+2023-03-06T13:54:41.751272793Z         modelMappers: [Object: null prototype] {
+2023-03-06T13:54:41.751278193Z           BlobServiceProperties: {
+2023-03-06T13:54:41.751283493Z             serializedName: 'BlobServiceProperties',
+2023-03-06T13:54:41.751288593Z             xmlName: 'StorageServiceProperties',
+2023-03-06T13:54:41.751293893Z             type: [Object]
+2023-03-06T13:54:41.751298893Z           },
+2023-03-06T13:54:41.751304393Z           Logging: { serializedName: 'Logging', type: [Object] },
+2023-03-06T13:54:41.751309593Z           RetentionPolicy: { serializedName: 'RetentionPolicy', type: [Object] },
+2023-03-06T13:54:41.751315093Z           Metrics: { serializedName: 'Metrics', type: [Object] },
+2023-03-06T13:54:41.751329593Z           CorsRule: { serializedName: 'CorsRule', type: [Object] },
+2023-03-06T13:54:41.751334993Z           StaticWebsite: { serializedName: 'StaticWebsite', type: [Object] },
+2023-03-06T13:54:41.751339993Z           StorageError: { serializedName: 'StorageError', type: [Object] },
+2023-03-06T13:54:41.751364193Z           BlobServiceStatistics: {
+2023-03-06T13:54:41.751369493Z             serializedName: 'BlobServiceStatistics',
+2023-03-06T13:54:41.751374393Z             xmlName: 'StorageServiceStats',
+2023-03-06T13:54:41.751379493Z             type: [Object]
+2023-03-06T13:54:41.751384293Z           },
+2023-03-06T13:54:41.751407593Z           GeoReplication: { serializedName: 'GeoReplication', type: [Object] },
+2023-03-06T13:54:41.751412793Z           ListContainersSegmentResponse: {
+2023-03-06T13:54:41.751417993Z             serializedName: 'ListContainersSegmentResponse',
+2023-03-06T13:54:41.751422993Z             xmlName: 'EnumerationResults',
+2023-03-06T13:54:41.751428093Z             type: [Object]
+2023-03-06T13:54:41.751433293Z           },
+2023-03-06T13:54:41.751438193Z           ContainerItem: {
+2023-03-06T13:54:41.751443293Z             serializedName: 'ContainerItem',
+2023-03-06T13:54:41.751448293Z             xmlName: 'Container',
+2023-03-06T13:54:41.751453393Z             type: [Object]
+2023-03-06T13:54:41.751458393Z           },
+2023-03-06T13:54:41.751463493Z           ContainerProperties: { serializedName: 'ContainerProperties', type: [Object] },
+2023-03-06T13:54:41.751469193Z           KeyInfo: { serializedName: 'KeyInfo', type: [Object] },
+2023-03-06T13:54:41.751474493Z           UserDelegationKey: { serializedName: 'UserDelegationKey', type: [Object] },
+2023-03-06T13:54:41.751479693Z           FilterBlobSegment: {
+2023-03-06T13:54:41.751488593Z             serializedName: 'FilterBlobSegment',
+2023-03-06T13:54:41.751494193Z             xmlName: 'EnumerationResults',
+2023-03-06T13:54:41.751499193Z             type: [Object]
+2023-03-06T13:54:41.751504293Z           },
+2023-03-06T13:54:41.751509393Z           FilterBlobItem: {
+2023-03-06T13:54:41.751514393Z             serializedName: 'FilterBlobItem',
+2023-03-06T13:54:41.751519493Z             xmlName: 'Blob',
+2023-03-06T13:54:41.751524393Z             type: [Object]
+2023-03-06T13:54:41.751529393Z           },
+2023-03-06T13:54:41.751534493Z           BlobTags: {
+2023-03-06T13:54:41.751539693Z             serializedName: 'BlobTags',
+2023-03-06T13:54:41.751544793Z             xmlName: 'Tags',
+2023-03-06T13:54:41.751549993Z             type: [Object]
+2023-03-06T13:54:41.751555093Z           },
+2023-03-06T13:54:41.751560293Z           BlobTag: { serializedName: 'BlobTag', xmlName: 'Tag', type: [Object] },
+2023-03-06T13:54:41.751565693Z           SignedIdentifier: {
+2023-03-06T13:54:41.751570693Z             serializedName: 'SignedIdentifier',
+2023-03-06T13:54:41.751575893Z             xmlName: 'SignedIdentifier',
+2023-03-06T13:54:41.751580893Z             type: [Object]
+2023-03-06T13:54:41.751585993Z           },
+2023-03-06T13:54:41.751591193Z           AccessPolicy: { serializedName: 'AccessPolicy', type: [Object] },
+2023-03-06T13:54:41.751596493Z           ListBlobsFlatSegmentResponse: {
+2023-03-06T13:54:41.751617293Z             serializedName: 'ListBlobsFlatSegmentResponse',
+2023-03-06T13:54:41.751622293Z             xmlName: 'EnumerationResults',
+2023-03-06T13:54:41.751626793Z             type: [Object]
+2023-03-06T13:54:41.751631293Z           },
+2023-03-06T13:54:41.751636093Z           BlobFlatListSegment: {
+2023-03-06T13:54:41.751641393Z             serializedName: 'BlobFlatListSegment',
+2023-03-06T13:54:41.751646393Z             xmlName: 'Blobs',
+2023-03-06T13:54:41.751651093Z             type: [Object]
+2023-03-06T13:54:41.751655593Z           },
+2023-03-06T13:54:41.751660294Z           BlobItemInternal: {
+2023-03-06T13:54:41.751668694Z             serializedName: 'BlobItemInternal',
+2023-03-06T13:54:41.751673894Z             xmlName: 'Blob',
+2023-03-06T13:54:41.751678694Z             type: [Object]
+2023-03-06T13:54:41.751683194Z           },
+2023-03-06T13:54:41.751687894Z           BlobName: { serializedName: 'BlobName', type: [Object] },
+2023-03-06T13:54:41.751692594Z           BlobPropertiesInternal: {
+2023-03-06T13:54:41.751719194Z             serializedName: 'BlobPropertiesInternal',
+2023-03-06T13:54:41.751723694Z             xmlName: 'Properties',
+2023-03-06T13:54:41.751728494Z             type: [Object]
+2023-03-06T13:54:41.751733394Z           },
+2023-03-06T13:54:41.751737894Z           ListBlobsHierarchySegmentResponse: {
+2023-03-06T13:54:41.751742594Z             serializedName: 'ListBlobsHierarchySegmentResponse',
+2023-03-06T13:54:41.751747294Z             xmlName: 'EnumerationResults',
+2023-03-06T13:54:41.751752094Z             type: [Object]
+2023-03-06T13:54:41.751756794Z           },
+2023-03-06T13:54:41.751761394Z           BlobHierarchyListSegment: {
+2023-03-06T13:54:41.751767794Z             serializedName: 'BlobHierarchyListSegment',
+2023-03-06T13:54:41.751772694Z             xmlName: 'Blobs',
+2023-03-06T13:54:41.751777394Z             type: [Object]
+2023-03-06T13:54:41.751782194Z           },
+2023-03-06T13:54:41.751786894Z           BlobPrefix: { serializedName: 'BlobPrefix', type: [Object] },
+2023-03-06T13:54:41.751791494Z           BlockLookupList: {
+2023-03-06T13:54:41.751873794Z             serializedName: 'BlockLookupList',
+2023-03-06T13:54:41.751879094Z             xmlName: 'BlockList',
+2023-03-06T13:54:41.751884094Z             type: [Object]
+2023-03-06T13:54:41.751888894Z           },
+2023-03-06T13:54:41.751893994Z           BlockList: { serializedName: 'BlockList', type: [Object] },
+2023-03-06T13:54:41.751898994Z           Block: { serializedName: 'Block', type: [Object] },
+2023-03-06T13:54:41.751903894Z           PageList: { serializedName: 'PageList', type: [Object] },
+2023-03-06T13:54:41.751908794Z           PageRange: {
+2023-03-06T13:54:41.751913994Z             serializedName: 'PageRange',
+2023-03-06T13:54:41.751919094Z             xmlName: 'PageRange',
+2023-03-06T13:54:41.751923994Z             type: [Object]
+2023-03-06T13:54:41.751928594Z           },
+2023-03-06T13:54:41.751933494Z           ClearRange: {
+2023-03-06T13:54:41.751938194Z             serializedName: 'ClearRange',
+2023-03-06T13:54:41.751943294Z             xmlName: 'ClearRange',
+2023-03-06T13:54:41.751948094Z             type: [Object]
+2023-03-06T13:54:41.751953094Z           },
+2023-03-06T13:54:41.751969294Z           QueryRequest: {
+2023-03-06T13:54:41.751975394Z             serializedName: 'QueryRequest',
+2023-03-06T13:54:41.751981694Z             xmlName: 'QueryRequest',
+2023-03-06T13:54:41.751987394Z             type: [Object]
+2023-03-06T13:54:41.751992994Z           },
+2023-03-06T13:54:41.751997894Z           QuerySerialization: { serializedName: 'QuerySerialization', type: [Object] },
+2023-03-06T13:54:41.752003094Z           QueryFormat: { serializedName: 'QueryFormat', type: [Object] },
+2023-03-06T13:54:41.752008394Z           DelimitedTextConfiguration: {
+2023-03-06T13:54:41.752013194Z             serializedName: 'DelimitedTextConfiguration',
+2023-03-06T13:54:41.752019494Z             xmlName: 'DelimitedTextConfiguration',
+2023-03-06T13:54:41.752024394Z             type: [Object]
+2023-03-06T13:54:41.752029094Z           },
+2023-03-06T13:54:41.752033994Z           JsonTextConfiguration: {
+2023-03-06T13:54:41.752038894Z             serializedName: 'JsonTextConfiguration',
+2023-03-06T13:54:41.752050494Z             xmlName: 'JsonTextConfiguration',
+2023-03-06T13:54:41.752055894Z             type: [Object]
+2023-03-06T13:54:41.752060694Z           },
+2023-03-06T13:54:41.752065394Z           ArrowConfiguration: {
+2023-03-06T13:54:41.752070394Z             serializedName: 'ArrowConfiguration',
+2023-03-06T13:54:41.752075194Z             xmlName: 'ArrowConfiguration',
+2023-03-06T13:54:41.752080094Z             type: [Object]
+2023-03-06T13:54:41.752084994Z           },
+2023-03-06T13:54:41.752089494Z           ArrowField: {
+2023-03-06T13:54:41.752094494Z             serializedName: 'ArrowField',
+2023-03-06T13:54:41.752100994Z             xmlName: 'Field',
+2023-03-06T13:54:41.752106094Z             type: [Object]
+2023-03-06T13:54:41.752110794Z           },
+2023-03-06T13:54:41.752116294Z           ServiceSetPropertiesHeaders: {
+2023-03-06T13:54:41.752121494Z             serializedName: 'Service_setPropertiesHeaders',
+2023-03-06T13:54:41.752126594Z             type: [Object]
+2023-03-06T13:54:41.752132594Z           },
+2023-03-06T13:54:41.752137494Z           ServiceSetPropertiesExceptionHeaders: {
+2023-03-06T13:54:41.752143394Z             serializedName: 'Service_setPropertiesExceptionHeaders',
+2023-03-06T13:54:41.752148494Z             type: [Object]
+2023-03-06T13:54:41.752153194Z           },
+2023-03-06T13:54:41.752157994Z           ServiceGetPropertiesHeaders: {
+2023-03-06T13:54:41.752162994Z             serializedName: 'Service_getPropertiesHeaders',
+2023-03-06T13:54:41.752168595Z             type: [Object]
+2023-03-06T13:54:41.752173295Z           },
+2023-03-06T13:54:41.752177995Z           ServiceGetPropertiesExceptionHeaders: {
+2023-03-06T13:54:41.752183095Z             serializedName: 'Service_getPropertiesExceptionHeaders',
+2023-03-06T13:54:41.752187995Z             type: [Object]
+2023-03-06T13:54:41.752192695Z           },
+2023-03-06T13:54:41.752202495Z           ServiceGetStatisticsHeaders: {
+2023-03-06T13:54:41.752208195Z             serializedName: 'Service_getStatisticsHeaders',
+2023-03-06T13:54:41.752212995Z             type: [Object]
+2023-03-06T13:54:41.752217695Z           },
+2023-03-06T13:54:41.752223295Z           ServiceGetStatisticsExceptionHeaders: {
+2023-03-06T13:54:41.752228395Z             serializedName: 'Service_getStatisticsExceptionHeaders',
+2023-03-06T13:54:41.752233295Z             type: [Object]
+2023-03-06T13:54:41.752238295Z           },
+2023-03-06T13:54:41.752242995Z           ServiceListContainersSegmentHeaders: {
+2023-03-06T13:54:41.752248195Z             serializedName: 'Service_listContainersSegmentHeaders',
+2023-03-06T13:54:41.752253595Z             type: [Object]
+2023-03-06T13:54:41.752258395Z           },
+2023-03-06T13:54:41.752263395Z           ServiceListContainersSegmentExceptionHeaders: {
+2023-03-06T13:54:41.752268395Z             serializedName: 'Service_listContainersSegmentExceptionHeaders',
+2023-03-06T13:54:41.752273295Z             type: [Object]
+2023-03-06T13:54:41.752278495Z           },
+2023-03-06T13:54:41.752283495Z           ServiceGetUserDelegationKeyHeaders: {
+2023-03-06T13:54:41.752288495Z             serializedName: 'Service_getUserDelegationKeyHeaders',
+2023-03-06T13:54:41.752293695Z             type: [Object]
+2023-03-06T13:54:41.752298595Z           },
+2023-03-06T13:54:41.752303495Z           ServiceGetUserDelegationKeyExceptionHeaders: {
+2023-03-06T13:54:41.752308395Z             serializedName: 'Service_getUserDelegationKeyExceptionHeaders',
+2023-03-06T13:54:41.752313295Z             type: [Object]
+2023-03-06T13:54:41.752317995Z           },
+2023-03-06T13:54:41.752325995Z           ServiceGetAccountInfoHeaders: {
+2023-03-06T13:54:41.752330995Z             serializedName: 'Service_getAccountInfoHeaders',
+2023-03-06T13:54:41.752335495Z             type: [Object]
+2023-03-06T13:54:41.752340195Z           },
+2023-03-06T13:54:41.752345095Z           ServiceGetAccountInfoExceptionHeaders: {
+2023-03-06T13:54:41.752350195Z             serializedName: 'Service_getAccountInfoExceptionHeaders',
+2023-03-06T13:54:41.752354995Z             type: [Object]
+2023-03-06T13:54:41.752359595Z           },
+2023-03-06T13:54:41.752364695Z           ServiceSubmitBatchHeaders: {
+2023-03-06T13:54:41.752369495Z             serializedName: 'Service_submitBatchHeaders',
+2023-03-06T13:54:41.752374295Z             type: [Object]
+2023-03-06T13:54:41.752378895Z           },
+2023-03-06T13:54:41.752383695Z           ServiceSubmitBatchExceptionHeaders: {
+2023-03-06T13:54:41.752388795Z             serializedName: 'Service_submitBatchExceptionHeaders',
+2023-03-06T13:54:41.752393595Z             type: [Object]
+2023-03-06T13:54:41.752398195Z           },
+2023-03-06T13:54:41.752403095Z           ServiceFilterBlobsHeaders: {
+2023-03-06T13:54:41.752407895Z             serializedName: 'Service_filterBlobsHeaders',
+2023-03-06T13:54:41.752412595Z             type: [Object]
+2023-03-06T13:54:41.752417195Z           },
+2023-03-06T13:54:41.752421595Z           ServiceFilterBlobsExceptionHeaders: {
+2023-03-06T13:54:41.752426395Z             serializedName: 'Service_filterBlobsExceptionHeaders',
+2023-03-06T13:54:41.752431495Z             type: [Object]
+2023-03-06T13:54:41.752436195Z           },
+2023-03-06T13:54:41.752441195Z           ContainerCreateHeaders: { serializedName: 'Container_createHeaders', type: [Object] },
+2023-03-06T13:54:41.752446195Z           ContainerCreateExceptionHeaders: {
+2023-03-06T13:54:41.752450795Z             serializedName: 'Container_createExceptionHeaders',
+2023-03-06T13:54:41.752455295Z             type: [Object]
+2023-03-06T13:54:41.752459995Z           },
+2023-03-06T13:54:41.752464495Z           ContainerGetPropertiesHeaders: {
+2023-03-06T13:54:41.752468895Z             serializedName: 'Container_getPropertiesHeaders',
+2023-03-06T13:54:41.752473195Z             type: [Object]
+2023-03-06T13:54:41.752477795Z           },
+2023-03-06T13:54:41.752482695Z           ContainerGetPropertiesExceptionHeaders: {
+2023-03-06T13:54:41.752487295Z             serializedName: 'Container_getPropertiesExceptionHeaders',
+2023-03-06T13:54:41.752492295Z             type: [Object]
+2023-03-06T13:54:41.752496795Z           },
+2023-03-06T13:54:41.752501695Z           ContainerDeleteHeaders: { serializedName: 'Container_deleteHeaders', type: [Object] },
+2023-03-06T13:54:41.752506595Z           ContainerDeleteExceptionHeaders: {
+2023-03-06T13:54:41.752511295Z             serializedName: 'Container_deleteExceptionHeaders',
+2023-03-06T13:54:41.752582495Z             type: [Object]
+2023-03-06T13:54:41.752588795Z           },
+2023-03-06T13:54:41.752593495Z           ContainerSetMetadataHeaders: {
+2023-03-06T13:54:41.752598395Z             serializedName: 'Container_setMetadataHeaders',
+2023-03-06T13:54:41.752604995Z             type: [Object]
+2023-03-06T13:54:41.752609895Z           },
+2023-03-06T13:54:41.752614795Z           ContainerSetMetadataExceptionHeaders: {
+2023-03-06T13:54:41.752619895Z             serializedName: 'Container_setMetadataExceptionHeaders',
+2023-03-06T13:54:41.752624795Z             type: [Object]
+2023-03-06T13:54:41.752629495Z           },
+2023-03-06T13:54:41.752635295Z           ContainerGetAccessPolicyHeaders: {
+2023-03-06T13:54:41.752640095Z             serializedName: 'Container_getAccessPolicyHeaders',
+2023-03-06T13:54:41.752652495Z             type: [Object]
+2023-03-06T13:54:41.752657595Z           },
+2023-03-06T13:54:41.752662595Z           ContainerGetAccessPolicyExceptionHeaders: {
+2023-03-06T13:54:41.752667595Z             serializedName: 'Container_getAccessPolicyExceptionHeaders',
+2023-03-06T13:54:41.752677596Z             type: [Object]
+2023-03-06T13:54:41.752682196Z           },
+2023-03-06T13:54:41.752687096Z           ContainerSetAccessPolicyHeaders: {
+2023-03-06T13:54:41.752691896Z             serializedName: 'Container_setAccessPolicyHeaders',
+2023-03-06T13:54:41.752696996Z             type: [Object]
+2023-03-06T13:54:41.752701496Z           },
+2023-03-06T13:54:41.752706496Z           ContainerSetAccessPolicyExceptionHeaders: {
+2023-03-06T13:54:41.752711396Z             serializedName: 'Container_setAccessPolicyExceptionHeaders',
+2023-03-06T13:54:41.752716196Z             type: [Object]
+2023-03-06T13:54:41.752721196Z           },
+2023-03-06T13:54:41.752725896Z           ContainerRestoreHeaders: {
+2023-03-06T13:54:41.752731296Z             serializedName: 'Container_restoreHeaders',
+2023-03-06T13:54:41.752736096Z             type: [Object]
+2023-03-06T13:54:41.752740796Z           },
+2023-03-06T13:54:41.752745696Z           ContainerRestoreExceptionHeaders: {
+2023-03-06T13:54:41.752750596Z             serializedName: 'Container_restoreExceptionHeaders',
+2023-03-06T13:54:41.752755196Z             type: [Object]
+2023-03-06T13:54:41.752759796Z           },
+2023-03-06T13:54:41.752764396Z           ContainerRenameHeaders: { serializedName: 'Container_renameHeaders', type: [Object] },
+2023-03-06T13:54:41.752769196Z           ContainerRenameExceptionHeaders: {
+2023-03-06T13:54:41.752774096Z             serializedName: 'Container_renameExceptionHeaders',
+2023-03-06T13:54:41.752783796Z             type: [Object]
+2023-03-06T13:54:41.752788996Z           },
+2023-03-06T13:54:41.752793696Z           ContainerSubmitBatchHeaders: {
+2023-03-06T13:54:41.752798896Z             serializedName: 'Container_submitBatchHeaders',
+2023-03-06T13:54:41.752803596Z             type: [Object]
+2023-03-06T13:54:41.752854496Z           },
+2023-03-06T13:54:41.752859596Z           ContainerSubmitBatchExceptionHeaders: {
+2023-03-06T13:54:41.752866996Z             serializedName: 'Container_submitBatchExceptionHeaders',
+2023-03-06T13:54:41.752872096Z             type: [Object]
+2023-03-06T13:54:41.752877196Z           },
+2023-03-06T13:54:41.752882896Z           ContainerFilterBlobsHeaders: {
+2023-03-06T13:54:41.752887696Z             serializedName: 'Container_filterBlobsHeaders',
+2023-03-06T13:54:41.752892696Z             type: [Object]
+2023-03-06T13:54:41.752897496Z           },
+2023-03-06T13:54:41.752902596Z           ContainerFilterBlobsExceptionHeaders: {
+2023-03-06T13:54:41.753002296Z             serializedName: 'Container_filterBlobsExceptionHeaders',
+2023-03-06T13:54:41.753008096Z             type: [Object]
+2023-03-06T13:54:41.753013496Z           },
+2023-03-06T13:54:41.753018496Z           ContainerAcquireLeaseHeaders: {
+2023-03-06T13:54:41.753023596Z             serializedName: 'Container_acquireLeaseHeaders',
+2023-03-06T13:54:41.753028596Z             type: [Object]
+2023-03-06T13:54:41.753033696Z           },
+2023-03-06T13:54:41.753038496Z           ContainerAcquireLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753043596Z             serializedName: 'Container_acquireLeaseExceptionHeaders',
+2023-03-06T13:54:41.753048496Z             type: [Object]
+2023-03-06T13:54:41.753053396Z           },
+2023-03-06T13:54:41.753066396Z           ContainerReleaseLeaseHeaders: {
+2023-03-06T13:54:41.753071696Z             serializedName: 'Container_releaseLeaseHeaders',
+2023-03-06T13:54:41.753076596Z             type: [Object]
+2023-03-06T13:54:41.753081496Z           },
+2023-03-06T13:54:41.753086396Z           ContainerReleaseLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753091396Z             serializedName: 'Container_releaseLeaseExceptionHeaders',
+2023-03-06T13:54:41.753096296Z             type: [Object]
+2023-03-06T13:54:41.753101096Z           },
+2023-03-06T13:54:41.753105996Z           ContainerRenewLeaseHeaders: {
+2023-03-06T13:54:41.753111096Z             serializedName: 'Container_renewLeaseHeaders',
+2023-03-06T13:54:41.753115796Z             type: [Object]
+2023-03-06T13:54:41.753120796Z           },
+2023-03-06T13:54:41.753125796Z           ContainerRenewLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753130896Z             serializedName: 'Container_renewLeaseExceptionHeaders',
+2023-03-06T13:54:41.753137396Z             type: [Object]
+2023-03-06T13:54:41.753142196Z           },
+2023-03-06T13:54:41.753147096Z           ContainerBreakLeaseHeaders: {
+2023-03-06T13:54:41.753152096Z             serializedName: 'Container_breakLeaseHeaders',
+2023-03-06T13:54:41.753157996Z             type: [Object]
+2023-03-06T13:54:41.753162896Z           },
+2023-03-06T13:54:41.753167896Z           ContainerBreakLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753173096Z             serializedName: 'Container_breakLeaseExceptionHeaders',
+2023-03-06T13:54:41.753178497Z             type: [Object]
+2023-03-06T13:54:41.753183397Z           },
+2023-03-06T13:54:41.753188297Z           ContainerChangeLeaseHeaders: {
+2023-03-06T13:54:41.753193397Z             serializedName: 'Container_changeLeaseHeaders',
+2023-03-06T13:54:41.753198797Z             type: [Object]
+2023-03-06T13:54:41.753204197Z           },
+2023-03-06T13:54:41.753209097Z           ContainerChangeLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753215097Z             serializedName: 'Container_changeLeaseExceptionHeaders',
+2023-03-06T13:54:41.753220097Z             type: [Object]
+2023-03-06T13:54:41.753224897Z           },
+2023-03-06T13:54:41.753229697Z           ContainerListBlobFlatSegmentHeaders: {
+2023-03-06T13:54:41.753234497Z             serializedName: 'Container_listBlobFlatSegmentHeaders',
+2023-03-06T13:54:41.753239397Z             type: [Object]
+2023-03-06T13:54:41.753244197Z           },
+2023-03-06T13:54:41.753249697Z           ContainerListBlobFlatSegmentExceptionHeaders: {
+2023-03-06T13:54:41.753255097Z             serializedName: 'Container_listBlobFlatSegmentExceptionHeaders',
+2023-03-06T13:54:41.753260397Z             type: [Object]
+2023-03-06T13:54:41.753265597Z           },
+2023-03-06T13:54:41.753270697Z           ContainerListBlobHierarchySegmentHeaders: {
+2023-03-06T13:54:41.753275897Z             serializedName: 'Container_listBlobHierarchySegmentHeaders',
+2023-03-06T13:54:41.753280897Z             type: [Object]
+2023-03-06T13:54:41.753285797Z           },
+2023-03-06T13:54:41.753290597Z           ContainerListBlobHierarchySegmentExceptionHeaders: {
+2023-03-06T13:54:41.753296597Z             serializedName: 'Container_listBlobHierarchySegmentExceptionHeaders',
+2023-03-06T13:54:41.753302497Z             type: [Object]
+2023-03-06T13:54:41.753307197Z           },
+2023-03-06T13:54:41.753312297Z           ContainerGetAccountInfoHeaders: {
+2023-03-06T13:54:41.753317097Z             serializedName: 'Container_getAccountInfoHeaders',
+2023-03-06T13:54:41.753321997Z             type: [Object]
+2023-03-06T13:54:41.753326797Z           },
+2023-03-06T13:54:41.753334897Z           ContainerGetAccountInfoExceptionHeaders: {
+2023-03-06T13:54:41.753340097Z             serializedName: 'Container_getAccountInfoExceptionHeaders',
+2023-03-06T13:54:41.753344997Z             type: [Object]
+2023-03-06T13:54:41.753352397Z           },
+2023-03-06T13:54:41.753357397Z           BlobDownloadHeaders: { serializedName: 'Blob_downloadHeaders', type: [Object] },
+2023-03-06T13:54:41.753362497Z           BlobDownloadExceptionHeaders: {
+2023-03-06T13:54:41.753367597Z             serializedName: 'Blob_downloadExceptionHeaders',
+2023-03-06T13:54:41.753372797Z             type: [Object]
+2023-03-06T13:54:41.753377497Z           },
+2023-03-06T13:54:41.753399097Z           BlobGetPropertiesHeaders: {
+2023-03-06T13:54:41.753404397Z             serializedName: 'Blob_getPropertiesHeaders',
+2023-03-06T13:54:41.753409497Z             type: [Object]
+2023-03-06T13:54:41.753414797Z           },
+2023-03-06T13:54:41.753420197Z           BlobGetPropertiesExceptionHeaders: {
+2023-03-06T13:54:41.753425397Z             serializedName: 'Blob_getPropertiesExceptionHeaders',
+2023-03-06T13:54:41.753430697Z             type: [Object]
+2023-03-06T13:54:41.753435697Z           },
+2023-03-06T13:54:41.753440897Z           BlobDeleteHeaders: { serializedName: 'Blob_deleteHeaders', type: [Object] },
+2023-03-06T13:54:41.753446197Z           BlobDeleteExceptionHeaders: {
+2023-03-06T13:54:41.753451597Z             serializedName: 'Blob_deleteExceptionHeaders',
+2023-03-06T13:54:41.753456597Z             type: [Object]
+2023-03-06T13:54:41.753462097Z           },
+2023-03-06T13:54:41.753467197Z           BlobUndeleteHeaders: { serializedName: 'Blob_undeleteHeaders', type: [Object] },
+2023-03-06T13:54:41.753472797Z           BlobUndeleteExceptionHeaders: {
+2023-03-06T13:54:41.753477697Z             serializedName: 'Blob_undeleteExceptionHeaders',
+2023-03-06T13:54:41.753488097Z             type: [Object]
+2023-03-06T13:54:41.753512697Z           },
+2023-03-06T13:54:41.753517497Z           BlobSetExpiryHeaders: { serializedName: 'Blob_setExpiryHeaders', type: [Object] },
+2023-03-06T13:54:41.753523397Z           BlobSetExpiryExceptionHeaders: {
+2023-03-06T13:54:41.753528997Z             serializedName: 'Blob_setExpiryExceptionHeaders',
+2023-03-06T13:54:41.753534797Z             type: [Object]
+2023-03-06T13:54:41.753539897Z           },
+2023-03-06T13:54:41.753545597Z           BlobSetHttpHeadersHeaders: {
+2023-03-06T13:54:41.753550797Z             serializedName: 'Blob_setHttpHeadersHeaders',
+2023-03-06T13:54:41.753555697Z             type: [Object]
+2023-03-06T13:54:41.753560497Z           },
+2023-03-06T13:54:41.753565497Z           BlobSetHttpHeadersExceptionHeaders: {
+2023-03-06T13:54:41.753570297Z             serializedName: 'Blob_setHttpHeadersExceptionHeaders',
+2023-03-06T13:54:41.753575497Z             type: [Object]
+2023-03-06T13:54:41.753580197Z           },
+2023-03-06T13:54:41.753585097Z           BlobSetImmutabilityPolicyHeaders: {
+2023-03-06T13:54:41.753589997Z             serializedName: 'Blob_setImmutabilityPolicyHeaders',
+2023-03-06T13:54:41.753595897Z             type: [Object]
+2023-03-06T13:54:41.753600597Z           },
+2023-03-06T13:54:41.753605297Z           BlobSetImmutabilityPolicyExceptionHeaders: {
+2023-03-06T13:54:41.753610297Z             serializedName: 'Blob_setImmutabilityPolicyExceptionHeaders',
+2023-03-06T13:54:41.753615497Z             type: [Object]
+2023-03-06T13:54:41.753620197Z           },
+2023-03-06T13:54:41.753625197Z           BlobDeleteImmutabilityPolicyHeaders: {
+2023-03-06T13:54:41.753630297Z             serializedName: 'Blob_deleteImmutabilityPolicyHeaders',
+2023-03-06T13:54:41.753638797Z             type: [Object]
+2023-03-06T13:54:41.753643897Z           },
+2023-03-06T13:54:41.753648797Z           BlobDeleteImmutabilityPolicyExceptionHeaders: {
+2023-03-06T13:54:41.753653597Z             serializedName: 'Blob_deleteImmutabilityPolicyExceptionHeaders',
+2023-03-06T13:54:41.753658497Z             type: [Object]
+2023-03-06T13:54:41.753663297Z           },
+2023-03-06T13:54:41.753742598Z           BlobSetLegalHoldHeaders: {
+2023-03-06T13:54:41.753748798Z             serializedName: 'Blob_setLegalHoldHeaders',
+2023-03-06T13:54:41.753753798Z             type: [Object]
+2023-03-06T13:54:41.753758798Z           },
+2023-03-06T13:54:41.753763998Z           BlobSetLegalHoldExceptionHeaders: {
+2023-03-06T13:54:41.753768998Z             serializedName: 'Blob_setLegalHoldExceptionHeaders',
+2023-03-06T13:54:41.753773898Z             type: [Object]
+2023-03-06T13:54:41.753778698Z           },
+2023-03-06T13:54:41.753783498Z           BlobSetMetadataHeaders: { serializedName: 'Blob_setMetadataHeaders', type: [Object] },
+2023-03-06T13:54:41.753788598Z           BlobSetMetadataExceptionHeaders: {
+2023-03-06T13:54:41.753793598Z             serializedName: 'Blob_setMetadataExceptionHeaders',
+2023-03-06T13:54:41.753798498Z             type: [Object]
+2023-03-06T13:54:41.753803498Z           },
+2023-03-06T13:54:41.753808198Z           BlobAcquireLeaseHeaders: {
+2023-03-06T13:54:41.753813098Z             serializedName: 'Blob_acquireLeaseHeaders',
+2023-03-06T13:54:41.753817898Z             type: [Object]
+2023-03-06T13:54:41.753822798Z           },
+2023-03-06T13:54:41.753827498Z           BlobAcquireLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753832498Z             serializedName: 'Blob_acquireLeaseExceptionHeaders',
+2023-03-06T13:54:41.753837298Z             type: [Object]
+2023-03-06T13:54:41.753842198Z           },
+2023-03-06T13:54:41.753846798Z           BlobReleaseLeaseHeaders: {
+2023-03-06T13:54:41.753851698Z             serializedName: 'Blob_releaseLeaseHeaders',
+2023-03-06T13:54:41.753856798Z             type: [Object]
+2023-03-06T13:54:41.753861398Z           },
+2023-03-06T13:54:41.753866098Z           BlobReleaseLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753870898Z             serializedName: 'Blob_releaseLeaseExceptionHeaders',
+2023-03-06T13:54:41.753875698Z             type: [Object]
+2023-03-06T13:54:41.753880298Z           },
+2023-03-06T13:54:41.753884898Z           BlobRenewLeaseHeaders: { serializedName: 'Blob_renewLeaseHeaders', type: [Object] },
+2023-03-06T13:54:41.753889698Z           BlobRenewLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753895598Z             serializedName: 'Blob_renewLeaseExceptionHeaders',
+2023-03-06T13:54:41.753900598Z             type: [Object]
+2023-03-06T13:54:41.753905298Z           },
+2023-03-06T13:54:41.753910098Z           BlobChangeLeaseHeaders: { serializedName: 'Blob_changeLeaseHeaders', type: [Object] },
+2023-03-06T13:54:41.753915198Z           BlobChangeLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753920398Z             serializedName: 'Blob_changeLeaseExceptionHeaders',
+2023-03-06T13:54:41.753925498Z             type: [Object]
+2023-03-06T13:54:41.753930598Z           },
+2023-03-06T13:54:41.753936098Z           BlobBreakLeaseHeaders: { serializedName: 'Blob_breakLeaseHeaders', type: [Object] },
+2023-03-06T13:54:41.753941098Z           BlobBreakLeaseExceptionHeaders: {
+2023-03-06T13:54:41.753946198Z             serializedName: 'Blob_breakLeaseExceptionHeaders',
+2023-03-06T13:54:41.753951498Z             type: [Object]
+2023-03-06T13:54:41.753956298Z           },
+2023-03-06T13:54:41.753962398Z           BlobCreateSnapshotHeaders: {
+2023-03-06T13:54:41.753975298Z             serializedName: 'Blob_createSnapshotHeaders',
+2023-03-06T13:54:41.753980698Z             type: [Object]
+2023-03-06T13:54:41.753985398Z           },
+2023-03-06T13:54:41.753991698Z           BlobCreateSnapshotExceptionHeaders: {
+2023-03-06T13:54:41.753996498Z             serializedName: 'Blob_createSnapshotExceptionHeaders',
+2023-03-06T13:54:41.754001598Z             type: [Object]
+2023-03-06T13:54:41.754006398Z           },
+2023-03-06T13:54:41.754011398Z           BlobStartCopyFromURLHeaders: {
+2023-03-06T13:54:41.754016098Z             serializedName: 'Blob_startCopyFromURLHeaders',
+2023-03-06T13:54:41.754020998Z             type: [Object]
+2023-03-06T13:54:41.754025798Z           },
+2023-03-06T13:54:41.754030798Z           BlobStartCopyFromURLExceptionHeaders: {
+2023-03-06T13:54:41.754035898Z             serializedName: 'Blob_startCopyFromURLExceptionHeaders',
+2023-03-06T13:54:41.754040898Z             type: [Object]
+2023-03-06T13:54:41.754045498Z           },
+2023-03-06T13:54:41.754050298Z           BlobCopyFromURLHeaders: { serializedName: 'Blob_copyFromURLHeaders', type: [Object] },
+2023-03-06T13:54:41.754055598Z           BlobCopyFromURLExceptionHeaders: {
+2023-03-06T13:54:41.754060298Z             serializedName: 'Blob_copyFromURLExceptionHeaders',
+2023-03-06T13:54:41.754065298Z             type: [Object]
+2023-03-06T13:54:41.754069998Z           },
+2023-03-06T13:54:41.754075398Z           BlobAbortCopyFromURLHeaders: {
+2023-03-06T13:54:41.754080398Z             serializedName: 'Blob_abortCopyFromURLHeaders',
+2023-03-06T13:54:41.754085298Z             type: [Object]
+2023-03-06T13:54:41.754090298Z           },
+2023-03-06T13:54:41.754095098Z           BlobAbortCopyFromURLExceptionHeaders: {
+2023-03-06T13:54:41.754123498Z             serializedName: 'Blob_abortCopyFromURLExceptionHeaders',
+2023-03-06T13:54:41.754130098Z             type: [Object]
+2023-03-06T13:54:41.754134798Z           },
+2023-03-06T13:54:41.754155898Z           BlobSetTierHeaders: { serializedName: 'Blob_setTierHeaders', type: [Object] },
+2023-03-06T13:54:41.754161198Z           BlobSetTierExceptionHeaders: {
+2023-03-06T13:54:41.754165998Z             serializedName: 'Blob_setTierExceptionHeaders',
+2023-03-06T13:54:41.754171698Z             type: [Object]
+2023-03-06T13:54:41.754176398Z           },
+2023-03-06T13:54:41.754180898Z           BlobGetAccountInfoHeaders: {
+2023-03-06T13:54:41.754185999Z             serializedName: 'Blob_getAccountInfoHeaders',
+2023-03-06T13:54:41.754190799Z             type: [Object]
+2023-03-06T13:54:41.754195499Z           },
+2023-03-06T13:54:41.754200599Z           BlobGetAccountInfoExceptionHeaders: {
+2023-03-06T13:54:41.754205799Z             serializedName: 'Blob_getAccountInfoExceptionHeaders',
+2023-03-06T13:54:41.754210599Z             type: [Object]
+2023-03-06T13:54:41.754215299Z           },
+2023-03-06T13:54:41.754220399Z           BlobQueryHeaders: { serializedName: 'Blob_queryHeaders', type: [Object] },
+2023-03-06T13:54:41.754225299Z           BlobQueryExceptionHeaders: {
+2023-03-06T13:54:41.754230499Z             serializedName: 'Blob_queryExceptionHeaders',
+2023-03-06T13:54:41.754235999Z             type: [Object]
+2023-03-06T13:54:41.754240699Z           },
+2023-03-06T13:54:41.754245799Z           BlobGetTagsHeaders: { serializedName: 'Blob_getTagsHeaders', type: [Object] },
+2023-03-06T13:54:41.754250499Z           BlobGetTagsExceptionHeaders: {
+2023-03-06T13:54:41.754255699Z             serializedName: 'Blob_getTagsExceptionHeaders',
+2023-03-06T13:54:41.754260299Z             type: [Object]
+2023-03-06T13:54:41.754268699Z           },
+2023-03-06T13:54:41.754273999Z           BlobSetTagsHeaders: { serializedName: 'Blob_setTagsHeaders', type: [Object] },
+2023-03-06T13:54:41.754278999Z           BlobSetTagsExceptionHeaders: {
+2023-03-06T13:54:41.754283699Z             serializedName: 'Blob_setTagsExceptionHeaders',
+2023-03-06T13:54:41.754288599Z             type: [Object]
+2023-03-06T13:54:41.754293199Z           },
+2023-03-06T13:54:41.754298199Z           PageBlobCreateHeaders: { serializedName: 'PageBlob_createHeaders', type: [Object] },
+2023-03-06T13:54:41.754302799Z           PageBlobCreateExceptionHeaders: {
+2023-03-06T13:54:41.754308299Z             serializedName: 'PageBlob_createExceptionHeaders',
+2023-03-06T13:54:41.754312999Z             type: [Object]
+2023-03-06T13:54:41.754317699Z           },
+2023-03-06T13:54:41.754322399Z           PageBlobUploadPagesHeaders: {
+2023-03-06T13:54:41.754327199Z             serializedName: 'PageBlob_uploadPagesHeaders',
+2023-03-06T13:54:41.754331999Z             type: [Object]
+2023-03-06T13:54:41.754336699Z           },
+2023-03-06T13:54:41.754341299Z           PageBlobUploadPagesExceptionHeaders: {
+2023-03-06T13:54:41.754349499Z             serializedName: 'PageBlob_uploadPagesExceptionHeaders',
+2023-03-06T13:54:41.754354499Z             type: [Object]
+2023-03-06T13:54:41.754359599Z           },
+2023-03-06T13:54:41.754364499Z           PageBlobClearPagesHeaders: {
+2023-03-06T13:54:41.754369499Z             serializedName: 'PageBlob_clearPagesHeaders',
+2023-03-06T13:54:41.754374099Z             type: [Object]
+2023-03-06T13:54:41.754378799Z           },
+2023-03-06T13:54:41.754383599Z           PageBlobClearPagesExceptionHeaders: {
+2023-03-06T13:54:41.754388499Z             serializedName: 'PageBlob_clearPagesExceptionHeaders',
+2023-03-06T13:54:41.754393199Z             type: [Object]
+2023-03-06T13:54:41.754397799Z           },
+2023-03-06T13:54:41.754403599Z           PageBlobUploadPagesFromURLHeaders: {
+2023-03-06T13:54:41.754408499Z             serializedName: 'PageBlob_uploadPagesFromURLHeaders',
+2023-03-06T13:54:41.754413599Z             type: [Object]
+2023-03-06T13:54:41.754418499Z           },
+2023-03-06T13:54:41.754423199Z           PageBlobUploadPagesFromURLExceptionHeaders: {
+2023-03-06T13:54:41.754428199Z             serializedName: 'PageBlob_uploadPagesFromURLExceptionHeaders',
+2023-03-06T13:54:41.754433099Z             type: [Object]
+2023-03-06T13:54:41.754437899Z           },
+2023-03-06T13:54:41.754460199Z           PageBlobGetPageRangesHeaders: {
+2023-03-06T13:54:41.754465299Z             serializedName: 'PageBlob_getPageRangesHeaders',
+2023-03-06T13:54:41.754470299Z             type: [Object]
+2023-03-06T13:54:41.754475099Z           },
+2023-03-06T13:54:41.754480099Z           PageBlobGetPageRangesExceptionHeaders: {
+2023-03-06T13:54:41.754485099Z             serializedName: 'PageBlob_getPageRangesExceptionHeaders',
+2023-03-06T13:54:41.754490499Z             type: [Object]
+2023-03-06T13:54:41.754495299Z           },
+2023-03-06T13:54:41.754500599Z           PageBlobGetPageRangesDiffHeaders: {
+2023-03-06T13:54:41.754523599Z             serializedName: 'PageBlob_getPageRangesDiffHeaders',
+2023-03-06T13:54:41.754528699Z             type: [Object]
+2023-03-06T13:54:41.754533799Z           },
+2023-03-06T13:54:41.754539899Z           PageBlobGetPageRangesDiffExceptionHeaders: {
+2023-03-06T13:54:41.754545299Z             serializedName: 'PageBlob_getPageRangesDiffExceptionHeaders',
+2023-03-06T13:54:41.754551499Z             type: [Object]
+2023-03-06T13:54:41.754557399Z           },
+2023-03-06T13:54:41.754562399Z           PageBlobResizeHeaders: { serializedName: 'PageBlob_resizeHeaders', type: [Object] },
+2023-03-06T13:54:41.754571199Z           PageBlobResizeExceptionHeaders: {
+2023-03-06T13:54:41.754576699Z             serializedName: 'PageBlob_resizeExceptionHeaders',
+2023-03-06T13:54:41.754581799Z             type: [Object]
+2023-03-06T13:54:41.754586599Z           },
+2023-03-06T13:54:41.754591599Z           PageBlobUpdateSequenceNumberHeaders: {
+2023-03-06T13:54:41.754596499Z             serializedName: 'PageBlob_updateSequenceNumberHeaders',
+2023-03-06T13:54:41.754601699Z             type: [Object]
+2023-03-06T13:54:41.754606599Z           },
+2023-03-06T13:54:41.754611599Z           PageBlobUpdateSequenceNumberExceptionHeaders: {
+2023-03-06T13:54:41.754616899Z             serializedName: 'PageBlob_updateSequenceNumberExceptionHeaders',
+2023-03-06T13:54:41.754622099Z             type: [Object]
+2023-03-06T13:54:41.754627199Z           },
+2023-03-06T13:54:41.754632399Z           PageBlobCopyIncrementalHeaders: {
+2023-03-06T13:54:41.754637599Z             serializedName: 'PageBlob_copyIncrementalHeaders',
+2023-03-06T13:54:41.754642699Z             type: [Object]
+2023-03-06T13:54:41.754647699Z           },
+2023-03-06T13:54:41.754652799Z           PageBlobCopyIncrementalExceptionHeaders: {
+2023-03-06T13:54:41.754658099Z             serializedName: 'PageBlob_copyIncrementalExceptionHeaders',
+2023-03-06T13:54:41.754662999Z             type: [Object]
+2023-03-06T13:54:41.754685499Z           },
+2023-03-06T13:54:41.754691800Z           AppendBlobCreateHeaders: {
+2023-03-06T13:54:41.754697100Z             serializedName: 'AppendBlob_createHeaders',
+2023-03-06T13:54:41.754702500Z             type: [Object]
+2023-03-06T13:54:41.754707900Z           },
+2023-03-06T13:54:41.754713100Z           AppendBlobCreateExceptionHeaders: {
+2023-03-06T13:54:41.754719500Z             serializedName: 'AppendBlob_createExceptionHeaders',
+2023-03-06T13:54:41.754725200Z             type: [Object]
+2023-03-06T13:54:41.754730600Z           },
+2023-03-06T13:54:41.754736000Z           AppendBlobAppendBlockHeaders: {
+2023-03-06T13:54:41.754741600Z             serializedName: 'AppendBlob_appendBlockHeaders',
+2023-03-06T13:54:41.754746800Z             type: [Object]
+2023-03-06T13:54:41.754752100Z           },
+2023-03-06T13:54:41.754757500Z           AppendBlobAppendBlockExceptionHeaders: {
+2023-03-06T13:54:41.754762800Z             serializedName: 'AppendBlob_appendBlockExceptionHeaders',
+2023-03-06T13:54:41.754768200Z             type: [Object]
+2023-03-06T13:54:41.754773400Z           },
+2023-03-06T13:54:41.754778800Z           AppendBlobAppendBlockFromUrlHeaders: {
+2023-03-06T13:54:41.754785000Z             serializedName: 'AppendBlob_appendBlockFromUrlHeaders',
+2023-03-06T13:54:41.754790500Z             type: [Object]
+2023-03-06T13:54:41.754796100Z           },
+2023-03-06T13:54:41.754801500Z           AppendBlobAppendBlockFromUrlExceptionHeaders: {
+2023-03-06T13:54:41.754806900Z             serializedName: 'AppendBlob_appendBlockFromUrlExceptionHeaders',
+2023-03-06T13:54:41.754812700Z             type: [Object]
+2023-03-06T13:54:41.754818100Z           },
+2023-03-06T13:54:41.754823500Z           AppendBlobSealHeaders: { serializedName: 'AppendBlob_sealHeaders', type: [Object] },
+2023-03-06T13:54:41.754828900Z           AppendBlobSealExceptionHeaders: {
+2023-03-06T13:54:41.754855800Z             serializedName: 'AppendBlob_sealExceptionHeaders',
+2023-03-06T13:54:41.754861500Z             type: [Object]
+2023-03-06T13:54:41.754866500Z           },
+2023-03-06T13:54:41.754871600Z           BlockBlobUploadHeaders: { serializedName: 'BlockBlob_uploadHeaders', type: [Object] },
+2023-03-06T13:54:41.754897500Z           BlockBlobUploadExceptionHeaders: {
+2023-03-06T13:54:41.754918700Z             serializedName: 'BlockBlob_uploadExceptionHeaders',
+2023-03-06T13:54:41.754924300Z             type: [Object]
+2023-03-06T13:54:41.754929300Z           },
+2023-03-06T13:54:41.754934300Z           BlockBlobPutBlobFromUrlHeaders: {
+2023-03-06T13:54:41.754939400Z             serializedName: 'BlockBlob_putBlobFromUrlHeaders',
+2023-03-06T13:54:41.754944500Z             type: [Object]
+2023-03-06T13:54:41.754949400Z           },
+2023-03-06T13:54:41.754954500Z           BlockBlobPutBlobFromUrlExceptionHeaders: {
+2023-03-06T13:54:41.754959800Z             serializedName: 'BlockBlob_putBlobFromUrlExceptionHeaders',
+2023-03-06T13:54:41.754964900Z             type: [Object]
+2023-03-06T13:54:41.754969700Z           },
+2023-03-06T13:54:41.754974600Z           BlockBlobStageBlockHeaders: {
+2023-03-06T13:54:41.754980800Z             serializedName: 'BlockBlob_stageBlockHeaders',
+2023-03-06T13:54:41.754985900Z             type: [Object]
+2023-03-06T13:54:41.754990900Z           },
+2023-03-06T13:54:41.755001100Z           BlockBlobStageBlockExceptionHeaders: {
+2023-03-06T13:54:41.755006900Z             serializedName: 'BlockBlob_stageBlockExceptionHeaders',
+2023-03-06T13:54:41.755011900Z             type: [Object]
+2023-03-06T13:54:41.755016900Z           },
+2023-03-06T13:54:41.755021900Z           BlockBlobStageBlockFromURLHeaders: {
+2023-03-06T13:54:41.755027400Z             serializedName: 'BlockBlob_stageBlockFromURLHeaders',
+2023-03-06T13:54:41.755032300Z             type: [Object]
+2023-03-06T13:54:41.755037300Z           },
+2023-03-06T13:54:41.755042300Z           BlockBlobStageBlockFromURLExceptionHeaders: {
+2023-03-06T13:54:41.755047400Z             serializedName: 'BlockBlob_stageBlockFromURLExceptionHeaders',
+2023-03-06T13:54:41.755052500Z             type: [Object]
+2023-03-06T13:54:41.755073100Z           },
+2023-03-06T13:54:41.755078700Z           BlockBlobCommitBlockListHeaders: {
+2023-03-06T13:54:41.755083600Z             serializedName: 'BlockBlob_commitBlockListHeaders',
+2023-03-06T13:54:41.755088400Z             type: [Object]
+2023-03-06T13:54:41.755093000Z           },
+2023-03-06T13:54:41.755097900Z           BlockBlobCommitBlockListExceptionHeaders: {
+2023-03-06T13:54:41.755102800Z             serializedName: 'BlockBlob_commitBlockListExceptionHeaders',
+2023-03-06T13:54:41.755107500Z             type: [Object]
+2023-03-06T13:54:41.755113000Z           },
+2023-03-06T13:54:41.755117700Z           BlockBlobGetBlockListHeaders: {
+2023-03-06T13:54:41.755122400Z             serializedName: 'BlockBlob_getBlockListHeaders',
+2023-03-06T13:54:41.755152300Z             type: [Object]
+2023-03-06T13:54:41.755157500Z           },
+2023-03-06T13:54:41.755287601Z           BlockBlobGetBlockListExceptionHeaders: {
+2023-03-06T13:54:41.755298101Z             serializedName: 'BlockBlob_getBlockListExceptionHeaders',
+2023-03-06T13:54:41.755303501Z             type: [Object]
+2023-03-06T13:54:41.755308701Z           }
+2023-03-06T13:54:41.755313901Z         },
+2023-03-06T13:54:41.755319401Z         isXML: false
+2023-03-06T13:54:41.755324701Z       }
+2023-03-06T13:54:41.755330101Z     }
+2023-03-06T13:54:41.755335201Z   },
+2023-03-06T13:54:41.755340401Z   response: undefined
+2023-03-06T13:54:41.755345501Z }
+2023-03-06T13:54:41.755351501Z 
+2023-03-06T13:54:41.755356801Z Node.js v18.11.0
