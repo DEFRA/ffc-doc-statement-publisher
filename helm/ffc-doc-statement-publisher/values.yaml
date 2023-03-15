@@ -37,7 +37,7 @@ container:
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
   azureStorageCreateContainers: false
-  storageContainer: statements
+  storageContainer: doc-statements
   storageFolder: outbound
   notifyApiKey: dummy
   notifyEmailTemplateKey: dummy
