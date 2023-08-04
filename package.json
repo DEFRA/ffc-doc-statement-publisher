@@ -23,7 +23,7 @@
   "dependencies": {
     "@azure/identity": "2.1.0",
     "@azure/storage-blob": "12.10.0",
-    "applicationinsights": "2.3.4",
+    "applicationinsights": "2.7.0",
     "ffc-messaging": "2.5.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
