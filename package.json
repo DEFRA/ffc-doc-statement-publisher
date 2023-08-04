@@ -24,7 +24,7 @@
     "@azure/identity": "2.1.0",
     "@azure/storage-blob": "12.10.0",
     "applicationinsights": "2.3.4",
-    "ffc-messaging": "2.5.1",
+    "ffc-messaging": "2.7.0",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
     "notifications-node-client": "7.0.0",
