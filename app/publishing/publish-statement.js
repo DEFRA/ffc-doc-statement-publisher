@@ -1,14 +1,26 @@
 const { EMAIL } = require('../constants/methods')
 
-const getPersonalisation = require('./get-personalisation')
-const handlePublishReasoning = require('./handle-publish-reasoning')
-const publish = require('./publish')
-const saveRequest = require('./save-request')
+const { getExistingDocument } = require('../processing/publish')
 const validateEmail = require('./validate-email')
+const getPersonalisation = require('./get-personalisation')
+const publish = require('./publish')
+const handlePublishReasoning = require('./handle-publish-reasoning')
+const saveRequest = require('./save-request')
 
 const publishStatement = async (request) => {
   let reason
   let response
+
+  try {
+    const existingDocument = await getExistingDocument(request.documentReference)
+    if (existingDocument) {
+      console.info(`Duplicate document received, skipping ${existingDocument.documentReference}`)
+      return
+    }
+  } catch (err) {
+    throw new Error('Could not check for duplicates')
+  }
+
   try {
     validateEmail(request.email)
     const personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName)

@@ -1,3 +1,3 @@
 module.exports = {
-  CRM: 'uk.gov.pay.statement.crm'
+  CRM: 'uk.gov.doc.statement.crm'
 }

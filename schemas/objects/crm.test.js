@@ -1,4 +1,4 @@
-const schema = require('../../../../app/schemas/objects/crm')
+const schema = require('../../app/schemas/objects/crm')
 
 let email
 let frn
@@ -8,9 +8,9 @@ let message
 
 describe('CRM message schema', () => {
   beforeEach(() => {
-    email = require('../../../mocks/components/email')
-    frn = require('../../../mocks/components/frn')
-    errorMessage = require('../../../../app/constants/crm-error-messages').EMPTY
+    email = require('../../test/mocks/components/email')
+    frn = require('../../test/mocks/components/frn')
+    errorMessage = require('../../app/constants/crm-error-messages').EMPTY
 
     message = {
       email,

@@ -3,6 +3,7 @@ module.exports = {
   sbi: 123456789,
   frn: 1234567890,
   email: 'farmer@farms.com',
+  documentReference: 1,
   filename: 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf',
   address: {
     line1: 'A Farm',

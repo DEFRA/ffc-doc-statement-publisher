@@ -36,10 +36,21 @@ in any environment before the Docker container is started or tests are run.
 | ---| --- |
 | NOTIFY_API_KEY | API key for GOV.UK Notify account |
 | NOTIFY_EMAIL_TEMPLATE_KEY | Existing GOV.UK email template key |
+| RETENTION_PERIOD_IN_WEEKS | No of weeks that document would be retained |
 
 ## Message schemas
 
 All message schemas are fully documented in an [AsyncAPI specification](docs/asyncapi.yaml).
+
+In order to verify the format set by RPA regarding the PDF filename structure, a regular expression has been created that will look for the following formats:
+Product Code ( example: FFC ) : 3 to 6 uppercase characters, 
+Descriptor ( example: PaymentStatement ) : any combination of words in PascalCase format, 
+Scheme ID ( example: SFI ) : 3 to 6 uppercase characters, 
+Scheme Year ( example : 2023 ) : 4 digits, 
+FRN ( example : 1234567890 ) : 10 digits, 
+Date and Time ( example : yyyymmddhhmmssxx ) : 16 digits,
+File Designation ( example : .pdf ) : fixed to .pdf,
+Each element is separated by an underscore ( example : _ ).
 
 ## Running the application
 
@@ -68,6 +79,8 @@ Use Docker Compose to run service locally.
 ```
 ./scripts/start
 ```
+
+Sending an email via GOV.UK Notify will require the user to enter the email address associated with that document for security. Entering the wrong email will block them fromm downloading the file.
 
 ## Test structure
 

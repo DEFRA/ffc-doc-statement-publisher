@@ -19,7 +19,7 @@ containerSecret:
 
 deployment:
   minReplicas: 1
-  maxReplicas: 1
+  maxReplicas: 4
   cpuThreshold: 80
   memoryThreshold: 80
   minReadySeconds: 0
@@ -39,8 +39,8 @@ container:
   azureStorageCreateContainers: false
   storageContainer: statements
   storageFolder: outbound
-  notifyApiKey: dummy
-  notifyEmailTemplateKey: dummy
+  notifyApiKey:
+  notifyEmailTemplateKey:
 
 postgresService:
   postgresDb: ffc_doc_statement_publisher

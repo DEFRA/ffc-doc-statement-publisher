@@ -15,7 +15,7 @@ process.on('SIGINT', async () => {
 })
 
 module.exports = (async () => {
-  initialiseContainers()
+  await initialiseContainers()
   await messaging.start()
   await monitoring.start()
 })()

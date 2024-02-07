@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
     schemeShortName: DataTypes.STRING,
     schemeYear: DataTypes.STRING,
     schemeFrequency: DataTypes.STRING,
-    received: DataTypes.DATE
+    received: DataTypes.DATE,
+    documentReference: DataTypes.INTEGER
   },
   {
     tableName: 'statements',

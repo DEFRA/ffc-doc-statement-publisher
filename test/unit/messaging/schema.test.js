@@ -5,6 +5,7 @@ describe('request schema', () => {
   beforeEach(() => {
     mockRequest = JSON.parse(JSON.stringify(require('../../mocks/request')))
   })
+
   test('validates success if all present', () => {
     const result = schema.validate(mockRequest)
     expect(result.error).toBeUndefined()

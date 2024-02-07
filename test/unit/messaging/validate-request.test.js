@@ -1,48 +1,53 @@
 const validateRequest = require('../../../app/messaging/validate-request')
-const mockRequest = require('../../mocks/request')
 
-describe('validate message body can be processed as request', () => {
-  test('does not throw on valid request', async () => {
-    expect(() => validateRequest(mockRequest)).not.toThrow()
+let request
+
+describe('Validate request', () => {
+  describe.each([
+    { name: 'statement', value: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body, expected: undefined },
+    { name: 'schedule', value: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body, expected: undefined }
+  ])('When request is $name', ({ name, value, expected }) => {
+    test(`returns ${expected}`, async () => {
+      const result = validateRequest(value)
+      expect(result).toBe(expected)
+    })
   })
 
-  test('throws on undefined request', async () => {
-    expect(() => validateRequest(undefined)).toThrow()
-  })
+  describe.each([
+    { name: 'false' },
+    { name: 'true' },
+    { name: '0' },
+    { name: '1' },
+    { name: '""' },
+    { name: '{}' },
+    { name: '[]' }
+  ])('When request is $name', ({ name }) => {
+    test('throws', async () => {
+      expect(() => validateRequest(request)).toThrow()
+    })
 
-  test('throws on missing request', async () => {
-    expect(() => validateRequest()).toThrow()
-  })
+    test('throws Error', async () => {
+      expect(() => validateRequest(request)).toThrow(Error)
+    })
 
-  test('throws on empty request', async () => {
-    expect(() => validateRequest({})).toThrow()
-  })
+    test('throws error which starts "Statement request is invalid"', async () => {
+      expect(() => validateRequest(request)).toThrow(/^Statement request is invalid/)
+    })
 
-  test('throws on array request', async () => {
-    expect(() => validateRequest([])).toThrow()
-  })
+    test('throws error with category key', async () => {
+      try {
+        validateRequest(request)
+      } catch (error) {
+        expect(error).toHaveProperty('category')
+      }
+    })
 
-  test('throws on true request', async () => {
-    expect(() => validateRequest(true)).toThrow()
-  })
-
-  test('throws on false request', async () => {
-    expect(() => validateRequest(false)).toThrow()
-  })
-
-  test('throws on 0 request', async () => {
-    expect(() => validateRequest(0)).toThrow()
-  })
-
-  test('throws on 1 request', async () => {
-    expect(() => validateRequest(1)).toThrow()
-  })
-
-  test('throws on empty string request', async () => {
-    expect(() => validateRequest('')).toThrow()
-  })
-
-  test('throws on string request', async () => {
-    expect(() => validateRequest('request')).toThrow()
+    test('throws error with category value "validation"', async () => {
+      try {
+        validateRequest(request)
+      } catch (error) {
+        expect(error.category).toBe('validation')
+      }
+    })
   })
 })

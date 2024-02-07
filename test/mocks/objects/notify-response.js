@@ -16,7 +16,7 @@ const NOTIFY_RESPONSE = {
     completed_at: '2023-02-15T10:05:50.922402Z',
     created_at: '2023-02-15T10:05:50.759413Z',
     created_by_name: null,
-    email_address: undefined,
+    email_address: null,
     id: RESPONSE_ID,
     line_1: null,
     line_2: null,
@@ -30,7 +30,7 @@ const NOTIFY_RESPONSE = {
     reference: null,
     scheduled_for: null,
     sent_at: '2023-02-15T10:05:50.869835Z',
-    status: undefined,
+    status: null,
     subject: 'Sustainable Farming Incentive Payment Statement',
     template: {
       id: TEMPLATE_ID,

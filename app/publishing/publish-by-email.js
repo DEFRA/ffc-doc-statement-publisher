@@ -5,7 +5,7 @@ const publishByEmail = async (email, file, personalisation) => {
   const notifyClient = new NotifyClient(config.notifyApiKey)
   return notifyClient.sendEmail(config.notifyEmailTemplateKey, email, {
     personalisation: {
-      link_to_file: notifyClient.prepareUpload(file),
+      link_to_file: notifyClient.prepareUpload(file, { confirmEmailBeforeDownload: true, retentionPeriod: `${config.retentionPeriodInWeeks} weeks` }),
       ...personalisation
     }
   })
