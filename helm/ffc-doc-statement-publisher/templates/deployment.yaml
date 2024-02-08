@@ -1,10 +1,8 @@
-{{- include "ffc-helm-library.container-secret" (list . "ffc-doc-statement-publisher.container-secret") -}}
-{{- define "ffc-doc-statement-publisher.container-secret" -}}
-stringData:
-  {{- if .Values.appInsights.key }}
-  APPINSIGHTS_INSTRUMENTATIONKEY: {{ quote .Values.appInsights.key }}
-  {{- end }}
-  POSTGRES_USERNAME: {{ .Values.postgresService.postgresUser | quote }}
-  NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
-  NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
+{{- include "ffc-helm-library.deployment" (list . "ffc-doc-statement-publisher.deployment") -}}
+{{- define "ffc-doc-statement-publisher.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "ffc-helm-library.container" (list . "ffc-doc-statement-publisher.container") }}
 {{- end -}}
