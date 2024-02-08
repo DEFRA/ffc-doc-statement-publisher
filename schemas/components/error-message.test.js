@@ -1,6 +1,6 @@
-const { EMPTY, INVALID } = require('../../../../app/constants/crm-error-messages')
+const { EMPTY, INVALID } = require('../../app/constants/crm-error-messages')
 
-const schema = require('../../../../app/schemas/components/errorMessage')
+const schema = require('../../app/schemas/components/errorMessage')
 
 let errorMessage
 

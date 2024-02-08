@@ -1,11 +1,11 @@
-const schema = require('../../../../app/schemas/components/frn')
+const schema = require('../../app/schemas/components/frn')
 
 let frn
 
 describe('FRN schema', () => {
   describe('When FRN is a 10 digit number', () => {
     beforeEach(() => {
-      frn = require('../../../mocks/components/frn')
+      frn = require('../../test/mocks/components/frn')
     })
 
     test('should return an object', async () => {
@@ -67,7 +67,7 @@ describe('FRN schema', () => {
 
   describe('When FRN is a parseable alphanumeric 10 digit number', () => {
     beforeEach(() => {
-      frn = require('../../../mocks/components/frn').toString()
+      frn = require('../../test/mocks/components/frn').toString()
     })
 
     test('should return an object', async () => {

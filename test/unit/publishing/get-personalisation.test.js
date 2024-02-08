@@ -37,4 +37,16 @@ describe('get personalisation', () => {
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName)
     expect(result.businessName).toBe(businessName)
   })
+
+  test('returns schemeShortName="advanced" when scheme.shortName="SFIA" ', () => {
+    scheme.shortName = 'SFIA'
+    const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName)
+    expect(result.schemeShortName).toBe('advanced')
+  })
+
+  test('returns schemeFrequency="one-off" when scheme.shortName="SFIA" ', () => {
+    scheme.shortName = 'SFIA'
+    const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName)
+    expect(result.schemeFrequency).toBe('one-off')
+  })
 })

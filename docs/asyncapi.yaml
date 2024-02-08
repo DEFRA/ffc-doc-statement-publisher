@@ -1,8 +1,8 @@
-asyncapi: 2.5.0
+asyncapi: 2.6.0
 info:
-  title: FFC Document Statement Publisher
-  version: 1.0.0
-  description: Publish PDF statements for Future Farming
+  title: FFC Payment Statement Publisher
+  version: 1.0.1
+  description: Publish PDF payment statements for Future Farming
 channels:
   ffc-doc-statement-publish/ffc-doc-statement-publisher:
     subscribe:
@@ -15,11 +15,13 @@ channels:
 components:
   messages:
     CrmInvalidEmailResponse:
+      title: Invalid Email Response
       name: Payment statement invalid email response
       contentType: application/json
       payload:
         $ref: '#/components/schemas/CrmInvalidEmailResponse'
     PublishRequest:
+      title: Publish request
       name: Payment statement publish request
       contentType: application/json
       payload:
@@ -43,6 +45,7 @@ components:
       required:
         - address
         - businessName
+        - documentReference
         - filename
         - frn
         - sbi
@@ -52,6 +55,8 @@ components:
           $ref: '#/components/schemas/Address'
         businessName:
           $ref: '#/components/schemas/BusinessName'
+        documentReference:
+          $ref: '#/components/schemas/DocumentReference'
         email:
           $ref: '#/components/schemas/Email'
         filename:
@@ -97,6 +102,11 @@ components:
       type: string
       description: The business name
       example: FFC Ltd
+    DocumentReference:
+      type: number
+      description: Unique identifier of the document
+      minimum: 1
+      example: 1
     Email:
       type: string
       description: The business email address
@@ -106,8 +116,12 @@ components:
       description: The invalid email reasoning
       enum:
         - The statement cannot be emailed as no email address was provided.
-        - We failed to send the statement because the email address provided was invalid.
-      example: We failed to send the statement because the email address provided was invalid.
+        - >-
+          We failed to send the statement because the email address provided was
+          invalid.
+      example: >-
+        We failed to send the statement because the email address provided was
+        invalid.
     FRN:
       type: number
       description: Firm Reference Number
@@ -116,8 +130,9 @@ components:
       example: 1234567890
     Filename:
       type: string
-      description: PDF filename
-      example: FFC_PaymentStatement_SFI_2022_1234567890_2022080515300000.pdf
+      description: PDF filename, formatted as product code using 3 to 6 uppercase characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase characters, Scheme Year using 4 digits, FRN using 10 digits, date and time using 16 digits and then .pdf. All separated by underscore.
+      example: FFC_PaymentStatement_SFI_2022_1234567890_2022080515301212.pdf
+      pattern: ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
     SBI:
       type: number
       description: Single Business Identifier
@@ -130,7 +145,7 @@ components:
         - agreementNumber
         - frequency
         - name
-        - shortName        
+        - shortName
         - year
       properties:
         agreementNumber:

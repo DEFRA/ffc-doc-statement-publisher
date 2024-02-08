@@ -1,4 +1,4 @@
-const { mockMessageSender } = require('../../mocks/objects/ffc-messaging')
+const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
 
 const db = require('../../../app/data')
 

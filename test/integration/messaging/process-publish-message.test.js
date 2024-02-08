@@ -1,66 +1,35 @@
-const MOCK_REFERENCE = '78363cba-2093-4447-8812-697c09820614'
-const MOCK_PREPARED_FILE = 'mock-prepared-file'
+const SYSTEM_TIME = require('../../mocks/components/system-time')
+jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
 
-let mockSendEmail
-let mockPrepareUpload
+const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
 
-const mockNotifyClient = jest.fn().mockImplementation(() => {
-  return {
-    sendEmail: mockSendEmail,
-    prepareUpload: mockPrepareUpload
-  }
-})
-
-jest.mock('notifications-node-client', () => {
-  return {
-    NotifyClient: mockNotifyClient
-  }
-})
-
-jest.mock('ffc-messaging')
+const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 
 const { BlobServiceClient } = require('@azure/storage-blob')
 const { storageConfig, notifyApiKey } = require('../../../app/config')
 
 const db = require('../../../app/data')
 
-const processPublishMessage = require('../../../app/messaging/process-publish-message')
-
 const path = require('path')
 
 const { EMAIL } = require('../../../app/constants/methods')
 
-const FILE_NAME = 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf'
 const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
 
-let mockRequest
-let blobServiceClient
-let container
-let receiver
-let message
+const processPublishMessage = require('../../../app/messaging/process-publish-message')
 
-describe('publish statement', () => {
+let container
+
+let receiver
+
+describe('Process publish message', () => {
   beforeEach(async () => {
-    mockRequest = JSON.parse(JSON.stringify(require('../../mocks/request')))
-    jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-    blobServiceClient = BlobServiceClient.fromConnectionString(storageConfig.connectionStr)
+    const blobServiceClient = BlobServiceClient.fromConnectionString(storageConfig.connectionStr)
     container = blobServiceClient.getContainerClient(storageConfig.container)
     await container.deleteIfExists()
     await container.createIfNotExists()
-    const blockBlobClient = container.getBlockBlobClient(`${storageConfig.folder}/${FILE_NAME}`)
-    await blockBlobClient.uploadFile(TEST_FILE)
 
-    mockSendEmail = jest.fn().mockResolvedValue({ data: { id: MOCK_REFERENCE } })
-    mockPrepareUpload = jest.fn().mockReturnValue(MOCK_PREPARED_FILE)
-
-    receiver = {
-      completeMessage: jest.fn(),
-      deadLetterMessage: jest.fn()
-    }
-
-    message = {
-      body: mockRequest
-    }
+    receiver = mockMessageReceiver()
   })
 
   afterEach(async () => {
@@ -72,168 +41,178 @@ describe('publish statement', () => {
     await db.sequelize.close()
   })
 
-  test('should use API key in Notify connection', async () => {
-    await processPublishMessage(message, receiver)
+  describe.each([
+    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) },
+    { name: 'schedule', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)) }
+  ])('When message is a $name', ({ name, message }) => {
+    beforeEach(async () => {
+      const blockBlobClient = container.getBlockBlobClient(`${storageConfig.folder}/${message.body.filename}`)
+      await blockBlobClient.uploadFile(TEST_FILE)
+    })
 
-    expect(mockNotifyClient).toHaveBeenCalledWith(notifyApiKey)
-  })
+    test('should use API key in Notify connection', async () => {
+      await processPublishMessage(message, receiver)
 
-  test('should send email via Notify once', async () => {
-    await processPublishMessage(message, receiver)
+      expect(mockNotifyClient).toHaveBeenCalledWith(notifyApiKey)
+    })
 
-    expect(mockSendEmail).toHaveBeenCalledTimes(1)
-  })
+    test('should send email via Notify once', async () => {
+      await processPublishMessage(message, receiver)
 
-  test('should send email to requested email address', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][1]).toBe(mockRequest.email)
-  })
+      expect(mockNotifyClient().sendEmail).toHaveBeenCalledTimes(1)
+    })
 
-  test('should send email with file link', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.link_to_file).toBe(MOCK_PREPARED_FILE)
-  })
+    test('should send email to requested email address', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][1]).toBe(message.body.email)
+    })
 
-  test('should send email with scheme name', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeName).toBe(mockRequest.scheme.name)
-  })
+    test('should send email with file link', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.link_to_file).toBe(mockNotifyClient().prepareUpload())
+    })
 
-  test('should send email with scheme short name', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeShortName).toBe(mockRequest.scheme.shortName)
-  })
+    test('should send email with scheme name', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeName).toBe(message.body.scheme.name)
+    })
 
-  test('should send email with scheme frequency', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency).toBe(mockRequest.scheme.frequency.toLowerCase())
-  })
+    test('should send email with scheme short name', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeShortName).toBe(message.body.scheme.shortName)
+    })
 
-  test('should send email with scheme year', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeYear).toBe(mockRequest.scheme.year)
-  })
+    test('should send email with scheme frequency', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeFrequency).toBe(message.body.scheme.frequency.toLowerCase())
+    })
 
-  test('should send email with business name', async () => {
-    await processPublishMessage(message, receiver)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.businessName).toBe(mockRequest.businessName)
-  })
+    test('should send email with scheme year', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeYear).toBe(message.body.scheme.year)
+    })
 
-  test('saves one statement', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findAll()
-    expect(statement.length).toBe(1)
-  })
+    test('should send email with business name', async () => {
+      await processPublishMessage(message, receiver)
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.businessName).toBe(message.body.businessName)
+    })
 
-  test('saves statement with business name', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.businessName).toBe(mockRequest.businessName)
-  })
+    test('should save one statement', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findAll()
+      expect(statement.length).toBe(1)
+    })
 
-  test('saves statement with sbi', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.sbi).toBe(mockRequest.sbi)
-  })
+    test('should save statement with business name', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.businessName).toBe(message.body.businessName)
+    })
 
-  test('saves statement with frn', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.frn).toBe(mockRequest.frn.toString())
-  })
+    test('should save statement with sbi', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.sbi).toBe(message.body.sbi)
+    })
 
-  test('saves statement with email', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.email).toBe(mockRequest.email)
-  })
+    test('should save statement with frn', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.frn).toBe(message.body.frn.toString())
+    })
 
-  test('saves statement with filename', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.filename).toBe(mockRequest.filename)
-  })
+    test('should save statement with email', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.email).toBe(message.body.email)
+    })
 
-  test('saves statement with address line 1', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.addressLine1).toBe(mockRequest.address.line1)
-  })
+    test('should save statement with filename', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.filename).toBe(message.body.filename)
+    })
 
-  test('saves statement with address line 2', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.addressLine2).toBe(mockRequest.address.line2)
-  })
+    test('should save statement with address line 1', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.addressLine1).toBe(message.body.address.line1)
+    })
 
-  test('saves statement with address line 3', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.addressLine3).toBe(mockRequest.address.line3)
-  })
+    test('should save statement with address line 2', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.addressLine2).toBe(message.body.address.line2)
+    })
 
-  test('saves statement with address line 4', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.addressLine4).toBe(mockRequest.address.line4)
-  })
+    test('should save statement with address line 3', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.addressLine3).toBe(message.body.address.line3)
+    })
 
-  test('saves statement with address line 5', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.addressLine5).toBe(mockRequest.address.line5)
-  })
+    test('should save statement with address line 4', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.addressLine4).toBe(message.body.address.line4)
+    })
 
-  test('saves statement with address postcode', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    expect(statement.postcode).toBe(mockRequest.address.postcode)
-  })
+    test('should save statement with address line 5', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.addressLine5).toBe(message.body.address.line5)
+    })
 
-  test('saves one delivery', async () => {
-    await processPublishMessage(message, receiver)
-    const delivery = await db.delivery.findAll()
-    expect(delivery.length).toBe(1)
-  })
+    test('should save statement with address postcode', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      expect(statement.postcode).toBe(message.body.address.postcode)
+    })
 
-  test('saves delivery with statement id', async () => {
-    await processPublishMessage(message, receiver)
-    const statement = await db.statement.findOne()
-    const delivery = await db.delivery.findOne()
-    expect(delivery.statementId).toBe(statement.statementId)
-  })
+    test('should save one delivery', async () => {
+      await processPublishMessage(message, receiver)
+      const delivery = await db.delivery.findAll()
+      expect(delivery.length).toBe(1)
+    })
 
-  test('saves delivery with email method', async () => {
-    await processPublishMessage(message, receiver)
-    const delivery = await db.delivery.findOne()
-    expect(delivery.method).toBe(EMAIL)
-  })
+    test('should save delivery with statement id', async () => {
+      await processPublishMessage(message, receiver)
+      const statement = await db.statement.findOne()
+      const delivery = await db.delivery.findOne()
+      expect(delivery.statementId).toBe(statement.statementId)
+    })
 
-  test('saves delivery with requested date', async () => {
-    await processPublishMessage(message, receiver)
-    const delivery = await db.delivery.findOne()
-    expect(delivery.requested).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
+    test('should save delivery with email method', async () => {
+      await processPublishMessage(message, receiver)
+      const delivery = await db.delivery.findOne()
+      expect(delivery.method).toBe(EMAIL)
+    })
 
-  test('saves delivery with null completed date', async () => {
-    await processPublishMessage(message, receiver)
-    const delivery = await db.delivery.findOne()
-    expect(delivery.completed).toBeNull()
-  })
+    test('should save delivery with requested date', async () => {
+      await processPublishMessage(message, receiver)
+      const delivery = await db.delivery.findOne()
+      expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
+    })
 
-  test('completes message if successful', async () => {
-    await processPublishMessage(message, receiver)
-    expect(receiver.completeMessage).toHaveBeenCalledWith(message)
-  })
+    test('should save delivery with null completed date', async () => {
+      await processPublishMessage(message, receiver)
+      const delivery = await db.delivery.findOne()
+      expect(delivery.completed).toBeNull()
+    })
 
-  test('completes message once if successful', async () => {
-    await processPublishMessage(message, receiver)
-    expect(receiver.completeMessage).toHaveBeenCalledTimes(1)
-  })
+    test('should complete message', async () => {
+      await processPublishMessage(message, receiver)
+      expect(receiver.completeMessage).toHaveBeenCalledWith(message)
+    })
 
-  test('does not dead letter if message completed', async () => {
-    await processPublishMessage(message, receiver)
-    expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+    test('should completes 1 message', async () => {
+      await processPublishMessage(message, receiver)
+      expect(receiver.completeMessage).toHaveBeenCalledTimes(1)
+    })
+
+    test('should not dead letter message', async () => {
+      await processPublishMessage(message, receiver)
+      expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+    })
   })
 })

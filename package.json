@@ -1,6 +1,6 @@
 {
   "name": "ffc-doc-statement-publisher",
-  "version": "2.1.0",
+  "version": "1.5.5",
   "description": "Publish statements",
   "homepage": "https://github.com/DEFRA/ffc-doc-statement-publisher",
   "main": "app/index.js",
@@ -17,7 +17,8 @@
   "contributors": [
     "John Watson john.watson2@rpa.gov.uk",
     "Marc Templeton m.templeton@kainos.com",
-    "Simon Dunn simon.dunn1@defra.gov.uk"
+    "Simon Dunn simon.dunn1@defra.gov.uk",
+    "Leigh Godson leigh.godson.external@eviden.com"
   ],
   "license": "OGL-UK-3.0",
   "dependencies": {
@@ -27,7 +28,7 @@
     "ffc-messaging": "2.5.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
-    "notifications-node-client": "7.0.0",
+    "notifications-node-client": "7.0.4",
     "pg": "8.7.3",
     "pg-hstore": "2.3.4",
     "sequelize": "6.29.3"
