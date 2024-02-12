@@ -26,7 +26,7 @@ services:
     volumes:
       - azurite_data:/data
     ports:
-      - "10054:10000"
+      - "10083:10000"
 
 volumes:
   azurite_data:
