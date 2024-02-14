@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 # This override file should be used when running this service in isolation
 # to provide dependencies and expose ports for local testing
 
@@ -9,7 +9,7 @@ services:
     image: ffc-doc-statement-publisher-development
     container_name: ffc-doc-statement-publisher-development
     ports:
-      - "9253:9229"
+      - "9287:9229"
     volumes:
       - ./app:/home/node/app
       - ./package.json:/home/node/package.json
@@ -18,7 +18,7 @@ services:
 
   ffc-doc-statement-publisher-postgres:
     ports:
-      - "5453:5432"
+      - "5487:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -26,9 +26,8 @@ services:
     volumes:
       - azurite_data:/data
     ports:
-      - "10053:10000"
+      - "10083:10000"
 
 volumes:
   azurite_data:
   postgres_data:
-

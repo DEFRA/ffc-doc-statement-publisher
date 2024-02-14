@@ -1,6 +1,6 @@
-version: '3.8'
+version: "3.8"
 services:
   ffc-doc-statement-publisher:
     command: npm run test:debug
     ports:
-      - "9253:9229"
+      - "9287:9229"
