@@ -8,7 +8,8 @@ const publishByEmail = async (email, file, personalisation) => {
   return notifyClient.sendEmail(config.notifyEmailTemplateKey, email, {
     personalisation: {
       link_to_file: notifyClient.prepareUpload(file, { confirmEmailBeforeDownload: true, retentionPeriod: `${config.retentionPeriodInWeeks} weeks` }),
-      ...personalisation, latestDownloadDate
+      ...personalisation,
+      latestDownloadDate
     }
   })
 }

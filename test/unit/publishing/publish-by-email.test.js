@@ -1,3 +1,4 @@
+const moment = require('moment')
 const config = require('../../../app/config')
 
 const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
@@ -64,7 +65,8 @@ describe('Publish by email', () => {
     expect(mockNotifyClient().sendEmail).toHaveBeenCalledWith(config.notifyEmailTemplateKey, EMAIL, {
       personalisation: {
         link_to_file: mockNotifyClient().prepareUpload(),
-        ...PERSONALISATION
+        ...PERSONALISATION,
+        latestDownloadDate: moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
       }
     })
   })

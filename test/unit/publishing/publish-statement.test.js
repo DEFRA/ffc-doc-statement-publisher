@@ -28,7 +28,8 @@ const MOCK_PERSONALISATION = {
   schemeShortName: 'TS',
   schemeYear: '2021',
   schemeFrequency: 'Monthly',
-  businessName: 'Test Business'
+  businessName: 'Test Business',
+  paymentPeriod: '1 April 2024 to 30 June 2024'
 }
 
 let error
@@ -223,7 +224,7 @@ describe('Publish document', () => {
 
         test('should call getPersonalisation with request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency and request.businessName', async () => {
           await publishStatement(request)
-          expect(getPersonalisation).toHaveBeenCalledWith(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName)
+          expect(getPersonalisation).toHaveBeenCalledWith(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
         })
 
         test('should call publish', async () => {
