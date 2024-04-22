@@ -16,12 +16,17 @@ const handlePublishReasoning = require('../../../app/publishing/handle-publish-r
 jest.mock('../../../app/publishing/save-request')
 const saveRequest = require('../../../app/publishing/save-request')
 
+jest.mock('../../../app/messaging/get-request-email-template-by-type')
+const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
+
 const publishStatement = require('../../../app/publishing/publish-statement')
 
 const { EMPTY, INVALID } = require('../../../app/constants/failure-reasons')
 const { EMAIL } = require('../../../app/constants/methods')
 
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
+
+const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 const NOTIFY_ID = NOTIFY_RESPONSE.data.id
 const MOCK_PERSONALISATION = {
   schemeName: 'Test Scheme',
@@ -175,6 +180,8 @@ describe('Publish document', () => {
         handlePublishReasoning.mockReturnValue(undefined)
         publish.mockResolvedValue(NOTIFY_RESPONSE)
         saveRequest.mockResolvedValue(undefined)
+        getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+        request.emailTemplate = EMAIL_TEMPLATE
       })
 
       describe('When it has a valid email', () => {
@@ -239,7 +246,7 @@ describe('Publish document', () => {
 
         test('should call publish with request.email, request.filename and MOCK_PERSONALISATION', async () => {
           await publishStatement(request)
-          expect(publish).toHaveBeenCalledWith(request.email, request.filename, MOCK_PERSONALISATION)
+          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION)
         })
 
         test('should call saveRequest', async () => {

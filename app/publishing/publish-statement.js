@@ -24,7 +24,7 @@ const publishStatement = async (request) => {
   try {
     validateEmail(request.email)
     const personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
-    response = await publish(request.email, request.filename, personalisation)
+    response = await publish(request.emailTemplate, request.email, request.filename, personalisation)
     console.log(`Statement published: ${request.filename}`)
   } catch (err) {
     reason = handlePublishReasoning(err)
