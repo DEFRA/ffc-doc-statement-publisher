@@ -1,12 +1,17 @@
 const SYSTEM_TIME = require('../../mocks/components/system-time')
 jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
 
+jest.mock('../../../app/messaging/get-request-email-template-by-type')
+const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
+
 const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
 
 const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 
 const { BlobServiceClient } = require('@azure/storage-blob')
 const { storageConfig, notifyApiKey } = require('../../../app/config')
+
+const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 
 const db = require('../../../app/data')
 
@@ -30,6 +35,7 @@ describe('Process publish message', () => {
     await container.createIfNotExists()
 
     receiver = mockMessageReceiver()
+    getRequestEmailTemplateByType.mockResolvedValue(EMAIL_TEMPLATE)
   })
 
   afterEach(async () => {
@@ -46,6 +52,7 @@ describe('Process publish message', () => {
     { name: 'schedule', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)) }
   ])('When message is a $name', ({ name, message }) => {
     beforeEach(async () => {
+      getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
       const blockBlobClient = container.getBlockBlobClient(`${storageConfig.folder}/${message.body.filename}`)
       await blockBlobClient.uploadFile(TEST_FILE)
     })

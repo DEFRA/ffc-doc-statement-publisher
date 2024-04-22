@@ -4,11 +4,16 @@ const validateRequest = require('../../../app/messaging/validate-request')
 jest.mock('../../../app/publishing/publish-statement')
 const publishStatement = require('../../../app/publishing/publish-statement')
 
+jest.mock('../../../app/messaging/get-request-email-template-by-type')
+const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
+
 const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 
 const { VALIDATION } = require('../../../app/constants/errors')
 
 const processPublishMessage = require('../../../app/messaging/process-publish-message')
+
+const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 
 let receiver
 
@@ -16,6 +21,7 @@ describe('Process publish message', () => {
   beforeEach(() => {
     receiver = mockMessageReceiver()
     publishStatement.mockResolvedValue(undefined)
+    getRequestEmailTemplateByType.mockResolvedValue(EMAIL_TEMPLATE)
   })
 
   afterEach(() => {

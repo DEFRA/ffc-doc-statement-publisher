@@ -16,19 +16,25 @@ const handlePublishReasoning = require('../../../app/publishing/handle-publish-r
 jest.mock('../../../app/publishing/save-request')
 const saveRequest = require('../../../app/publishing/save-request')
 
+jest.mock('../../../app/messaging/get-request-email-template-by-type')
+const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
+
 const publishStatement = require('../../../app/publishing/publish-statement')
 
 const { EMPTY, INVALID } = require('../../../app/constants/failure-reasons')
 const { EMAIL } = require('../../../app/constants/methods')
 
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
+
+const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 const NOTIFY_ID = NOTIFY_RESPONSE.data.id
 const MOCK_PERSONALISATION = {
   schemeName: 'Test Scheme',
   schemeShortName: 'TS',
   schemeYear: '2021',
   schemeFrequency: 'Monthly',
-  businessName: 'Test Business'
+  businessName: 'Test Business',
+  paymentPeriod: '1 April 2024 to 30 June 2024'
 }
 
 let error
@@ -174,6 +180,8 @@ describe('Publish document', () => {
         handlePublishReasoning.mockReturnValue(undefined)
         publish.mockResolvedValue(NOTIFY_RESPONSE)
         saveRequest.mockResolvedValue(undefined)
+        getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+        request.emailTemplate = EMAIL_TEMPLATE
       })
 
       describe('When it has a valid email', () => {
@@ -223,7 +231,7 @@ describe('Publish document', () => {
 
         test('should call getPersonalisation with request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency and request.businessName', async () => {
           await publishStatement(request)
-          expect(getPersonalisation).toHaveBeenCalledWith(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName)
+          expect(getPersonalisation).toHaveBeenCalledWith(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
         })
 
         test('should call publish', async () => {
@@ -238,7 +246,7 @@ describe('Publish document', () => {
 
         test('should call publish with request.email, request.filename and MOCK_PERSONALISATION', async () => {
           await publishStatement(request)
-          expect(publish).toHaveBeenCalledWith(request.email, request.filename, MOCK_PERSONALISATION)
+          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION)
         })
 
         test('should call saveRequest', async () => {
