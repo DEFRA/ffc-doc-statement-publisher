@@ -1,6 +1,6 @@
-const DOCUMENT_REFERENCE = require('../../test/mocks/components/document-reference')
+const DOCUMENT_REFERENCE = require('../../mocks/components/document-reference')
 
-const schema = require('../../app/schemas/components/document-reference')
+const schema = require('../../../app/schemas/components/document-reference')
 
 describe('document reference schema', () => {
   describe.each([
