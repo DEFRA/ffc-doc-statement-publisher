@@ -3,6 +3,7 @@ const config = require('../config')
 const { NotifyClient } = require('notifications-node-client')
 
 const publishByEmail = async (template, email, file, personalisation) => {
+  moment.locale('en-gb')
   const notifyClient = new NotifyClient(config.notifyApiKey)
   const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
   return notifyClient.sendEmail(template, email, {
