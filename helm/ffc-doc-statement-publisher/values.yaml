@@ -32,7 +32,7 @@ container:
   messageQueueHost: namespace.servicebus.windows.net
   publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
-  crmTopicAddress: ffc-doc-statement-crm
+  crmTopicAddress: ffc-pay-statement-crm
   azureStorageAccountName: ffcdoc
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
