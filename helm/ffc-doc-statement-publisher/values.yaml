@@ -41,6 +41,8 @@ container:
   storageFolder: outbound
   notifyApiKey: dummy
   notifyEmailTemplateKey: dummy
+  docNotifyApiKey: dummy
+  docNotifyEmailTemplateKey: dummy
 
 postgresService:
   postgresDb: ffc_doc_statement_publisher
