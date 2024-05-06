@@ -28,6 +28,8 @@ services:
       AZURE_STORAGE_USE_CONNECTION_STRING: "true"
       NOTIFY_API_KEY: ${NOTIFY_API_KEY}
       NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
+      DOC_NOTIFY_API_KEY: ${NOTIFY_API_KEY}
+      DOC_NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
 
   ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine
