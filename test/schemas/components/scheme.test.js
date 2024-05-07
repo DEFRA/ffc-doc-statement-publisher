@@ -1,7 +1,7 @@
-const { SHORT_NAMES } = require('../../app/constants/scheme-names')
+const { SHORT_NAMES } = require('../../../app/constants/scheme-names')
 const { LNR, LUMP_SUMS, SFI, SFI_PILOT, VET_VISITS } = SHORT_NAMES
 
-const schema = require('../../app/schemas/components/scheme')
+const schema = require('../../../app/schemas/components/scheme')
 
 let scheme
 
