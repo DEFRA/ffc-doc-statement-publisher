@@ -7,7 +7,6 @@ const handlePublishReasoning = (error) => {
     case ('Email is invalid: The email provided is invalid.'):
       return INVALID
     default:
-      console.log(`Publish fail reason ${error} not recognised`)
       console.log(`Publish fail reason ${error.message} not recognised`)
       return undefined
   }
