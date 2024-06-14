@@ -1,13 +1,15 @@
 const schema = require('../../../app/messaging/schema')
+let messagingMockRequest
 let mockRequest
 
 describe('request schema', () => {
   beforeEach(() => {
     mockRequest = JSON.parse(JSON.stringify(require('../../mocks/request')))
+    messagingMockRequest = JSON.parse(JSON.stringify(require('../../mocks/messaging-schema')))
   })
 
   test('validates success if all present', () => {
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
@@ -61,85 +63,85 @@ describe('request schema', () => {
 
   test('validates success if missing postcode', () => {
     delete mockRequest.address.postcode
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty postcode', () => {
     mockRequest.address.postcode = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing line 1', () => {
     delete mockRequest.address.line1
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty line 1', () => {
     mockRequest.address.line1 = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing line 2', () => {
     delete mockRequest.address.line2
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty line 2', () => {
     mockRequest.address.line2 = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing line 3', () => {
     delete mockRequest.address.line3
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty line 3', () => {
     mockRequest.address.line3 = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing line 4', () => {
     delete mockRequest.address.line4
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty line 4', () => {
     mockRequest.address.line4 = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing line 5', () => {
     delete mockRequest.address.line5
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if empty line 5', () => {
     mockRequest.address.line5 = ''
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if missing email', () => {
     delete mockRequest.email
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 
   test('validates success if invalid email', () => {
     mockRequest.email = 'This is not an email'
-    const result = schema.validate(mockRequest)
+    const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeUndefined()
   })
 

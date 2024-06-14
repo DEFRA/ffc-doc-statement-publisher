@@ -3,24 +3,56 @@ const Joi = require('joi')
 const documentReference = require('../schemas/components/document-reference')
 
 module.exports = Joi.object({
-  filename: Joi.string().required(),
-  businessName: Joi.string().required(),
-  frn: Joi.number().integer().min(1000000000).max(9999999999).required(),
-  sbi: Joi.number().integer().min(105000000).max(999999999).required(),
-  email: Joi.string().optional().allow('', null),
+  email: Joi.string().optional().allow('', null).messages({
+    'string.base': 'Email must be a string'
+  }),
   documentReference,
   address: Joi.object({
-    line1: Joi.string().optional().allow('', null),
-    line2: Joi.string().optional().allow('', null),
-    line3: Joi.string().optional().allow('', null),
-    line4: Joi.string().optional().allow('', null),
-    line5: Joi.string().optional().allow('', null),
-    postcode: Joi.string().optional().allow('', null)
-  }).required(),
+    line1: Joi.string().optional().allow('', null).messages({
+      'string.base': 'line1 from address object must be a string'
+    }),
+    line2: Joi.string().optional().allow('', null).messages({
+      'string.base': 'line2 from address object must be a string'
+    }),
+    line3: Joi.string().optional().allow('', null).messages({
+      'string.base': 'line3 from address object must be a string'
+    }),
+    line4: Joi.string().optional().allow('', null).messages({
+      'string.base': 'line4 from address object must be a string'
+    }),
+    line5: Joi.string().optional().allow('', null).messages({
+      'string.base': 'line5 from address object must be a string'
+    }),
+    postcode: Joi.string().optional().allow('', null).messages({
+      'string.base': 'postcode from address object must be a string'
+    })
+  }).required().messages({
+    'object.base': 'address must be an object',
+    'any.required': 'address object is missing, but it is required'
+  }),
   scheme: Joi.object({
-    name: Joi.string().required(),
-    shortName: Joi.string().required(),
-    year: Joi.string().required(),
-    frequency: Joi.string().required()
-  }).required()
-}).required()
+    name: Joi.string().required().messages({
+      'string.empty': 'name string from scheme object cannot be empty',
+      'any.required': 'name string from scheme object is missing but it is required',
+      'string.base': 'name from scheme object must be a string'
+    }),
+    shortName: Joi.string().required().messages({
+      'string.empty': 'shortName string from scheme object cannot be empty',
+      'any.required': 'shortName string from scheme object is missing but it is required',
+      'string.base': 'shortName from scheme object must be a string'
+    }),
+    year: Joi.string().required().messages({
+      'string.empty': 'year string from scheme object cannot be empty',
+      'any.required': 'year string from scheme object is missing but it is required',
+      'string.base': 'year from scheme object must be a string'
+    }),
+    frequency: Joi.string().required().messages({
+      'string.empty': 'frequency string from scheme object cannot be empty',
+      'any.required': 'frequency string from scheme object is missing but it is required',
+      'string.base': 'frequency from scheme object must be a string'
+    })
+  }).required().messages({
+    'object.base': 'scheme must be an object',
+    'any.required': 'scheme object is missing but it is required'
+  })
+})
