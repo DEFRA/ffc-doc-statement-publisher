@@ -14,29 +14,29 @@ describe('Validate request', () => {
   })
 
   describe.each([
-    { name: 'false' },
-    { name: 'true' },
-    { name: '0' },
-    { name: '1' },
-    { name: '""' },
-    { name: '{}' },
-    { name: '[]' }
-  ])('When request is $name', ({ name }) => {
+    { name: 'false', value: false },
+    { name: 'true', value: true },
+    { name: '0', value: 0 },
+    { name: '1', value: 1 },
+    { name: '""', value: '' },
+    { name: '{}', value: {} },
+    { name: '[]', value: [] }
+  ])('When request is $name', ({ value }) => {
     test('throws', async () => {
-      expect(() => validateRequest(request)).toThrow()
+      expect(() => validateRequest(value)).toThrow()
     })
 
     test('throws Error', async () => {
-      expect(() => validateRequest(request)).toThrow(Error)
+      expect(() => validateRequest(value)).toThrow(Error)
     })
 
     test('throws error which starts "Statement request is invalid"', async () => {
-      expect(() => validateRequest(request)).toThrow(/^Statement request is invalid/)
+      expect(() => validateRequest(value)).toThrow(/^Statement request is invalid/)
     })
 
     test('throws error with category key', async () => {
       try {
-        validateRequest(request)
+        validateRequest(value)
       } catch (error) {
         expect(error).toHaveProperty('category')
       }
