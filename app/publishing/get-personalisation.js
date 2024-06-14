@@ -1,4 +1,4 @@
-const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName) => {
+const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName, paymentPeriod) => {
   if (schemeShortName === 'SFIA') {
     return {
       schemeName,
@@ -13,7 +13,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     schemeShortName,
     schemeYear,
     schemeFrequency: schemeFrequency.toLowerCase(),
-    businessName
+    businessName,
+    paymentPeriod
   }
 }
 

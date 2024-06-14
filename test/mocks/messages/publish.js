@@ -15,7 +15,6 @@ const { SHORT_NAMES, LONG_NAMES } = require('../../../app/constants/scheme-names
 const MARKETING_YEAR = require('../components/marketing-year')
 const { QUARTERLY: QUARTERLY_FREQUENCY } = require('../../../app/constants/frequencies')
 const DOCUMENT_REFERENCE = require('../components/document-reference')
-const { STATEMENT: STATEMENT_TYPE, SCHEDULE: SCHEDULE_TYPE } = require('../../../app/constants/document-types')
 const MESSAGE_SOURCE = require('../../../app/constants/message-source')
 
 const BASE_MESSAGE = {
@@ -48,7 +47,10 @@ const STATEMENT_MESSAGE = {
     },
     documentReference: DOCUMENT_REFERENCE
   },
-  type: `uk.gov.doc.${STATEMENT_TYPE.id}.publish`
+  applicationProperties: {
+    type: 'uk.gov.doc.statement.publish'
+  },
+  type: 'uk.gov.doc.statement.publish'
 }
 
 const SCHEDULE_MESSAGE = {
@@ -75,7 +77,10 @@ const SCHEDULE_MESSAGE = {
     },
     documentReference: DOCUMENT_REFERENCE
   },
-  type: `uk.gov.doc.${SCHEDULE_TYPE.id}.publish`
+  applicationProperties: {
+    type: 'uk.gov.doc.schedule.publish'
+  },
+  type: 'uk.gov.doc.schedule.publish'
 }
 
 module.exports = {

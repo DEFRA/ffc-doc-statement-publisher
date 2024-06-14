@@ -1,13 +1,13 @@
-const { TEMPORARY, PERMANENT } = require('../../app/constants/notify-simulation-email-addresses')
+const { TEMPORARY, PERMANENT } = require('../../../app/constants/notify-simulation-email-addresses')
 
-const schema = require('../../app/schemas/components/email')
+const schema = require('../../../app/schemas/components/email-lenient')
 
 let email
 
-describe('Email schema', () => {
+describe('Lenient email schema', () => {
   describe('When email is a valid email address', () => {
     beforeEach(() => {
-      email = require('../../test/mocks/components/email')
+      email = require('../../mocks/components/email')
     })
 
     test('should return an object', async () => {
@@ -263,29 +263,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: value, error', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "any.required" as value for key: error.details[0].type', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].type).toBe('any.required')
-    })
-
-    test('should return "Email must be provided." as value for key: error.details[0].message', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].message).toBe('Email must be provided.')
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -299,29 +294,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: value, error', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "any.required" as value for key: error.details[0].type', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].type).toBe('any.required')
-    })
-
-    test('should return "Email must be provided." as value for key: error.details[0].message', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].message).toBe('Email must be provided.')
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -335,29 +325,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: value, error', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "any.required" as value for key: error.details[0].type', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].type).toBe('any.required')
-    })
-
-    test('should return "Email must be provided." as value for key: error.details[0].message', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].message).toBe('Email must be provided.')
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -371,29 +356,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: value, error', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "any.required" as value for key: error.details[0].type', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].type).toBe('any.required')
-    })
-
-    test('should return "Email must be provided." as value for key: error.details[0].message', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].message).toBe('Email must be provided.')
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -407,29 +387,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: value, error', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "any.required" as value for key: error.details[0].type', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].type).toBe('any.required')
-    })
-
-    test('should return "Email must be provided." as value for key: error.details[0].message', () => {
-      const result = schema.validate()
-      expect(result.error.details[0].message).toBe('Email must be provided.')
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -443,29 +418,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.email" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.email')
-    })
-
-    test('should return "The email provided is invalid." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('The email provided is invalid.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -479,29 +449,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.email" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.email')
-    })
-
-    test('should return "The email provided is invalid." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('The email provided is invalid.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -515,29 +480,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.email" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.email')
-    })
-
-    test('should return "The email provided is invalid." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('The email provided is invalid.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -563,7 +523,12 @@ describe('Email schema', () => {
 
     test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBe(email)
+      expect(result.value).toStrictEqual(email)
+    })
+
+    test('should not return an object with key: error', () => {
+      const result = schema.validate(email)
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -577,29 +542,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.email" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.email')
-    })
-
-    test('should return "The email provided is invalid." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('The email provided is invalid.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -613,29 +573,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.email" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.email')
-    })
-
-    test('should return "The email provided is invalid." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('The email provided is invalid.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -681,29 +636,24 @@ describe('Email schema', () => {
       expect(result).toBeInstanceOf(Object)
     })
 
-    test('should return an object with 2 keys', () => {
+    test('should return an object with 1 key', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toHaveLength(2)
+      expect(Object.keys(result)).toHaveLength(1)
     })
 
-    test('should return an object with keys: error and value', () => {
+    test('should return an object with keys: value', () => {
       const result = schema.validate(email)
-      expect(Object.keys(result)).toStrictEqual(['value', 'error'])
+      expect(Object.keys(result)).toStrictEqual(['value'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toStrictEqual(email)
     })
 
-    test('should return "string.empty" as value for key: error.details[0].type', () => {
+    test('should not return an object with key: error', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('string.empty')
-    })
-
-    test('should return "Email cannot be empty." as value for key: error.details[0].message', () => {
-      const result = schema.validate(email)
-      expect(result.error.details[0].message).toBe('Email cannot be empty.')
+      expect(Object.keys(result)).not.toContain('error')
     })
   })
 
@@ -727,14 +677,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
@@ -763,14 +713,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
@@ -799,14 +749,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
@@ -835,14 +785,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
@@ -871,9 +821,9 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
     test('should return "any.required" as value for key: error.details[0].type', () => {
@@ -907,14 +857,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
@@ -943,14 +893,14 @@ describe('Email schema', () => {
       expect(Object.keys(result)).toStrictEqual(['value', 'error'])
     })
 
-    test('should return undefined as value for key: value', () => {
+    test('should return email as value for key: value', () => {
       const result = schema.validate(email)
-      expect(result.value).toBeUndefined()
+      expect(result.value).toBe(email)
     })
 
-    test('should return "alternatives.types" as value for key: error.details[0].type', () => {
+    test('should return "string.base" as value for key: error.details[0].type', () => {
       const result = schema.validate(email)
-      expect(result.error.details[0].type).toBe('alternatives.types')
+      expect(result.error.details[0].type).toBe('string.base')
     })
 
     test('should return "Email must be a string." as value for key: error.details[0].message', () => {
