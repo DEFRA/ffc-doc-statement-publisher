@@ -7,6 +7,14 @@ module.exports = Joi.object({
     'string.base': 'Email must be a string'
   }),
   documentReference,
+  filename: Joi.string()
+    .pattern(/^[A-Z]{3,6}_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$/)
+    .required()
+    .messages({
+      'string.pattern.base': 'filename must match the required pattern',
+      'string.base': 'filename must be a string',
+      'any.required': 'filename is missing but it is required'
+    }),
   address: Joi.object({
     line1: Joi.string().optional().allow('', null).messages({
       'string.base': 'line1 from address object must be a string'

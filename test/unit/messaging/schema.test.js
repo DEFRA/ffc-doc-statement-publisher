@@ -13,6 +13,13 @@ describe('request schema', () => {
     expect(result.error).toBeUndefined()
   })
 
+  test('should not validate an object with incorrect filename', () => {
+    messagingMockRequest.filename = 'not a valid filename'
+    const { error } = schema.validate(messagingMockRequest)
+    expect(error).toBeDefined()
+    expect(error.details[0].message).toEqual('filename must match the required pattern')
+  })
+
   test('validates fail if missing frn', () => {
     delete mockRequest.frn
     const result = schema.validate(mockRequest)
