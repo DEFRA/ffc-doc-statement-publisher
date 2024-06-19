@@ -14,7 +14,7 @@ describe('request schema', () => {
   })
 
   test('should not validate an object with incorrect filename', () => {
-    messagingMockRequest.filename = 'not a valid filenamee'
+    messagingMockRequest.filename = 'not a valid filename'
     const { error } = schema.validate(messagingMockRequest)
     expect(error).toBeDefined()
     expect(error.details[0].message).toEqual('filename must match the required pattern')
