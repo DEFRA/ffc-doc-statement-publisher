@@ -1,23 +1,20 @@
 const Joi = require('joi')
 
 const documentReference = require('../schemas/components/document-reference')
+const matchPattern = require('./filename-regex-validation')
 
-const teamName = /^[A-Z]{3,6}_/
-const documentPrefix = /[A-Z](?:[A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*_/
-const schemeShortName = /[A-Z]{3,6}_/
-const schemeYear = /\d{4}_/
-const frn = /\d{10}_/
-const timestampRegex = /\d{16}/
-const extension = /\.pdf$/
-
-const combinedRegex = new RegExp(teamName.source + documentPrefix.source + schemeShortName.source + schemeYear.source + frn.source + timestampRegex.source + extension.source)
 module.exports = Joi.object({
   email: Joi.string().optional().allow('', null).messages({
     'string.base': 'Email must be a string'
   }),
   documentReference,
   filename: Joi.string()
-    .pattern(combinedRegex)
+    .custom((value, helpers) => {
+      if (!matchPattern(value)) {
+        return helpers.error('string.pattern.base')
+      }
+      return value
+    }, 'filename validation')
     .required()
     .messages({
       'string.pattern.base': 'filename must match the required pattern',
