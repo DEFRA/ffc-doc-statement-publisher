@@ -1,12 +1,26 @@
 const Joi = require('joi')
 
 const documentReference = require('../schemas/components/document-reference')
+const matchPattern = require('./filename-regex-validation')
 
 module.exports = Joi.object({
   email: Joi.string().optional().allow('', null).messages({
     'string.base': 'Email must be a string'
   }),
   documentReference,
+  filename: Joi.string()
+    .custom((value, helpers) => {
+      if (!matchPattern(value)) {
+        return helpers.error('string.pattern.base')
+      }
+      return value
+    }, 'filename validation')
+    .required()
+    .messages({
+      'string.pattern.base': 'filename must match the required pattern',
+      'string.base': 'filename must be a string',
+      'any.required': 'filename is missing but it is required'
+    }),
   address: Joi.object({
     line1: Joi.string().optional().allow('', null).messages({
       'string.base': 'line1 from address object must be a string'

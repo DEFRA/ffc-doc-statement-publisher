@@ -1,6 +1,7 @@
 module.exports = {
   email: 'test@example.com',
   documentReference: 12345,
+  filename: 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf',
   address: {
     line1: '123 Test St',
     line2: 'Apt 4B',
