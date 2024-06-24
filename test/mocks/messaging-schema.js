@@ -15,7 +15,7 @@ module.exports = {
   },
   scheme: {
     agreementNumber: 'SFI1234567',
-    name: 'TestScheme',
+    name: 'TestSchem',
     shortName: 'TS',
     year: '2022',
     frequency: 'Annual'
