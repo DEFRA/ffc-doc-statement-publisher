@@ -95,7 +95,6 @@ module.exports = Joi.object({
     }),
     agreementNumber: Joi.string().required().messages({
       'number.base': 'Agreement number must be a string',
-      'number.integer': 'Agreement number must be an integer',
       'any.required': 'Agreement number is required'
     })
   }).required().messages({
