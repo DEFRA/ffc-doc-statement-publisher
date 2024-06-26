@@ -15,5 +15,11 @@ module.exports = [
     id: 'sfi-23-quarterly-statement',
     type: 'uk.gov.doc.sfi-23-quarterly-statement.publish',
     name: 'SFI 23 quarterly statement'
+  },
+  {
+    id: 'sfi-23-advanced-statement',
+    type: 'uk.gov.doc.sfi-23-advanced-statement.publish',
+    name: 'Payment statement',
+    template: 'd54d1697-9b66-45a4-ad9f-a538e749fb60'
   }
 ]
