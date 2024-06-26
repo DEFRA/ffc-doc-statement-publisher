@@ -40,6 +40,7 @@ const STATEMENT_MESSAGE = {
     email: EMAIL,
     filename: STATEMENT_FILENAME,
     scheme: {
+      agreementNumber: 'SFI1234567',
       name: LONG_NAMES.SFI,
       shortName: SHORT_NAMES.SFI,
       year: String(MARKETING_YEAR),
@@ -70,6 +71,7 @@ const SCHEDULE_MESSAGE = {
     email: EMAIL,
     filename: SCHEDULE_FILENAME,
     scheme: {
+      agreementNumber: 'SFI1234567',
       name: LONG_NAMES.SFI,
       shortName: SHORT_NAMES.SFI,
       year: String(MARKETING_YEAR),
