@@ -17,7 +17,7 @@ services:
       MESSAGE_QUEUE_USER: ${MESSAGE_QUEUE_USER}
       PUBLISH_TOPIC_ADDRESS: ${PUBLISH_TOPIC_ADDRESS:-ffc-doc-statement-publish}${MESSAGE_QUEUE_SUFFIX}
       PUBLISH_SUBSCRIPTION_ADDRESS: ${PUBLISH_SUBSCRIPTION_ADDRESS:-ffc-doc-statement-publisher}${MESSAGE_QUEUE_SUFFIX}
-      CRM_TOPIC_ADDRESS: ${CRM_TOPIC_ADDRESS:-ffc-doc-statement-crm}${MESSAGE_QUEUE_SUFFIX}
+      CRM_TOPIC_ADDRESS: ${CRM_TOPIC_ADDRESS:-ffc-pay-statement-crm}${MESSAGE_QUEUE_SUFFIX}
       POSTGRES_DB: ffc_doc_statement_publisher
       POSTGRES_HOST: ${POSTGRES_HOST:-ffc-doc-statement-publisher-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_SCHEMA_PASSWORD:-ppp}
