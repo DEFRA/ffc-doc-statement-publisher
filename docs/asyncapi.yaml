@@ -8,7 +8,7 @@ channels:
     subscribe:
       message:
         $ref: '#/components/messages/PublishRequest'
-  ffc-doc-statement-crm:
+  ffc-pay-statement-crm:
     publish:
       message:
         $ref: '#/components/messages/CrmInvalidEmailResponse'
