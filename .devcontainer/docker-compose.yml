@@ -17,6 +17,7 @@ services:
       - "9287:9229"
     volumes:
       - ./app:/home/node/app
+      - ./test:/home/node/test
       - ./package.json:/home/node/package.json
       - ..:/workspaces:cached
     
