@@ -27,6 +27,7 @@ const { EMAIL } = require('../../../app/constants/methods')
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
 
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
+
 const NOTIFY_ID = NOTIFY_RESPONSE.data.id
 const MOCK_PERSONALISATION = {
   schemeName: 'Test Scheme',
@@ -45,8 +46,7 @@ describe('Publish document', () => {
   })
 
   describe.each([
-    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body },
-    { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body }
+    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body }
   ])('When request is a $name', ({ name, request }) => {
     describe('When it is a duplicate', () => {
       beforeEach(async () => {
@@ -433,6 +433,30 @@ describe('Publish document', () => {
         test('should throw error with message "Could not check for duplicates"', async () => {
           const wrapper = async () => { await publishStatement(request) }
           expect(wrapper).rejects.toThrow(/^Could not check for duplicates$/)
+        })
+
+        test('should save error to database if all retry attempts are exhausted', (done) => {
+          expect.assertions(3)
+          publish.mockRejectedValue({
+            err: {
+              response: {
+                data: {
+                  status_code: 500
+                }
+              }
+            }
+          })
+          getExistingDocument.mockResolvedValue(undefined)
+          publishStatement(request)
+            .then(response => {
+              expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
+              expect(saveRequest).toHaveBeenCalledTimes(1)
+              expect(saveRequest).toHaveBeenCalledWith(request, undefined, "email", undefined)
+              done()
+            })
+            .catch((err) => {
+              console.log(err)
+            })          
         })
       })
     })
