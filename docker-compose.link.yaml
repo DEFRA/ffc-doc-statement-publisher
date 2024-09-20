@@ -1,4 +1,4 @@
-etworks:
+networks:
   default:
     external:
       name: ffc-doc
