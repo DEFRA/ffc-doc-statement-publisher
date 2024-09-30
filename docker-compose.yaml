@@ -38,7 +38,7 @@ services:
       POSTGRES_USERNAME: postgres
 
   ffc-doc-statement-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.17.1
+    image: mcr.microsoft.com/azure-storage/azurite:3.32.0
     command: "azurite-blob --loose --blobHost 0.0.0.0"
     labels:
       com.docker.compose.pay.role: ffc-doc-statement-azurite
