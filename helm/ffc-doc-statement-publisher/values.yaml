@@ -8,7 +8,7 @@ image: ffc-doc-statement-publisher
 labels: {}
 
 appInsights:
-  key:
+  connectionString:
 
 containerConfigMap:
   name: ffc-doc-statement-publisher-config-map
