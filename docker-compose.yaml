@@ -10,7 +10,6 @@ services:
       - ffc-doc-statement-publisher-postgres
     environment:
       APPINSIGHTS_CLOUDROLE: ffc-doc-statement-publisher-local
-      APPINSIGHTS_CONNECTIONSTRING: ${APPINSIGHTS_CONNECTIONSTRING}
       MESSAGE_QUEUE_HOST: ${MESSAGE_QUEUE_HOST}
       MESSAGE_QUEUE_PASSWORD: ${MESSAGE_QUEUE_PASSWORD}
       MESSAGE_QUEUE_USER: ${MESSAGE_QUEUE_USER}
