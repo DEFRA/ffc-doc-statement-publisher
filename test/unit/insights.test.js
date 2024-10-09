@@ -26,7 +26,7 @@ describe('Application Insights', () => {
   })
 
   test('does not setup application insights if no connection string', () => {
-    process.env.APPINSIGHTS_CONNECTIONSTRING = undefined
+    process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = undefined
     const appInsights = require('../../app/insights')
     appInsights.setup()
     expect(applicationInsights.setup.mock.calls.length).toBe(0)
@@ -34,7 +34,7 @@ describe('Application Insights', () => {
 
   test('does setup application insights if connection string present', () => {
     const appInsights = require('../../app/insights')
-    process.env.APPINSIGHTS_CONNECTIONSTRING = 'test-key'
+    process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = 'test-key'
     appInsights.setup()
     expect(applicationInsights.setup.mock.calls.length).toBe(1)
   })

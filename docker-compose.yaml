@@ -10,7 +10,6 @@ services:
       - ffc-doc-statement-publisher-postgres
     environment:
       APPINSIGHTS_CLOUDROLE: ffc-doc-statement-publisher-local
-      APPINSIGHTS_CONNECTIONSTRING: ${APPINSIGHTS_CONNECTIONSTRING}
       MESSAGE_QUEUE_HOST: ${MESSAGE_QUEUE_HOST}
       MESSAGE_QUEUE_PASSWORD: ${MESSAGE_QUEUE_PASSWORD}
       MESSAGE_QUEUE_USER: ${MESSAGE_QUEUE_USER}
@@ -38,7 +37,7 @@ services:
       POSTGRES_USERNAME: postgres
 
   ffc-doc-statement-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.17.1
+    image: mcr.microsoft.com/azure-storage/azurite:3.32.0
     command: "azurite-blob --loose --blobHost 0.0.0.0"
     labels:
       com.docker.compose.pay.role: ffc-doc-statement-azurite
