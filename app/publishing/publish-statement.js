@@ -10,6 +10,7 @@ const saveRequest = require('./save-request')
 const publishStatement = async (request) => {
   let reason
   let response
+  let errorObject
 
   try {
     const existingDocument = await getExistingDocument(request.documentReference)
@@ -24,13 +25,20 @@ const publishStatement = async (request) => {
   try {
     validateEmail(request.email)
     const personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
+    //TODO Add check if email errored out
     response = await publish(request.emailTemplate, request.email, request.filename, personalisation)
     console.log(`Statement published: ${request.filename}`)
   } catch (err) {
     reason = handlePublishReasoning(err)
+    errorObject = {
+      reason: reason,
+      statusCode: err.statusCode,
+      error: err.error,
+      message: err.message
+    }
   } finally {
     try {
-      await saveRequest(request, response?.data.id, EMAIL, reason)
+      await saveRequest(request, response?.data.id, EMAIL, errorObject)
     } catch {
       console.log('Could not save the request')
     }
