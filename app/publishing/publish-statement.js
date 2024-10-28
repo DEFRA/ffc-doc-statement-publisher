@@ -1,4 +1,4 @@
-const { EMAIL } = require('../constants/methods')
+const { EMAIL, LETTER } = require('../constants/methods')
 
 const { getExistingDocument } = require('../processing/publish')
 const validateEmail = require('./validate-email')
@@ -21,16 +21,21 @@ const publishStatement = async (request) => {
     throw new Error('Could not check for duplicates')
   }
 
+  const publishStatementType = request?.emailTemplate ? EMAIL : LETTER
+
   try {
-    validateEmail(request.email)
-    const personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
-    response = await publish(request.emailTemplate, request.email, request.filename, personalisation)
+    let personalisation = null
+    if (publishStatementType === EMAIL) {
+      validateEmail(request.email)
+      personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
+    }
+    response = await publish(request?.emailTemplate, request?.email, request.filename, personalisation, publishStatementType)
     console.log(`Statement published: ${request.filename}`)
   } catch (err) {
     reason = handlePublishReasoning(err)
   } finally {
     try {
-      await saveRequest(request, response?.data.id, EMAIL, reason)
+      await saveRequest(request, response?.data.id, publishStatementType, reason)
     } catch {
       console.log('Could not save the request')
     }
