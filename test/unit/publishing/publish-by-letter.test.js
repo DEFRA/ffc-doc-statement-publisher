@@ -7,6 +7,7 @@ const publishByLetter = require('../../../app/publishing/publish-by-email')
 const EMAIL = require('../../mocks/components/email')
 const FILE = require('../../mocks/components/filename')
 const FILE_BUFFER = require('../../mocks/components/file_buffer')
+const POSTAGE = require('../../mocks/components/postage')
 
 describe('Publish by email', () => {
   afterEach(() => {
@@ -43,10 +44,10 @@ describe('Publish by email', () => {
     expect(mockNotifyClient().sendPrecompiledLetter).toHaveBeenCalledTimes(1)
   })
 
-  test('should call mockNotifyClient.sendPrecompiledLetter with FILE, FILE_BUFFER and default postage value "second"', async () => {
+  test('should call mockNotifyClient.sendPrecompiledLetter with FILE, FILE_BUFFER and default POSTAGE value "second"', async () => {
     await publishByLetter(FILE, FILE_BUFFER)
 
-    expect(mockNotifyClient().sendPrecompiledLetter).toHaveBeenCalledWith(FILE, FILE_BUFFER, 'second')
+    expect(mockNotifyClient().sendPrecompiledLetter).toHaveBeenCalledWith(FILE, FILE_BUFFER, POSTAGE)
   })
 
   test('should return mockNotifyClient.sendPrecompiledLetter', async () => {
