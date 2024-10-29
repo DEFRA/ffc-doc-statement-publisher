@@ -246,7 +246,7 @@ describe('Publish document', () => {
 
         test('should call publish with request.email, request.filename and MOCK_PERSONALISATION', async () => {
           await publishStatement(request)
-          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION)
+          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION, EMAIL)
         })
 
         test('should call saveRequest', async () => {
