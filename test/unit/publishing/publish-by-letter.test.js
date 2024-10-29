@@ -2,7 +2,7 @@ const config = require('../../../app/config')
 
 const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
 
-const publishByLetter = require('../../../app/publishing/publish-by-email')
+const publishByLetter = require('../../../app/publishing/publish-by-letter')
 
 const EMAIL = require('../../mocks/components/email')
 const FILE = require('../../mocks/components/filename')
@@ -27,11 +27,6 @@ describe('Publish by email', () => {
   test('should call mockNotifyClient with config.notifyApiKey', async () => {
     await publishByLetter(FILE, FILE_BUFFER)
     expect(mockNotifyClient).toHaveBeenCalledWith(config.notifyApiKey)
-  })
-
-  test('should call mockNotifyClient.prepareUpload', async () => {
-    await publishByLetter(FILE, FILE_BUFFER)
-    expect(mockNotifyClient().prepareUpload).toHaveBeenCalled()
   })
 
   test('should call mockNotifyClient.sendPrecompiledLetter', async () => {
