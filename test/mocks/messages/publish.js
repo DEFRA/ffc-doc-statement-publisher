@@ -16,6 +16,7 @@ const MARKETING_YEAR = require('../components/marketing-year')
 const { QUARTERLY: QUARTERLY_FREQUENCY } = require('../../../app/constants/frequencies')
 const DOCUMENT_REFERENCE = require('../components/document-reference')
 const MESSAGE_SOURCE = require('../../../app/constants/message-source')
+const TEMPLATE = require('../components/template')
 
 const BASE_MESSAGE = {
   body: {},
@@ -38,6 +39,7 @@ const STATEMENT_MESSAGE = {
       postcode: POSTCODE
     },
     email: EMAIL,
+    emailTemplate: TEMPLATE,
     filename: STATEMENT_FILENAME,
     scheme: {
       agreementNumber: 'SFI1234567',
@@ -68,6 +70,7 @@ const SCHEDULE_MESSAGE = {
       line5: LINE_5,
       postcode: POSTCODE
     },
+    emailTemplate: TEMPLATE,
     email: EMAIL,
     filename: SCHEDULE_FILENAME,
     scheme: {
