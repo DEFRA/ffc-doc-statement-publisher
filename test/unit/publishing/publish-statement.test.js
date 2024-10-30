@@ -22,7 +22,7 @@ const getRequestEmailTemplateByType = require('../../../app/messaging/get-reques
 const publishStatement = require('../../../app/publishing/publish-statement')
 
 const { EMPTY, INVALID } = require('../../../app/constants/failure-reasons')
-const { EMAIL } = require('../../../app/constants/methods')
+const { EMAIL, LETTER } = require('../../../app/constants/methods')
 
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
 
@@ -47,7 +47,7 @@ describe('Publish document', () => {
   describe.each([
     { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body },
     { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body }
-  ])('When request is a $name', ({ name, request }) => {
+  ])('When email request is a $name', ({ name, request }) => {
     describe('When it is a duplicate', () => {
       beforeEach(async () => {
         getExistingDocument.mockResolvedValue(true)
@@ -360,6 +360,286 @@ describe('Publish document', () => {
         test('should call saveRequest with request, undefined, EMAIL and handlePublishReasoning', async () => {
           try { await publishStatement(request) } catch {}
           expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, handlePublishReasoning())
+        })
+
+        test('should not throw', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).not.toThrow()
+        })
+
+        test('should return undefined', async () => {
+          const result = await publishStatement(request)
+          expect(result).toBeUndefined()
+        })
+      })
+
+      describe('When getExistingDocument throws', () => {
+        beforeEach(() => {
+          error = new Error('Issue retrieving document.')
+
+          getExistingDocument.mockRejectedValue(error)
+        })
+
+        test('should call getExistingDocument', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalled()
+        })
+
+        test('should call getExistingDocument once', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalledTimes(1)
+        })
+
+        test('should call getExistingDocument with request.documentReference', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
+        })
+
+        test('should not call validateEmail', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(validateEmail).not.toHaveBeenCalled()
+        })
+
+        test('should not call getPersonalisation', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getPersonalisation).not.toHaveBeenCalled()
+        })
+
+        test('should not call publish', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(publish).not.toHaveBeenCalled()
+        })
+
+        test('should not call handlePublishReasoning', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(handlePublishReasoning).not.toHaveBeenCalled()
+        })
+
+        test('should not call saveRequest', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(saveRequest).not.toHaveBeenCalled()
+        })
+
+        test('should throw', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow()
+        })
+
+        test('should throw Error', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow(Error)
+        })
+
+        test('should throw error with message "Could not check for duplicates"', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow(/^Could not check for duplicates$/)
+        })
+      })
+    })
+  })
+
+  describe.each([
+    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').LETTER_STATEMENT_MESSAGE)).body },
+    { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').LETTER_SCHEDULE_MESSAGE)).body }
+  ])('When letter request is a $name', ({ name, request }) => {
+    describe('When it is a duplicate', () => {
+      beforeEach(async () => {
+        getExistingDocument.mockResolvedValue(true)
+      })
+
+      test('should call getExistingDocument', async () => {
+        await publishStatement(request)
+        expect(getExistingDocument).toHaveBeenCalled()
+      })
+
+      test('should call getExistingDocument once', async () => {
+        await publishStatement(request)
+        expect(getExistingDocument).toHaveBeenCalledTimes(1)
+      })
+
+      test('should call getExistingDocument with request.documentReference', async () => {
+        await publishStatement(request)
+        expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
+      })
+
+      test('should not call validateEmail', async () => {
+        await publishStatement(request)
+        expect(validateEmail).not.toHaveBeenCalled()
+      })
+
+      test('should not call getPersonalisation', async () => {
+        await publishStatement(request)
+        expect(getPersonalisation).not.toHaveBeenCalled()
+      })
+
+      test('should not call publish', async () => {
+        await publishStatement(request)
+        expect(publish).not.toHaveBeenCalled()
+      })
+
+      test('should not call saveRequest', async () => {
+        await publishStatement(request)
+        expect(saveRequest).not.toHaveBeenCalled()
+      })
+
+      test('should not call handlePublishReasoning', async () => {
+        await publishStatement(request)
+        expect(handlePublishReasoning).not.toHaveBeenCalled()
+      })
+
+      test('should not call saveRequest', async () => {
+        await publishStatement(request)
+        expect(saveRequest).not.toHaveBeenCalled()
+      })
+
+      test('should not throw', async () => {
+        const wrapper = async () => { await publishStatement(request) }
+        expect(wrapper).not.toThrow()
+      })
+
+      test('should return undefined', async () => {
+        const result = await publishStatement(request)
+        expect(result).toBeUndefined()
+      })
+
+      describe('When getExistingDocument throws', () => {
+        beforeEach(() => {
+          error = new Error('Issue retrieving document.')
+
+          getExistingDocument.mockRejectedValue(error)
+        })
+
+        test('should call getExistingDocument', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalled()
+        })
+
+        test('should call getExistingDocument once', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalledTimes(1)
+        })
+
+        test('should call getExistingDocument with request.documentReference', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
+        })
+
+        test('should not call validateEmail', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(validateEmail).not.toHaveBeenCalled()
+        })
+
+        test('should not call getPersonalisation', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(getPersonalisation).not.toHaveBeenCalled()
+        })
+
+        test('should not call publish', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(publish).not.toHaveBeenCalled()
+        })
+
+        test('should not call handlePublishReasoning', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(handlePublishReasoning).not.toHaveBeenCalled()
+        })
+
+        test('should not call saveRequest', async () => {
+          try { await publishStatement(request) } catch {}
+          expect(saveRequest).not.toHaveBeenCalled()
+        })
+
+        test('should throw', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow()
+        })
+
+        test('should throw Error', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow(Error)
+        })
+
+        test('should throw error with message "Could not check for duplicates"', async () => {
+          const wrapper = async () => { await publishStatement(request) }
+          expect(wrapper).rejects.toThrow(/^Could not check for duplicates$/)
+        })
+      })
+    })
+
+    describe('When it is not a duplicate', () => {
+      beforeEach(() => {
+        getExistingDocument.mockResolvedValue(null)
+        validateEmail.mockReturnValue({ value: request.email })
+        getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
+        handlePublishReasoning.mockReturnValue(undefined)
+        publish.mockResolvedValue(NOTIFY_RESPONSE)
+        saveRequest.mockResolvedValue(undefined)
+        getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+      })
+
+      describe('When it is a letter', () => {
+        beforeEach(() => {
+          error = undefined
+        })
+
+        test('should call getExistingDocument', async () => {
+          await publishStatement(request)
+          expect(getExistingDocument).toHaveBeenCalled()
+        })
+
+        test('should call getExistingDocument once', async () => {
+          await publishStatement(request)
+          expect(getExistingDocument).toHaveBeenCalledTimes(1)
+        })
+
+        test('should call getExistingDocument with request.documentReference', async () => {
+          await publishStatement(request)
+          expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
+        })
+
+        test('should not call validateEmail', async () => {
+          await publishStatement(request)
+          expect(validateEmail).not.toHaveBeenCalled()
+        })
+
+        test('should not call getPersonalisation', async () => {
+          await publishStatement(request)
+          expect(getPersonalisation).not.toHaveBeenCalled()
+        })
+
+        test('should call publish', async () => {
+          await publishStatement(request)
+          expect(publish).toHaveBeenCalled()
+        })
+
+        test('should call publish once', async () => {
+          await publishStatement(request)
+          expect(publish).toHaveBeenCalledTimes(1)
+        })
+
+        test('should call publish with undefined, request.email, request.filename and LETTER', async () => {
+          await publishStatement(request)
+          expect(publish).toHaveBeenCalledWith(undefined, request.email, request.filename, null, LETTER)
+        })
+
+        test('should call saveRequest', async () => {
+          await publishStatement(request)
+          expect(saveRequest).toHaveBeenCalled()
+        })
+
+        test('should call saveRequest once', async () => {
+          await publishStatement(request)
+          expect(saveRequest).toHaveBeenCalledTimes(1)
+        })
+
+        test('should call saveRequest with request, NOTIFY_ID, LETTER and handlePublishReasoning', async () => {
+          await publishStatement(request)
+          expect(saveRequest).toHaveBeenCalledWith(request, NOTIFY_ID, LETTER, handlePublishReasoning())
+        })
+
+        test('should not call handlePublishReasoning', async () => {
+          await publishStatement(request)
+          expect(handlePublishReasoning).not.toHaveBeenCalled()
         })
 
         test('should not throw', async () => {
