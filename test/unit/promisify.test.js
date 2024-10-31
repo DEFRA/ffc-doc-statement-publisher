@@ -1,4 +1,3 @@
-const { test } = require('../../app/config/database')
 const promisify = require('../../app/promisify')
 
 function mockFunction (a, b) {
