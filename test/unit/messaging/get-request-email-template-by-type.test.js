@@ -1,4 +1,3 @@
-
 const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
 
 const mockDocumentTypes = require('../../mocks/objects/document-types')

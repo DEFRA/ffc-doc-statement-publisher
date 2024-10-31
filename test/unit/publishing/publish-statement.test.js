@@ -451,12 +451,12 @@ describe('Publish document', () => {
             .then(response => {
               expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
               expect(saveRequest).toHaveBeenCalledTimes(1)
-              expect(saveRequest).toHaveBeenCalledWith(request, undefined, "email", undefined)
+              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'email', undefined)
               done()
             })
             .catch((err) => {
               console.log(err)
-            })          
+            })
         })
       })
     })
