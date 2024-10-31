@@ -1,16 +1,16 @@
 /**
  * Turns a regular function into a thunk for evaluation at a later time
  * For more information on thunks see https://en.wikipedia.org/wiki/Thunk#:~:text=In%20computer%20programming%2C%20a%20thunk,end%20of%20the%20other%20subroutine.
- * 
+ *
  * @param {Function} fn any function (sync or async) you wish to turn into a thunk
  * @param {ParamArray} an array of parameters to be used for the function
  * see here for more info on rest parameters https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters
- * @returns 
+ * @returns
  */
-function thunkify(fn, ...rest){
-  return function(cb) {
+function thunkify (fn, ...rest) {
+  return function (cb) {
     rest.push(cb)
-    return fn.apply(null, rest)
+    return fn(...rest)
   }
 }
 
