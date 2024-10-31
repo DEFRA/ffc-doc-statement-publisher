@@ -1,14 +1,7 @@
-test-output/
+test-output
 node_modules
 helm/**/*.lock
 *.tgz
+.vscode
 .env
 .DS_Store
-*.[Cc]ache
-.vscode-server/
-.npm/
-.cache/
-.dotnet/
-glibc-2.29-r0.apk
-
-
