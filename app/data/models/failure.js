@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     reason: DataTypes.STRING,
     error: DataTypes.STRING,
     message: DataTypes.STRING,
-    failed: DataTypes.TIMESTAMP
+    failed: DataTypes.DATE
   },
   {
     tableName: 'failures',
