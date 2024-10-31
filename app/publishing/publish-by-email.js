@@ -36,17 +36,11 @@ function setupNotifyClient () {
  * @param {NotifyClient} notifyClient
  * @returns Thunk
  */
-function setupEmailThunk (template, email, file, personalisation, notifyClient) {
+function setupEmailThunk (template, email, linkToFile, personalisation, notifyClient) {
   const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
-  return promisify(thunkify(notifyClient.sendEmail, template, email, {
+    return promisify(thunkify(notifyClient.sendEmail, template, email, {
     personalisation: {
-      link_to_file: notifyClient.prepareUpload(
-        file,
-        {
-          confirmEmailBeforeDownload: true,
-          retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
-        }
-      ),
+      link_to_file: linkToFile,
       ...personalisation,
       latestDownloadDate
     }
@@ -56,7 +50,14 @@ function setupEmailThunk (template, email, file, personalisation, notifyClient) 
 const publishByEmail = async (template, email, file, personalisation) => {
   moment.locale('en-gb')
   const notifyClient = setupNotifyClient()
-  const thunk = setupEmailThunk(template, email, file, personalisation, notifyClient)
+  const linkToFile = await notifyClient.prepareUpload(
+    file,
+    {
+      confirmEmailBeforeDownload: true,
+      retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
+    }
+  )
+  const thunk = setupEmailThunk(template, email, linkToFile, personalisation, notifyClient)
   return retry(thunk, 3, 100, true)
     .then(result => {
       console.log(result)
