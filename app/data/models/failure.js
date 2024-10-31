@@ -1,10 +1,8 @@
-const { message } = require("../../schemas/components/email")
-
 module.exports = (sequelize, DataTypes) => {
   /**
    * Please see https://docs.notifications.service.gov.uk/node.html#send-an-email-error-codes for
    * more details about Notify error codes
-   * 
+   *
    * @param {INTEGER}     failureId
    * @param {INTEGER}     deliveryId Foreign key of the delivery table
    * @param {INTEGER}     statusCode Returned from Notify err.response.data.status_code, 400; 403; 429; 500;

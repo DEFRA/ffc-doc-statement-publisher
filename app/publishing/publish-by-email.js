@@ -1,10 +1,10 @@
 const moment = require('moment')
 const config = require('../config')
 const { NotifyClient } = require('notifications-node-client')
-const { retry, thunkify } = require("../retry")
-const promisify = require("../promisify")
+const { retry, thunkify } = require('../retry')
+const promisify = require('../promisify')
 
-function setupNotifyClient(){
+function setupNotifyClient () {
   const notifyClient = new NotifyClient(config.notifyApiKey)
   notifyClient.prepareUpload = promisify(notifyClient.prepareUpload)
   notifyClient.sendEmail = promisify(notifyClient.sendEmail)
@@ -27,23 +27,24 @@ function setupNotifyClient(){
  * const thunk = thunkify(toBeThunked, 2, 2)
  * console.log(thunk()) // prints 4
  * console.log(thunk()) // prints 4 again even though we did nothing different
- * 
- * 
- * @param {Object} template 
- * @param {String} email 
- * @param {String} file 
- * @param {Object} personalisation 
- * @param {NotifyClient} notifyClient 
+ *
+ *
+ * @param {Object} template
+ * @param {String} email
+ * @param {String} file
+ * @param {Object} personalisation
+ * @param {NotifyClient} notifyClient
  * @returns Thunk
  */
-function setupEmailThunk(template, email, file, personalisation, notifyClient){
+function setupEmailThunk (template, email, file, personalisation, notifyClient) {
   const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
   return promisify(thunkify(notifyClient.sendEmail, template, email, {
     personalisation: {
       link_to_file: notifyClient.prepareUpload(
-        file, 
-        { confirmEmailBeforeDownload: true, 
-          retentionPeriod: `${config.retentionPeriodInWeeks} weeks` 
+        file,
+        {
+          confirmEmailBeforeDownload: true,
+          retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
         }
       ),
       ...personalisation,
@@ -55,7 +56,7 @@ function setupEmailThunk(template, email, file, personalisation, notifyClient){
 const publishByEmail = async (template, email, file, personalisation) => {
   moment.locale('en-gb')
   const notifyClient = setupNotifyClient()
-  const thunk = setupEmailThunk(template, email, file, personalisation, notifyClient) 
+  const thunk = setupEmailThunk(template, email, file, personalisation, notifyClient)
   return retry(thunk, 3, 100, true)
     .then(result => {
       console.log(result)

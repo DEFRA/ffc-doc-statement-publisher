@@ -11,7 +11,7 @@ const saveRequest = async (request, reference, method, errorObject) => {
     const timestamp = new Date()
     const statement = await saveStatement(request, timestamp, transaction)
     const delivery = await saveDelivery(statement.statementId, method, reference, timestamp, transaction)
-    
+
     if (errorObject.reason) {
       console.log(`Unable to deliver statement ${statement.filename} to "${statement.email}": ${errorObject.reason}`)
       await sendCrmMessage(statement.email, statement.frn, errorObject.reason)
@@ -25,4 +25,3 @@ const saveRequest = async (request, reference, method, errorObject) => {
 }
 
 module.exports = saveRequest
-
