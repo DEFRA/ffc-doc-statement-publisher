@@ -9,7 +9,7 @@
  */
 function thunkify (fn, ...rest) {
   return function (cb) {
-    if(cb){
+    if (cb) {
       rest.push(cb)
     }
     return fn(...rest)

@@ -38,7 +38,7 @@ function setupNotifyClient () {
  */
 function setupEmailThunk (template, email, linkToFile, personalisation, notifyClient) {
   const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
-    return promisify(thunkify(notifyClient.sendEmail, template, email, {
+  return promisify(thunkify(notifyClient.sendEmail, template, email, {
     personalisation: {
       link_to_file: linkToFile,
       ...personalisation,

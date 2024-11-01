@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
    * @param {STRING}      reason Failure reason from local application validator; Empty or invalid email
    * @param {STRING}      error as returned from Notify
    * @param {STRING}      message as returned from Notify
-   * @param {TIMESTAMP}   when the failure occured
+   * @param {DATE}        when the failure occured
    */
   const failure = sequelize.define('failure', {
     failureId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
