@@ -7,7 +7,9 @@ jest.mock('../../../app/storage', () => ({
   getFile: jest.fn().mockResolvedValueOnce(Buffer.from('Some random byes'))
 }))
 
-jest.mock('../../../app/retry', () => jest.fn())
+jest.mock('../../../app/retry', () => ({
+  retry: jest.fn()
+}))
 
 describe('Publish document', () => {
   afterEach(() => {
