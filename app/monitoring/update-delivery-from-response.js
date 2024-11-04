@@ -10,10 +10,14 @@ const updateDeliveryFromResponse = async (delivery, response) => {
       await completeDelivery(delivery.deliveryId)
       break
     case PERMANENT_FAILURE:
-      await failed(delivery, INVALID)
+      await failed(delivery, {
+        reason: INVALID
+      })
       break
     case TEMPORARY_FAILURE:
-      await failed(delivery, REJECTED)
+      await failed(delivery, {
+        reason: REJECTED
+      })
       break
     case TECHNICAL_FAILURE:
       await rescheduleDelivery(delivery)
