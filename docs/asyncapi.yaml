@@ -1,19 +1,47 @@
-asyncapi: 2.6.0
+asyncapi: 3.0.0
 info:
   title: FFC Payment Statement Publisher
-  version: 1.0.1
+  version: 1.0.2
   description: Publish PDF payment statements for Future Farming
 channels:
   ffc-doc-statement-publish/ffc-doc-statement-publisher:
-    subscribe:
-      message:
+    address: ffc-doc-statement-publish/ffc-doc-statement-publisher
+    messages:
+      subscribeToPublisher.message.0:
         $ref: '#/components/messages/PublishRequest'
+      subscribeToPublisher.message.1:
+        $ref: '#/components/messages/DelinkedPublishRequest'
   ffc-doc-statement-crm:
-    publish:
-      message:
+    address: ffc-doc-statement-crm
+    messages:
+      publishToCrm.message:
         $ref: '#/components/messages/CrmInvalidEmailResponse'
+operations:
+  subscribeToPublisher:
+    action: send
+    channel:
+      $ref: '#/channels/ffc-doc-statement-publish~1ffc-doc-statement-publisher'
+    summary: Subscribe to publisher
+    messages:
+      - $ref: >-
+          #/channels/ffc-doc-statement-publish~1ffc-doc-statement-publisher/messages/subscribeToPublisher.message.0
+      - $ref: >-
+          #/channels/ffc-doc-statement-publish~1ffc-doc-statement-publisher/messages/subscribeToPublisher.message.1
+  publishToCrm:
+    action: receive
+    channel:
+      $ref: '#/channels/ffc-doc-statement-crm'
+    summary: Publish to CRM
+    messages:
+      - $ref: '#/channels/ffc-doc-statement-crm/messages/publishToCrm.message'
 components:
   messages:
+    DelinkedPublishRequest:
+      title: Delinked Publish request
+      name: Delinked payment statement publish request
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/DelinkedPublishRequest'
     CrmInvalidEmailResponse:
       title: Invalid Email Response
       name: Payment statement invalid email response
@@ -27,6 +55,32 @@ components:
       payload:
         $ref: '#/components/schemas/PublishRequest'
   schemas:
+    DelinkedPublishRequest:
+      type: object
+      required:
+        - address
+        - businessName
+        - documentReference
+        - filename
+        - frn
+        - sbi
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        businessName:
+          $ref: '#/components/schemas/BusinessName'
+        documentReference:
+          $ref: '#/components/schemas/DocumentReference'
+        email:
+          $ref: '#/components/schemas/Email'
+        filename:
+          $ref: '#/components/schemas/FilenameDelinked'
+        frn:
+          $ref: '#/components/schemas/FRN'
+        sbi:
+          $ref: '#/components/schemas/SBI'
+        scheme:
+          $ref: '#/components/schemas/SchemeDelinked'
     CrmInvalidEmailResponse:
       type: object
       required:
@@ -128,11 +182,26 @@ components:
       minimum: 1000000000
       maximum: 9999999999
       example: 1234567890
+    FilenameDelinked:
+      type: string
+      description: >-
+        PDF filename, formatted as product code using 3 to 6 uppercase
+        characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase
+        characters, Scheme Year using 4 digits, FRN using 10 digits, date and
+        time using 16 digits and then .pdf. All separated by underscore.
+      example: FFC_PaymentStatement_DP_2023_1234567890_2022080515301212.pdf
+      pattern: >-
+        ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
     Filename:
       type: string
-      description: PDF filename, formatted as product code using 3 to 6 uppercase characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase characters, Scheme Year using 4 digits, FRN using 10 digits, date and time using 16 digits and then .pdf. All separated by underscore.
+      description: >-
+        PDF filename, formatted as product code using 3 to 6 uppercase
+        characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase
+        characters, Scheme Year using 4 digits, FRN using 10 digits, date and
+        time using 16 digits and then .pdf. All separated by underscore.
       example: FFC_PaymentStatement_SFI_2022_1234567890_2022080515301212.pdf
-      pattern: ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
+      pattern: >-
+        ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
     SBI:
       type: number
       description: Single Business Identifier
@@ -158,14 +227,39 @@ components:
           $ref: '#/components/schemas/SchemeShortName'
         year:
           $ref: '#/components/schemas/SchemeYear'
+    SchemeDelinked:
+      type: object
+      required:
+        - name
+        - shortName
+        - year
+      properties:
+        name:
+          $ref: '#/components/schemas/SchemeNameDelinked'
+        shortName:
+          $ref: '#/components/schemas/SchemeShortNameDelinked'
+        year:
+          $ref: '#/components/schemas/SchemeYearDelinked'
+    SchemeNameDelinked:
+      type: string
+      description: The name of the scheme
+      example: Delinked payments
     SchemeName:
       type: string
       description: The name of the scheme
       example: Sustainable Farming Incentive
+    SchemeShortNameDelinked:
+      type: string
+      description: The short name of the scheme
+      example: DP
     SchemeShortName:
       type: string
       description: The short name of the scheme
       example: SFI
+    SchemeYearDelinked:
+      type: string
+      description: The marketing year
+      example: '2023'
     SchemeYear:
       type: string
       description: The marketing year
