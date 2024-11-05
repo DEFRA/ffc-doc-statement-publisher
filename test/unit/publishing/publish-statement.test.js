@@ -1,5 +1,5 @@
-jest.mock('../../../app/processing/publish/get-exisiting-document')
-const getExistingDocument = require('../../../app/processing/publish/get-exisiting-document')
+jest.mock('../../../app/processing/publish/get-existing-document')
+const getExistingDocument = require('../../../app/processing/publish/get-existing-document')
 
 jest.mock('../../../app/publishing/validate-email')
 const validateEmail = require('../../../app/publishing/validate-email')

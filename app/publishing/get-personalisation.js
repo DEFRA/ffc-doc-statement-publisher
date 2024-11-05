@@ -13,7 +13,7 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
       schemeName,
       schemeShortName,
       schemeYear,
-      schemeFrequency: 'Bi-annual',
+      schemeFrequency: 'Bi-Annual',
       businessName
     }
   }
