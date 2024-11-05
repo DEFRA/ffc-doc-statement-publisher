@@ -359,7 +359,7 @@ describe('Publish document', () => {
 
         test('should call saveRequest with request, undefined, EMAIL and handlePublishReasoning', async () => {
           try { await publishStatement(request) } catch {}
-          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, handlePublishReasoning())
+          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, { reason: handlePublishReasoning() })
         })
 
         test('should not throw', async () => {
