@@ -88,12 +88,12 @@ module.exports = Joi.object({
       'string.max': `Year must be at most ${maxYearLength} characters`,
       'any.required': 'Year is required'
     }),
-    frequency: Joi.string().max(maxFrequencyLength).required().messages({
+    frequency: Joi.string().max(maxFrequencyLength).messages({
       'string.base': 'Frequency must be a string',
       'string.max': `Frequency must be at most ${maxFrequencyLength} characters`,
       'any.required': 'Frequency is required'
     }),
-    agreementNumber: Joi.string().required().messages({
+    agreementNumber: Joi.string().optional().allow('', null).messages({
       'number.base': 'Agreement number must be a string',
       'any.required': 'Agreement number is required'
     })
