@@ -359,7 +359,8 @@ describe('Publish document', () => {
 
         test('should call saveRequest with request, undefined, EMAIL and handlePublishReasoning', async () => {
           try { await publishStatement(request) } catch {}
-          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, { reason: handlePublishReasoning() })
+          const reason = handlePublishReasoning()
+          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, { error: undefined, message: errorMessage, reason, statusCode: undefined })
         })
 
         test('should not throw', async () => {
@@ -451,7 +452,7 @@ describe('Publish document', () => {
             .then(response => {
               expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
               expect(saveRequest).toHaveBeenCalledTimes(1)
-              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'email', undefined)
+              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'email', { error: undefined, message: undefined, reason: undefined, ssatusCode: undefined })
               done()
             })
             .catch((err) => {
