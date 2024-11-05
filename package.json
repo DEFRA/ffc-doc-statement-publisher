@@ -1,6 +1,6 @@
 {
   "name": "ffc-doc-statement-publisher",
-  "version": "2.1.21",
+  "version": "2.1.23",
   "description": "Publish statements",
   "homepage": "https://github.com/DEFRA/ffc-doc-statement-publisher",
   "main": "app/index.js",
@@ -37,7 +37,7 @@
   "devDependencies": {
     "jest": "29.6.4",
     "jest-junit": "14.0.0",
-    "nodemon": "^3.0.1",
+    "nodemon": "3.0.1",
     "standard": "17.0.0"
   },
   "standard": {
