@@ -96,7 +96,7 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call createFailure with delivery.deliveryId, INVALID and mockTransaction()', async () => {
-      await failed(delivery, { reason } )
+      await failed(delivery, { reason })
       expect(createFailure).toHaveBeenCalledWith(delivery.deliveryId, { reason: INVALID }, expect.any(Number), mockTransaction())
     })
 
