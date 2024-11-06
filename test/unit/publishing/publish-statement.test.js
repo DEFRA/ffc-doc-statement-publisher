@@ -757,7 +757,7 @@ describe('Publish document', () => {
             .then(response => {
               expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
               expect(saveRequest).toHaveBeenCalledTimes(1)
-              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'email', { error: undefined, message: undefined, reason: undefined, ssatusCode: undefined })
+              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'letter', { error: undefined, message: undefined, reason: undefined, ssatusCode: undefined })
               done()
             })
             .catch((err) => {
