@@ -207,12 +207,8 @@ describe('Notify failed to deliver', () => {
       expect(failure.reason).toBe(REJECTED)
     })
 
-    test.only('should create failure with date', async () => {
-      try {
-        await failed(delivery, { reason })
-      } catch (e) {
-        console.error('!?!', e)
-      }
+    test('should create failure with date', async () => {
+      await failed(delivery, { reason })
 
       const failure = await db.failure.findOne({ where: { deliveryId: delivery.deliveryId } })
       expect(failure.failed).toStrictEqual(SYSTEM_TIME)
