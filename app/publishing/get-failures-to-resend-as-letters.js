@@ -19,17 +19,23 @@ const getFailuresToResendAsLetters = async (transaction) => {
     },
     attributes: [
       'failureId',
-      'deliveryId',
-      'statusCode',
-      'reason',
-      'error',
-      'message',
-      'failed',
-      'dateResent',
-      'updated',
+      [db.Sequelize.col('delivery.statement.email'), 'email'],
       [db.Sequelize.col('delivery.statement.statementId'), 'statementId'],
-      [db.Sequelize.col('delivery.statement.filename'), 'filename']
-      //TODO get other attributes from statement that are needed for message
+      [db.Sequelize.col('delivery.statement.filename'), 'filename'],
+      [db.Sequelize.col('delivery.statement.businessName'), 'businessName'],
+      [db.Sequelize.col('delivery.statement.frn'), 'frn'],
+      [db.Sequelize.col('delivery.statement.sbi'), 'sbi'],
+      [db.Sequelize.col('delivery.statement.addressLine1'), 'addressLine1'],
+      [db.Sequelize.col('delivery.statement.addressLine2'), 'addressLine2'],
+      [db.Sequelize.col('delivery.statement.addressLine3'), 'addressLine3'],
+      [db.Sequelize.col('delivery.statement.addressLine4'), 'addressLine4'],
+      [db.Sequelize.col('delivery.statement.addressLine5'), 'addressLine5'],
+      [db.Sequelize.col('delivery.statement.postcode'), 'postcode'],
+      [db.Sequelize.col('delivery.statement.schemeName'), 'schemeName'],
+      [db.Sequelize.col('delivery.statement.schemeShortName'), 'schemeShortName'],
+      [db.Sequelize.col('delivery.statement.schemeYear'), 'schemeYear'],
+      [db.Sequelize.col('delivery.statement.schemeFrequency'), 'schemeFrequency'],
+      [db.Sequelize.col('delivery.statement.documentReference'), 'documentReference'],
     ],
     include: [
       {

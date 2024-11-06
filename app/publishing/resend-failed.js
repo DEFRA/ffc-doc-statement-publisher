@@ -5,7 +5,8 @@ const getStatementFileUrl = require('./get-statement-file-url')
 const updateFailureSent = require('./update-failure-sent')
 const getPrimaryKeyValue = require('./get-primary-key-value')
 const sendMessage = require('../messaging/send-message')
-const validateUpdate = require('./validate-letter-statement.js')
+const validateRequest = require('../messaging/validate-request')
+const getStatementRequestObject = require('./get-statement-request-object')
 const config = require('../config')
 
 const resendFailed = async () => {
@@ -14,16 +15,14 @@ const resendFailed = async () => {
 
     try {
         const failures = await getFailuresToResendAsLetters(transaction)
-        const outstanding = await getLetterSendMessages(failures, transaction)
-        for (const unpublished of outstanding) {
-          unpublished.statementFileUrl = getStatementFileUrl( unpublished.filename )
-          const isValid = validateUpdate(unpublished)
-          if (isValid) {
-            await sendMessage(unpublished, config.publishSubscription.type, config.publishSubscription)
-            const primaryKey = getPrimaryKeyValue(unpublished, 'failures')
-            await updateFailureSent(primaryKey, transaction)
-            totalPublished++
-          }
+        for (const failure of failures) {
+          const statementFileUrl = getStatementFileUrl( unpublished.filename )
+          const request = getStatementRequestObject({ ...failure, ...{ statementFileUrl } })
+          validateRequest(request)
+          await sendMessage(request, config.publishSubscription.type, config.publishSubscription)
+          const primaryKey = getPrimaryKeyValue(failure, 'failures')
+          await updateFailureSent(primaryKey, transaction)
+          totalPublished++
         }
         await transaction.commit()
         console.log('%i %s statements published', totalPublished, LETTER)
