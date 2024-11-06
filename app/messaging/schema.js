@@ -16,7 +16,7 @@ module.exports = Joi.object({
   email: Joi.string().optional().allow('', null).messages({
     'string.base': 'Email must be a string'
   }),
-  statementFileUrl: Joi.uri().optional().allow('', null).messages({
+  statementFileUrl: Joi.string().uri().optional().allow('', null).messages({
     'string.base': 'Statement File URL must be a valid URI'
   }),
   documentReference,
