@@ -1,5 +1,5 @@
 const { EMAIL, LETTER } = require('../constants/methods')
-const retry = require('../retry')
+const { retry } = require('../retry')
 const { getFile } = require('../storage')
 const publishByEmail = require('./publish-by-email')
 const publishByLetter = require('./publish-by-letter')

@@ -10,6 +10,7 @@ const saveRequest = require('./save-request')
 const publishStatement = async (request) => {
   let reason
   let response
+  let errorObject
 
   try {
     const existingDocument = await getExistingDocument(request.documentReference)
@@ -33,9 +34,15 @@ const publishStatement = async (request) => {
     console.log(`Statement published: ${request.filename}`)
   } catch (err) {
     reason = handlePublishReasoning(err)
+    errorObject = {
+      reason,
+      statusCode: err.statusCode,
+      error: err.error,
+      message: err.message
+    }
   } finally {
     try {
-      await saveRequest(request, response?.data.id, publishStatementType, reason)
+      await saveRequest(request, response?.data.id, publishStatementType, errorObject)
     } catch {
       console.log('Could not save the request')
     }

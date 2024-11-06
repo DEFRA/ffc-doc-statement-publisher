@@ -1,0 +1,19 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.9.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+  <changeSet id="1" author="John Watson">
+    <tagDatabase tag="v1.5.0" />
+  </changeSet>
+  <changeSet id="2" author="John Barnard">
+    <addColumn tableName="failures">
+      <column name="statusCode" type="INTEGER">
+        <constraints nullable="true" />
+      </column>
+      <column name="error" type="VARCHAR(175)">
+        <constraints nullable="true" />
+      </column>
+      <column name="message" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>
+</databaseChangeLog>
