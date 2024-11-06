@@ -1,11 +1,11 @@
 const db = require('../data')
 const { LETTER } = require('../constants/methods')
 const getFailuresToResendAsLetters = require('./get-failures-to-resend-as-letters')
-const getLetterSendMessages = require('./get-letter-send-messages') //todo
+const getStatementFileUrl = require('./get-statement-file-url')
 const updateFailureSent = require('./update-failure-sent')
 const getPrimaryKeyValue = require('./get-primary-key-value')
 const sendMessage = require('../messaging/send-message')
-const validateUpdate = require('./validate-update') //todo
+const validateUpdate = require('./validate-letter-statement.js')
 const config = require('../config')
 
 const resendFailed = async () => {
@@ -16,7 +16,8 @@ const resendFailed = async () => {
         const failures = await getFailuresToResendAsLetters(transaction)
         const outstanding = await getLetterSendMessages(failures, transaction)
         for (const unpublished of outstanding) {
-          const isValid = validateUpdate(unpublished, type)
+          unpublished.statementFileUrl = getStatementFileUrl( unpublished.filename )
+          const isValid = validateUpdate(unpublished)
           if (isValid) {
             await sendMessage(unpublished, config.publishSubscription.type, config.publishSubscription)
             const primaryKey = getPrimaryKeyValue(unpublished, 'failures')
