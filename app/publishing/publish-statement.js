@@ -9,6 +9,7 @@ const saveRequest = require('./save-request')
 
 const publishStatement = async (request) => {
   let reason
+  let error
   let response
 
   try {
