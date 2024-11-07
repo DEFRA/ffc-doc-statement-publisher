@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
    * @param {STRING}      reason Failure reason from local application validator; Empty or invalid email
    * @param {STRING}      error as returned from Notify
    * @param {STRING}      message as returned from Notify
-   * @param {DATE}        when the failure occured
+   * @param {DATE}        failed when the failure occured
+   * @param {DATE}        dateResent the delivery was resent
    */
   const failure = sequelize.define('failure', {
     failureId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -18,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     reason: DataTypes.STRING,
     error: DataTypes.STRING,
     message: DataTypes.STRING,
-    failed: DataTypes.DATE
+    failed: DataTypes.DATE,
+    dateResent: DataTypes.DATE,
   },
   {
     tableName: 'failures',
