@@ -104,6 +104,7 @@ const LETTER_STATEMENT_MESSAGE = {
     },
     email: EMAIL,
     filename: STATEMENT_FILENAME,
+    statementFileUrl: STATEMENT_FILENAME,
     scheme: {
       agreementNumber: 'SFI1234567',
       name: LONG_NAMES.SFI,
@@ -135,6 +136,7 @@ const LETTER_SCHEDULE_MESSAGE = {
     },
     email: EMAIL,
     filename: SCHEDULE_FILENAME,
+    statementFileUrl: SCHEDULE_FILENAME,
     scheme: {
       agreementNumber: 'SFI1234567',
       name: LONG_NAMES.SFI,
