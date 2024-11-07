@@ -16,7 +16,7 @@ const resendFailed = async () => {
   try {
     const failures = await getFailuresToResendAsLetters(transaction)
     for (const failure of failures) {
-      const statementFileUrl = getStatementFileUrl(unpublished.filename)
+      const statementFileUrl = getStatementFileUrl(failure?.filename)
       const request = getStatementRequestObject({ ...failure, ...{ statementFileUrl } })
       validateRequest(request)
       await sendMessage(request, config.publishSubscription.type, config.publishSubscription)
