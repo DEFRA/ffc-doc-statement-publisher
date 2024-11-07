@@ -28,6 +28,8 @@ services:
       NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
       DOC_NOTIFY_API_KEY: ${NOTIFY_API_KEY}
       DOC_NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
+      STATEMENT_RECEIVER_API_VERSION: v1
+      STATEMENT_RECEIVER_ENDPOINT: http://localhost:3022
 
   ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine
