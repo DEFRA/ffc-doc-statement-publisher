@@ -24,7 +24,9 @@ data:
   AZURE_STORAGE_CONTAINER: {{ quote .Values.container.storageContainer }}
   AZURE_STORAGE_FOLDER: {{ quote .Values.container.storageFolder }}
   NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
+  NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
   NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
   DOC_NOTIFY_API_KEY: {{ quote .Values.container.docNotifyApiKey }}
+  DOC_NOTIFY_API_KEY_LETTER: {{ quote .Values.container.docNotifyApiKeyLetter }}
   DOC_NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.docNotifyEmailTemplateKey }}
 {{- end -}}

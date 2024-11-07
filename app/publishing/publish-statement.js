@@ -1,11 +1,13 @@
-const { EMAIL } = require('../constants/methods')
-
+// const { EMAIL, LETTER } = require('../constants/methods')
 const { getExistingDocument } = require('../processing/publish')
 const validateEmail = require('./validate-email')
 const getPersonalisation = require('./get-personalisation')
-const publish = require('./publish')
+const publishByEmail = require('./publish-by-email')
+const publishByPrint = require('./publish-by-print')
 const handlePublishReasoning = require('./handle-publish-reasoning')
 const saveRequest = require('./save-request')
+const { retry } = require('../retry')
+const { getFile } = require('../storage')
 
 const publishStatement = async (request) => {
   let reason
@@ -23,11 +25,29 @@ const publishStatement = async (request) => {
   }
 
   try {
-    validateEmail(request.email)
-    const personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
-    // TODO Add check if email errored out
-    response = await publish(request.emailTemplate, request.email, request.filename, personalisation)
-    console.log(`Statement published: ${request.filename}`)
+    if (request.email && request.email.trim() !== '') {
+      validateEmail(request.email)
+      const personalisation = getPersonalisation(
+        request.scheme.name,
+        request.scheme.shortName,
+        request.scheme.year,
+        request.scheme.frequency,
+        request.businessName,
+        request.paymentPeriod
+      )
+      const file = await retry(() => getFile(request.filename))
+      response = await publishByEmail(
+        request.emailTemplate,
+        request.email,
+        file,
+        personalisation
+      )
+      console.log(`Statement published via email: ${request.filename}`)
+    } else {
+      const file = await retry(() => getFile(request.filename))
+      response = await publishByPrint(request.filename, file)
+      console.log(`Statement published via print: ${request.filename}`)
+    }
   } catch (err) {
     reason = handlePublishReasoning(err)
     errorObject = {
@@ -38,7 +58,7 @@ const publishStatement = async (request) => {
     }
   } finally {
     try {
-      await saveRequest(request, response?.data.id, EMAIL, errorObject)
+      await saveRequest(request, response?.data.id, request.method, errorObject)
     } catch {
       console.log('Could not save the request')
     }
