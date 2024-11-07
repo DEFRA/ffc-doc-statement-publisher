@@ -85,7 +85,7 @@ describe('Decide next step from Notify delivery reponse', () => {
 
     test('should call failed with delivery and INVALID', async () => {
       await updateDeliveryFromResponse(delivery, response)
-      expect(failed).toHaveBeenCalledWith(delivery, INVALID)
+      expect(failed).toHaveBeenCalledWith(delivery, { reason: INVALID })
     })
 
     test('should not call completeDelivery', async () => {
@@ -126,7 +126,7 @@ describe('Decide next step from Notify delivery reponse', () => {
 
     test('should call failed with delivery and REJECTED', async () => {
       await updateDeliveryFromResponse(delivery, response)
-      expect(failed).toHaveBeenCalledWith(delivery, REJECTED)
+      expect(failed).toHaveBeenCalledWith(delivery, { reason: REJECTED })
     })
 
     test('should not call completeDelivery', async () => {

@@ -72,6 +72,31 @@ describe('Publish by email', () => {
     })
   })
 
+  test('should record email send failure and retry once and succeed', (done) => {
+    expect.assertions(1)
+    mockNotifyClient().sendEmail.mockReturnValueOnce(Promise.reject(new Error('error')))
+    publishByEmail(EMAIL_TEMPLATE, EMAIL, FILE_BUFFER, PERSONALISATION)
+      .then(result => {
+        expect(result.status).toEqual(200)
+        done()
+      })
+      .catch((e) => {
+        done()
+      })
+  })
+
+  test('should record email send failure and retry thrice and fail', () => {
+    expect.assertions(1)
+    mockNotifyClient().sendEmail
+      .mockRejectedValueOnce('error')
+      .mockRejectedValueOnce('error')
+      .mockRejectedValueOnce('error')
+      .mockRejectedValueOnce('error')
+
+    return expect(publishByEmail(EMAIL_TEMPLATE, EMAIL, FILE_BUFFER, PERSONALISATION))
+      .rejects.toBe('error')
+  })
+
   test('should return mockNotifyClient.sendEmail', async () => {
     const result = await publishByEmail(EMAIL_TEMPLATE, EMAIL, FILE_BUFFER, PERSONALISATION)
     expect(result).toBe(await mockNotifyClient().sendEmail())

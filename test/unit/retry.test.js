@@ -1,4 +1,4 @@
-const retry = require('../../app/retry')
+const { retry, thunkify } = require('../../app/retry')
 let mockFunction
 
 describe('retry', () => {
@@ -30,5 +30,26 @@ describe('retry', () => {
       await retry(mockFunction, 1)
     } catch {}
     expect(mockFunction).toHaveBeenCalledTimes(2)
+  })
+})
+
+function syncThunkable (a, b) {
+  return a + b
+}
+
+async function asyncThunkable (a, b) {
+  return a + b
+}
+
+describe('thunkify', () => {
+  test('should create a synchronous thunk', () => {
+    const thunk = thunkify(syncThunkable, 2, 2)
+    expect(typeof thunk).toEqual('function')
+    expect(thunk()).toEqual(4)
+  })
+  test('should create an asynchronous thunk', async () => {
+    const thunk = thunkify(asyncThunkable, 2, 2)
+    expect(typeof thunk).toEqual('function')
+    expect(await thunk()).toEqual(4)
   })
 })

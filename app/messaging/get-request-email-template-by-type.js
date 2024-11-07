@@ -1,4 +1,3 @@
-
 const getRequestEmailTemplateByType = (requestType, documentTypes) => {
   const documentType = documentTypes.find(documentType => documentType.type === requestType)
   if (!documentType) {
