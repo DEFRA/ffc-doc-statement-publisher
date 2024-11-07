@@ -12,8 +12,8 @@ const getFailuresToResendAsLetters = async (transaction) => {
         {
           dateResent: null
         },
-        { 
-          reason: { [db.Sequelize.Op.or]: Object.values(failureReasons) } 
+        {
+          reason: { [db.Sequelize.Op.or]: Object.values(failureReasons) }
         }
       ]
     },
@@ -35,7 +35,7 @@ const getFailuresToResendAsLetters = async (transaction) => {
       [db.Sequelize.col('delivery.statement.schemeShortName'), 'schemeShortName'],
       [db.Sequelize.col('delivery.statement.schemeYear'), 'schemeYear'],
       [db.Sequelize.col('delivery.statement.schemeFrequency'), 'schemeFrequency'],
-      [db.Sequelize.col('delivery.statement.documentReference'), 'documentReference'],
+      [db.Sequelize.col('delivery.statement.documentReference'), 'documentReference']
     ],
     include: [
       {
@@ -53,7 +53,7 @@ const getFailuresToResendAsLetters = async (transaction) => {
     ],
     raw: true,
     transaction
-  });  
-  }
-  
-  module.exports = getFailuresToResendAsLetters
+  })
+}
+
+module.exports = getFailuresToResendAsLetters
