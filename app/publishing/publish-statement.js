@@ -22,7 +22,7 @@ const publishStatement = async (request) => {
     throw new Error('Could not check for duplicates')
   }
 
-  const publishStatementType = request?.emailTemplate ? EMAIL : LETTER
+  const publishStatementType = request?.statementFileUrl ? LETTER : EMAIL
 
   try {
     let personalisation = null
@@ -30,7 +30,8 @@ const publishStatement = async (request) => {
       validateEmail(request.email)
       personalisation = getPersonalisation(request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency, request.businessName, request.paymentPeriod)
     }
-    response = await publish(request?.emailTemplate, request?.email, request.filename, personalisation, publishStatementType)
+    const filename = publishStatementType === LETTER ? request?.statementFileUrl : request?.filename
+    response = await publish(request?.emailTemplate, request?.email, filename, personalisation, publishStatementType)
     console.log(`Statement published: ${request.filename}`)
   } catch (err) {
     reason = handlePublishReasoning(err)
