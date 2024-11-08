@@ -43,6 +43,7 @@ container:
   notifyApiKeyLetter: dummy
   notifyEmailTemplateKey: dummy
   docNotifyApiKey: dummy
+  docNotifyApiKeyLetter: dummy
   docNotifyEmailTemplateKey: dummy
 
 postgresService:
