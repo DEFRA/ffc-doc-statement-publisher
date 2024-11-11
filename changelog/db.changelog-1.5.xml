@@ -14,9 +14,6 @@
       <column name="message" type="VARCHAR(255)">
         <constraints nullable="true" />
       </column>
-        <column name="dateResent" type="TIMESTAMP">
-        <constraints nullable="true" />
-      </column>
     </addColumn>
   </changeSet>
 </databaseChangeLog>
