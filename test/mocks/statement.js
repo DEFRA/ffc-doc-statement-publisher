@@ -1,4 +1,5 @@
 const EMAIL = require('./components/email')
+const EMAIL_TEMPLATE = require('./components/template')
 const SYSTEM_TIME = require('./components/system-time')
 
 const mockScheme = {
@@ -21,6 +22,7 @@ const mockStatement1 = {
   sbi: 123456789,
   frn: 1234567890,
   email: EMAIL,
+  emailTemplate: EMAIL_TEMPLATE,
   received: SYSTEM_TIME,
   ...mockScheme
 }
@@ -38,6 +40,7 @@ const mockStatement2 = {
   sbi: 123456788,
   frn: 1234567898,
   email: 'farmer2@farm.com',
+  emailTemplate: EMAIL_TEMPLATE,
   received: SYSTEM_TIME,
   ...mockScheme
 }
