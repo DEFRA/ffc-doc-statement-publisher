@@ -5,7 +5,7 @@ jest.mock('../../../app/schemas/components/email', () => {
   }
 })
 
-const validateEmail = require('../../../app/publishing/validate-email')
+const { validateEmail } = require('../../../app/publishing/validate-email')
 
 let email
 

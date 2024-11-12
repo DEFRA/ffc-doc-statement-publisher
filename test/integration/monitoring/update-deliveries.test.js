@@ -1,6 +1,10 @@
 let mockSendEmail
 const MOCK_PREPARED_FILE = 'mock-prepared-file'
+const MOCK_URL = 'http://mock.url'
 let mockPrepareUpload
+let mockSendPrecompiledLetter
+const mockGetStatementFileUrl = jest.fn()
+const mockFetchStatementFile = jest.fn()
 let mockGetNotificationById
 jest.mock('notifications-node-client', () => {
   return {
@@ -8,12 +12,16 @@ jest.mock('notifications-node-client', () => {
       return {
         sendEmail: mockSendEmail,
         prepareUpload: mockPrepareUpload,
-        getNotificationById: mockGetNotificationById
+        getNotificationById: mockGetNotificationById,
+        sendPrecompiledLetter: mockSendPrecompiledLetter
       }
     })
   }
 })
 jest.mock('ffc-messaging')
+jest.mock('../../../app/publishing/get-statement-file-url', () => mockGetStatementFileUrl)
+jest.mock('../../../app/publishing/fetch-statement-file', () => mockFetchStatementFile)
+
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
 const db = require('../../../app/data')
@@ -48,6 +56,9 @@ describe('update deliveries', () => {
     mockSendEmail = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
     mockPrepareUpload = jest.fn().mockReturnValue(MOCK_PREPARED_FILE)
     mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: DELIVERED } })
+    mockSendPrecompiledLetter = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
+    mockFetchStatementFile.mockReturnValue(MOCK_PREPARED_FILE)
+    mockGetStatementFileUrl.mockReturnValue(MOCK_URL)
   })
 
   afterAll(async () => {

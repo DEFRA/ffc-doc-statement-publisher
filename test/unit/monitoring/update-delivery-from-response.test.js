@@ -7,6 +7,9 @@ const failed = require('../../../app/monitoring/failed')
 jest.mock('../../../app/monitoring/reschedule-delivery')
 const rescheduleDelivery = require('../../../app/monitoring/reschedule-delivery')
 
+jest.mock('../../../app/monitoring/schedule-letter')
+const scheduleLetter = require('../../../app/monitoring/schedule-letter')
+
 const updateDeliveryFromResponse = require('../../../app/monitoring/update-delivery-from-response')
 
 const { mockDelivery1: delivery } = require('../../mocks/delivery')
@@ -19,6 +22,7 @@ describe('Decide next step from Notify delivery reponse', () => {
     completeDelivery.mockResolvedValue(undefined)
     failed.mockResolvedValue(undefined)
     rescheduleDelivery.mockResolvedValue(undefined)
+    scheduleLetter.mockResolvedValue(undefined)
 
     response = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
   })

@@ -17,7 +17,7 @@ const isValidEmail = (email) => {
     abortEarly: false
   })
 
-  return !result?.error
+  return result?.error === undefined
 }
 
 module.exports = { validateEmail, isValidEmail }

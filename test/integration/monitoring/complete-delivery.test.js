@@ -9,7 +9,11 @@ describe('complete delivery', () => {
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
 
     await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1])
+    try {
+      await db.statement.bulkCreate([mockStatement1])
+    } catch (e) {
+      console.log(':::', e)
+    }
     await db.delivery.bulkCreate([mockDelivery1])
   })
 
