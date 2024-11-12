@@ -6,29 +6,12 @@ const promisify = require('../promisify')
 
 function setupNotifyClient () {
   const notifyClient = new NotifyClient(config.notifyApiKey)
-  notifyClient.prepareUpload = promisify(notifyClient.prepareUpload)
-  notifyClient.sendEmail = promisify(notifyClient.sendEmail)
+  notifyClient.prepareUpload = promisify(notifyClient.prepareUpload).bind(notifyClient)
+  notifyClient.sendEmail = promisify(notifyClient.sendEmail).bind(notifyClient)
   return notifyClient
 }
 
 /**
- * Creates a thunk for the retry mechanism
- * A thunk is basically an instance of a function call along with parameter values that can be evaluated at any time
- * For example the following function
- * function toBeThunked(a,b) return a+b
- * Can be turned into a thunk like this
- * function thunkify(fn){
- *   const args = [].slice.call(arguments, 1)
- *   return function(cb) {
- *     args.push(cb)
- *     return fn.apply(null,args)
- *   }
- * }
- * const thunk = thunkify(toBeThunked, 2, 2)
- * console.log(thunk()) // prints 4
- * console.log(thunk()) // prints 4 again even though we did nothing different
- *
- *
  * @param {Object} template
  * @param {String} email
  * @param {String} file
@@ -60,7 +43,6 @@ const publishByEmail = async (template, email, file, personalisation) => {
   const thunk = setupEmailThunk(template, email, linkToFile, personalisation, notifyClient)
   return retry(thunk, 3, 100, true)
     .then(result => {
-      console.log(result)
       return result
     })
     .catch((err) => {

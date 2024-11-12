@@ -1,9 +1,9 @@
-// const { EMAIL, LETTER } = require('../constants/methods')
+const { EMAIL, LETTER } = require('../constants/methods')
 const { getExistingDocument } = require('../processing/publish')
 const validateEmail = require('./validate-email')
 const getPersonalisation = require('./get-personalisation')
 const publishByEmail = require('./publish-by-email')
-const publishByPrint = require('./publish-by-print')
+const publishByLetter = require('./publish-by-letter')
 const handlePublishReasoning = require('./handle-publish-reasoning')
 const saveRequest = require('./save-request')
 const { retry } = require('../retry')
@@ -27,6 +27,7 @@ const publishStatement = async (request) => {
   try {
     if (request.email && request.email.trim() !== '') {
       validateEmail(request.email)
+      request.method = EMAIL
       const personalisation = getPersonalisation(
         request.scheme.name,
         request.scheme.shortName,
@@ -44,8 +45,9 @@ const publishStatement = async (request) => {
       )
       console.log(`Statement published via email: ${request.filename}`)
     } else {
+      request.method = LETTER
       const file = await retry(() => getFile(request.filename))
-      response = await publishByPrint(request.filename, file)
+      response = await publishByLetter(request.filename, file)
       console.log(`Statement published via print: ${request.filename}`)
     }
   } catch (err) {
