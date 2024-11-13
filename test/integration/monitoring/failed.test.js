@@ -191,13 +191,10 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should create one failure', async () => {
-      try {
-        await failed(delivery, { reason })
-        const failures = await db.failure.findAll({ where: { deliveryId: delivery.deliveryId } })
-        expect(failures.length).toBe(1)
-      } catch (e) {
-        console.log(e)
-      }
+      await failed(delivery, { reason })
+      
+      const failures = await db.failure.findAll({ where: { deliveryId: delivery.deliveryId } })
+      expect(failures.length).toBe(1)
     })
 
     test('should create failure with REJECTED reason', async () => {

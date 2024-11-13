@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
    * @param {STRING}      error as returned from Notify
    * @param {STRING}      message as returned from Notify
    * @param {DATE}        failed when the failure occured
-   * @param {DATE}        dateResent the delivery was resent
    */
   const failure = sequelize.define('failure', {
     failureId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
