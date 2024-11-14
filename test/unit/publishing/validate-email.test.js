@@ -5,7 +5,7 @@ jest.mock('../../../app/schemas/components/email', () => {
   }
 })
 
-const { validateEmail } = require('../../../app/publishing/validate-email')
+const { validateEmail, isValidEmail } = require('../../../app/publishing/validate-email')
 
 let email
 
@@ -44,6 +44,26 @@ describe('Validate email', () => {
     test('should return mockValidation().value', async () => {
       const result = validateEmail(email)
       expect(result).toStrictEqual(mockValidation().value)
+    })
+
+    test('isValidEmail should call mockValidation', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalled()
+    })
+
+    test('isValidEmail should call mockValidation once', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalledTimes(1)
+    })
+
+    test('isValidEmail should call mockValidation with email and { abortEarly: false }', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalledWith(email, { abortEarly: false })
+    })
+
+    test('isValidEmail should return true', async () => {
+      const result = isValidEmail(email)
+      expect(result).toBe(true)
     })
   })
 
@@ -85,6 +105,26 @@ describe('Validate email', () => {
     test('should throw error which starts "Email is invalid"', async () => {
       const wrapper = () => { validateEmail(email) }
       expect(wrapper).toThrow(/^Email is invalid/)
+    })
+
+    test('isValidEmail should call mockValidation', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalled()
+    })
+
+    test('isValidEmail should call mockValidation once', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalledTimes(1)
+    })
+
+    test('isValidEmail should call mockValidation with email and { abortEarly: false }', async () => {
+      isValidEmail(email)
+      expect(mockValidation).toHaveBeenCalledWith(email, { abortEarly: false })
+    })
+
+    test('isValidEmail should return false', async () => {
+      const result = isValidEmail(email)
+      expect(result).toBe(false)
     })
   })
 })

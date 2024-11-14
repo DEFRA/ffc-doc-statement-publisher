@@ -1,7 +1,6 @@
 const config = require('../../../app/config')
 const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
 const publishByLetter = require('../../../app/publishing/publish-by-letter')
-const { retry } = require('../../../app/retry')
 
 const EMAIL = require('../../mocks/components/email')
 const FILE = require('../../mocks/components/filename')
