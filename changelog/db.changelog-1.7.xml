@@ -3,7 +3,7 @@
   <changeSet author="John Barnard" id="1">
     <tagDatabase tag="v1.6.0" />
   </changeSet>
-  <changeSet author="John Barnar" id="2">
+  <changeSet author="John Barnard" id="2">
     <addColumn tableName="statements">
       <column name="emailTemplate" type="VARCHAR(50)">
         <constraints nullable="true" />
