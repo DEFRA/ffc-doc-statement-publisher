@@ -194,15 +194,21 @@ describe('request schema', () => {
     expect(result.error).toBeDefined()
   })
 
-  test('validates fail if missing scheme frequency', () => {
+  test('validates success if missing scheme frequency', () => {
     delete mockRequest.scheme.frequency
-    const result = schema.validate(mockRequest)
-    expect(result.error).toBeDefined()
+    const result = schema.validate(messagingMockRequest)
+    expect(result.error).toBeUndefined()
   })
 
-  test('validates fail if empty scheme frequency', () => {
+  test('validates success if empty scheme frequency', () => {
     mockRequest.scheme.frequency = ''
-    const result = schema.validate(mockRequest)
-    expect(result.error).toBeDefined()
+    const result = schema.validate(messagingMockRequest)
+    expect(result.error).toBeUndefined()
+  })
+
+  test('validates success if scheme frequency is null', () => {
+    mockRequest.scheme.frequency = null
+    const result = schema.validate(messagingMockRequest)
+    expect(result.error).toBeUndefined()
   })
 })

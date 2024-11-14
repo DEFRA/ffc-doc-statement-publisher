@@ -1,7 +1,6 @@
 const Joi = require('joi')
 
-module.exports = Joi.string().email().required().messages({
+module.exports = Joi.string().email().optional().allow('', null).messages({
   'string.empty': 'email cannot be empty',
-  'string.email': 'email must be a valid email address',
-  'any.required': 'email string is missing, but it is required'
+  'string.email': 'email must be a valid email address'
 })

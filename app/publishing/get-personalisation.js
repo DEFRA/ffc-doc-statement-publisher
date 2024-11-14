@@ -8,6 +8,15 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
       businessName
     }
   }
+  if (schemeShortName === 'DP') {
+    return {
+      schemeName,
+      schemeShortName,
+      schemeYear,
+      schemeFrequency: 'Bi-Annual',
+      businessName
+    }
+  }
   return {
     schemeName,
     schemeShortName,

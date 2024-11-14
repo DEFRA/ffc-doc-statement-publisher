@@ -22,5 +22,11 @@ module.exports = [
     type: 'uk.gov.doc.sfi-23-advanced-statement.publish',
     name: 'Payment statement',
     template: 'd54d1697-9b66-45a4-ad9f-a538e749fb60'
+  },
+  {
+    id: 'delinked-statement',
+    type: 'uk.gov.doc.delinked-statement.publish',
+    name: 'Delinked payment statement',
+    template: '925c5cee-8721-4786-80ab-a9bef4f22161'
   }
 ]

@@ -1,7 +1,7 @@
 const filenameRegex = {
   teamName: /^[A-Z]{3,6}_/,
   documentPrefix: /^[A-Z](?:[A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*_/,
-  schemeShortName: /^[A-Z]{3,6}_/,
+  schemeShortName: /^[A-Z]{2,6}_/,
   schemeYear: /^\d{4}_/,
   frn: /^\d{10}_/,
   timestampRegex: /\d{16}/,
