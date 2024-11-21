@@ -60,7 +60,7 @@ describe('Publish document', () => {
     const result = await publish(template, email, filename, personalisation, LETTER)
 
     expect(retry).toHaveBeenCalledWith(expect.any(Function))
-    expect(fetchStatementFile).toHaveBeenCalledWith(filename)
+    expect(fetchStatementFile).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`${filename}$`)))
     expect(publishByLetter).toHaveBeenCalledWith(filename, file)
     expect(result).toBe('Letter sent')
   })
