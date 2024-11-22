@@ -10,7 +10,7 @@ const setupLetterRequest = (reference, pdfFile, postage, notifyClient) => {
 }
 
 const publishByLetter = async (reference, pdfFile, postage = SECOND) => {
-  const notifyClient = new NotifyClient(config.notifyApiKey)
+  const notifyClient = new NotifyClient(config.notifyApiKeyLetter)
   const letterRequest = setupLetterRequest(reference, pdfFile, postage, notifyClient)
   return retry(letterRequest, 3, 100, true)
     .then(result => {

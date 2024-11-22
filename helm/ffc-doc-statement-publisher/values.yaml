@@ -40,8 +40,10 @@ container:
   storageContainer: statements
   storageFolder: outbound
   notifyApiKey: dummy
+  notifyApiKeyLetter: dummy
   notifyEmailTemplateKey: dummy
   docNotifyApiKey: dummy
+  docNotifyApiKeyLetter: dummy
   docNotifyEmailTemplateKey: dummy
   statementReceiverApiVersion: v1
   statementReceiverEndpoint: https://ffc-doc-statement-receiver  

@@ -36,9 +36,9 @@ describe('Publish by letter', () => {
     expect(mockNotifyClient).toHaveBeenCalledTimes(1)
   })
 
-  test('should call mockNotifyClient with config.notifyApiKey', async () => {
+  test('should call mockNotifyClient with config.notifyApiKeyLetter', async () => {
     await publishByLetter(FILE, FILE_BUFFER)
-    expect(mockNotifyClient).toHaveBeenCalledWith(config.notifyApiKey)
+    expect(mockNotifyClient).toHaveBeenCalledWith(config.notifyApiKeyLetter)
   })
 
   test('should call mockNotifyClient.sendPrecompiledLetter', async () => {
