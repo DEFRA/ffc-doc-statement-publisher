@@ -1,6 +1,6 @@
 {
   "name": "ffc-doc-statement-publisher",
-  "version": "2.1.24",
+  "version": "2.2.0",
   "description": "Publish statements",
   "homepage": "https://github.com/DEFRA/ffc-doc-statement-publisher",
   "main": "app/index.js",
@@ -27,7 +27,7 @@
     "@azure/identity": "4.2.1",
     "@azure/storage-blob": "12.10.0",
     "applicationinsights": "2.9.6",
-    "axios": "^1.7.7",
+    "axios": "1.7.7",
     "ffc-messaging": "2.9.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
