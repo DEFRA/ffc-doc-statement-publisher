@@ -48,8 +48,7 @@ describe('scheduleLetter', () => {
 
     expect(db.statement.findOne).toHaveBeenCalledWith({ where: { statementId: delivery.statementId }, transaction })
     expect(isDpSchema).toHaveBeenCalledWith(statement.schemeShortName)
-    expect(getStatementFileUrl).toHaveBeenCalledWith(statement.filename)
-    expect(publish).toHaveBeenCalledWith(statement.emailTemplate, statement.email, 'file-url', null, LETTER)
+    expect(publish).toHaveBeenCalledWith(statement.emailTemplate, statement.email, 'file.pdf', null, LETTER)
     expect(db.delivery.create).toHaveBeenCalledWith({
       statementId: delivery.statementId,
       method: delivery.method,
