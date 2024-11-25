@@ -29,7 +29,6 @@ const publishByEmail = async (template, email, file, personalisation) => {
   const emailRequest = setupEmailRequest(template, email, linkToFile, personalisation, notifyClient)
   return retry(emailRequest, 3, 100, true)
     .then(result => {
-      console.log(result)
       return result
     })
     .catch((err) => {
