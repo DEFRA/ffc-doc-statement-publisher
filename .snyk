@@ -7,4 +7,9 @@ ignore:
         reason: no direct upgrade
         expires: 2024-08-23T09:33:30.658Z
         created: 2024-08-12T18:31:30.658Z  
+  SNYK-JS-AXIOS-6671926:
+      - '*':
+        reason: no direct upgrade
+        expires: 2025-02-28T15:32:12.474Z
+        created: 2024-11-28T15:32:12.474Z
 patch: {}
