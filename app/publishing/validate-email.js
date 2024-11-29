@@ -12,4 +12,12 @@ const validateEmail = (email) => {
   return result.value
 }
 
-module.exports = validateEmail
+const isValidEmail = (email) => {
+  const result = schema.validate(email, {
+    abortEarly: false
+  })
+
+  return result?.error === undefined
+}
+
+module.exports = { validateEmail, isValidEmail }

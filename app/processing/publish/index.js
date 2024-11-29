@@ -1,4 +1,4 @@
-const getExistingDocument = require('./get-exisiting-document')
+const getExistingDocument = require('./get-existing-document')
 
 module.exports = {
   getExistingDocument

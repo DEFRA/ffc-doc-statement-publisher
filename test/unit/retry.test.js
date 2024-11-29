@@ -1,4 +1,4 @@
-const retry = require('../../app/retry')
+const { retry } = require('../../app/retry')
 let mockFunction
 
 describe('retry', () => {

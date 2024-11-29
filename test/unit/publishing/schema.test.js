@@ -10,14 +10,16 @@ describe('Email Schema', () => {
     expect(result.error).toBeDefined()
     expect(result.error.details[0].message).toEqual('email must be a valid email address')
   })
-  test('should return an error for an empty string', () => {
+  test('should allow an empty string without error', () => {
     const result = schema.validate('')
-    expect(result.error).toBeDefined()
-    expect(result.error.details[0].message).toEqual('email cannot be empty')
+    expect(result.error).toBeUndefined()
   })
-  test('should return an error for a missing email', () => {
-    const result = schema.validate()
-    expect(result.error).toBeDefined()
-    expect(result.error.details[0].message).toEqual('email string is missing, but it is required')
+  test('should allow null without error', () => {
+    const result = schema.validate(null)
+    expect(result.error).toBeUndefined()
+  })
+  test('should allow missing email without error', () => {
+    const result = schema.validate(undefined)
+    expect(result.error).toBeUndefined()
   })
 })

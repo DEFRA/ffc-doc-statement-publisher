@@ -1,4 +1,4 @@
-const { EMPTY, INVALID } = require('../../../app/constants/failure-reasons')
+const { EMPTY, INVALID, UNSUCCESFUL } = require('../../../app/constants/failure-reasons')
 
 const handlePublishReasoning = require('../../../app/publishing/handle-publish-reasoning')
 
@@ -32,9 +32,9 @@ describe('Handle error message from attempting to publish a statement', () => {
       error = { message: 'Unknown issue' }
     })
 
-    test('returns undefined', () => {
+    test('returns UNSUCCESFUL', () => {
       const result = handlePublishReasoning(error)
-      expect(result).toBeUndefined()
+      expect(result).toBe(UNSUCCESFUL)
     })
   })
 
@@ -43,9 +43,9 @@ describe('Handle error message from attempting to publish a statement', () => {
       error = {}
     })
 
-    test('returns undefined', () => {
+    test('returns UNSUCCESFUL', () => {
       const result = handlePublishReasoning(error)
-      expect(result).toBeUndefined()
+      expect(result).toBe(UNSUCCESFUL)
     })
   })
 })

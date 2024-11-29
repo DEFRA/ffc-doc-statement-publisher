@@ -16,6 +16,7 @@ const MARKETING_YEAR = require('../components/marketing-year')
 const { QUARTERLY: QUARTERLY_FREQUENCY } = require('../../../app/constants/frequencies')
 const DOCUMENT_REFERENCE = require('../components/document-reference')
 const MESSAGE_SOURCE = require('../../../app/constants/message-source')
+const TEMPLATE = require('../components/template')
 
 const BASE_MESSAGE = {
   body: {},
@@ -38,6 +39,7 @@ const STATEMENT_MESSAGE = {
       postcode: POSTCODE
     },
     email: EMAIL,
+    emailTemplate: TEMPLATE,
     filename: STATEMENT_FILENAME,
     scheme: {
       agreementNumber: 'SFI1234567',
@@ -68,6 +70,7 @@ const SCHEDULE_MESSAGE = {
       line5: LINE_5,
       postcode: POSTCODE
     },
+    emailTemplate: TEMPLATE,
     email: EMAIL,
     filename: SCHEDULE_FILENAME,
     scheme: {
@@ -85,7 +88,73 @@ const SCHEDULE_MESSAGE = {
   type: 'uk.gov.doc.schedule.publish'
 }
 
+const LETTER_STATEMENT_MESSAGE = {
+  ...BASE_MESSAGE,
+  body: {
+    businessName: BUSINESS_NAME,
+    sbi: Number(SBI),
+    frn: Number(FRN),
+    address: {
+      line1: LINE_1,
+      line2: LINE_2,
+      line3: LINE_3,
+      line4: LINE_4,
+      line5: LINE_5,
+      postcode: POSTCODE
+    },
+    email: EMAIL,
+    filename: STATEMENT_FILENAME,
+    statementFileUrl: STATEMENT_FILENAME,
+    scheme: {
+      agreementNumber: 'SFI1234567',
+      name: LONG_NAMES.SFI,
+      shortName: SHORT_NAMES.SFI,
+      year: String(MARKETING_YEAR),
+      frequency: QUARTERLY_FREQUENCY
+    },
+    documentReference: DOCUMENT_REFERENCE
+  },
+  applicationProperties: {
+    type: 'uk.gov.doc.statement.publish'
+  },
+  type: 'uk.gov.doc.statement.publish'
+}
+
+const LETTER_SCHEDULE_MESSAGE = {
+  ...BASE_MESSAGE,
+  body: {
+    businessName: BUSINESS_NAME,
+    sbi: Number(SBI),
+    frn: Number(FRN),
+    address: {
+      line1: LINE_1,
+      line2: LINE_2,
+      line3: LINE_3,
+      line4: LINE_4,
+      line5: LINE_5,
+      postcode: POSTCODE
+    },
+    email: EMAIL,
+    filename: SCHEDULE_FILENAME,
+    statementFileUrl: SCHEDULE_FILENAME,
+    scheme: {
+      agreementNumber: 'SFI1234567',
+      name: LONG_NAMES.SFI,
+      shortName: SHORT_NAMES.SFI,
+      year: String(MARKETING_YEAR),
+      frequency: QUARTERLY_FREQUENCY
+    },
+    documentReference: DOCUMENT_REFERENCE
+  },
+  applicationProperties: {
+    type: 'uk.gov.doc.schedule.publish'
+  },
+  type: 'uk.gov.doc.schedule.publish'
+}
+
 module.exports = {
   STATEMENT_MESSAGE,
-  SCHEDULE_MESSAGE
+  SCHEDULE_MESSAGE,
+  LETTER_STATEMENT_MESSAGE,
+  LETTER_SCHEDULE_MESSAGE
 }

@@ -1,8 +1,8 @@
-jest.mock('../../../app/processing/publish/get-exisiting-document')
-const getExistingDocument = require('../../../app/processing/publish/get-exisiting-document')
+jest.mock('../../../app/processing/publish/get-existing-document')
+const getExistingDocument = require('../../../app/processing/publish/get-existing-document')
 
 jest.mock('../../../app/publishing/validate-email')
-const validateEmail = require('../../../app/publishing/validate-email')
+const { validateEmail, isValidEmail } = require('../../../app/publishing/validate-email')
 
 jest.mock('../../../app/publishing/get-personalisation')
 const getPersonalisation = require('../../../app/publishing/get-personalisation')
@@ -27,6 +27,7 @@ const { EMAIL } = require('../../../app/constants/methods')
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
 
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
+
 const NOTIFY_ID = NOTIFY_RESPONSE.data.id
 const MOCK_PERSONALISATION = {
   schemeName: 'Test Scheme',
@@ -47,7 +48,7 @@ describe('Publish document', () => {
   describe.each([
     { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body },
     { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body }
-  ])('When request is a $name', ({ name, request }) => {
+  ])('When email request is a $name', ({ name, request }) => {
     describe('When it is a duplicate', () => {
       beforeEach(async () => {
         getExistingDocument.mockResolvedValue(true)
@@ -176,6 +177,7 @@ describe('Publish document', () => {
       beforeEach(() => {
         getExistingDocument.mockResolvedValue(null)
         validateEmail.mockReturnValue({ value: request.email })
+        isValidEmail.mockReturnValue(true)
         getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
         handlePublishReasoning.mockReturnValue(undefined)
         publish.mockResolvedValue(NOTIFY_RESPONSE)
@@ -246,7 +248,7 @@ describe('Publish document', () => {
 
         test('should call publish with request.email, request.filename and MOCK_PERSONALISATION', async () => {
           await publishStatement(request)
-          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION)
+          expect(publish).toHaveBeenCalledWith(EMAIL_TEMPLATE, request.email, request.filename, MOCK_PERSONALISATION, EMAIL)
         })
 
         test('should call saveRequest', async () => {
@@ -359,7 +361,8 @@ describe('Publish document', () => {
 
         test('should call saveRequest with request, undefined, EMAIL and handlePublishReasoning', async () => {
           try { await publishStatement(request) } catch {}
-          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, handlePublishReasoning())
+          const reason = handlePublishReasoning()
+          expect(saveRequest).toHaveBeenCalledWith(request, undefined, EMAIL, { error: undefined, message: errorMessage, reason, statusCode: undefined })
         })
 
         test('should not throw', async () => {
@@ -433,6 +436,30 @@ describe('Publish document', () => {
         test('should throw error with message "Could not check for duplicates"', async () => {
           const wrapper = async () => { await publishStatement(request) }
           expect(wrapper).rejects.toThrow(/^Could not check for duplicates$/)
+        })
+
+        test('should save error to database if all retry attempts are exhausted', (done) => {
+          expect.assertions(3)
+          publish.mockRejectedValue({
+            err: {
+              response: {
+                data: {
+                  status_code: 500
+                }
+              }
+            }
+          })
+          getExistingDocument.mockResolvedValue(undefined)
+          publishStatement(request)
+            .then(response => {
+              expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
+              expect(saveRequest).toHaveBeenCalledTimes(1)
+              expect(saveRequest).toHaveBeenCalledWith(request, undefined, 'email', { error: undefined, message: undefined, reason: undefined, ssatusCode: undefined })
+              done()
+            })
+            .catch((err) => {
+              console.log(err)
+            })
         })
       })
     })

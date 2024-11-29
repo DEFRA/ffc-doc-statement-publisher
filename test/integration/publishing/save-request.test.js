@@ -44,7 +44,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findAll()
         expect(statement.length).toBe(1)
@@ -57,7 +57,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'email', column: 'email' },
         { key: 'documentReference', column: 'documentReference' }
       ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request[key]).toBeDefined()
@@ -66,7 +66,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save string request key frn to statement column frn', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.frn).toBeDefined()
@@ -75,7 +75,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.line1 to statement column addressLine1', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.line1).toBeDefined()
@@ -84,7 +84,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.line2 to statement column addressLine2', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.line2).toBeDefined()
@@ -93,7 +93,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.line3 to statement column addressLine3', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.line3).toBeDefined()
@@ -102,7 +102,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.line4 to statement column addressLine4', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.line4).toBeDefined()
@@ -111,7 +111,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.line5 to statement column addressLine5', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.line5).toBeDefined()
@@ -120,7 +120,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save request key address.postcode to statement column postcode', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request.address.postcode).toBeDefined()
@@ -129,14 +129,14 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findAll()
         expect(delivery.length).toBe(1)
       })
 
       test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         const delivery = await db.delivery.findOne()
@@ -144,28 +144,28 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save delivery with method method', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.method).toBe(method)
       })
 
       test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.completed).toBeNull()
       })
 
       test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBe(reference)
@@ -174,7 +174,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = null
 
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
@@ -183,21 +183,21 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = undefined
 
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
       })
 
       test('should not save failure', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const failure = await db.failure.findAll()
         expect(failure.length).toBe(0)
       })
 
       test('should not send message to CRM', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
@@ -210,7 +210,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findAll()
         expect(statement.length).toBe(1)
@@ -223,7 +223,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'email', column: 'email' },
         { key: 'documentReference', column: 'documentReference' }
       ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request[key]).toBeDefined()
@@ -232,63 +232,63 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save statement with frn', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.frn).toBe(request.frn.toString())
       })
 
       test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine1).toBe(request.address.line1)
       })
 
       test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine2).toBe(request.address.line2)
       })
 
       test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine3).toBe(request.address.line3)
       })
 
       test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine4).toBe(request.address.line4)
       })
 
       test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine5).toBe(request.address.line5)
       })
 
       test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.postcode).toBe(request.address.postcode)
       })
 
       test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findAll()
         expect(delivery.length).toBe(1)
       })
 
       test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         const delivery = await db.delivery.findOne()
@@ -296,28 +296,28 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save delivery with method method', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.method).toBe(method)
       })
 
       test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.completed).toBeNull()
       })
 
       test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBe(reference)
@@ -326,7 +326,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = null
 
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
@@ -335,21 +335,21 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = undefined
 
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
       })
 
       test('should save 1 failure', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const failure = await db.failure.findAll()
         expect(failure.length).toBe(1)
       })
 
       test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findOne()
         const failure = await db.failure.findOne()
@@ -357,35 +357,35 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save failure with reason as EMPTY', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.reason).toBe(EMPTY)
       })
 
       test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.failed).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should send message to CRM', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).toHaveBeenCalled()
       })
 
       test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
         expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
       })
 
       test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
           ...MESSAGE,
@@ -404,7 +404,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findAll()
         expect(statement.length).toBe(1)
@@ -417,7 +417,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'email', column: 'email' },
         { key: 'documentReference', column: 'documentReference' }
       ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(request[key]).toBeDefined()
@@ -426,63 +426,63 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save statement with frn', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.frn).toBe(request.frn.toString())
       })
 
       test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine1).toBe(request.address.line1)
       })
 
       test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine2).toBe(request.address.line2)
       })
 
       test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine3).toBe(request.address.line3)
       })
 
       test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine4).toBe(request.address.line4)
       })
 
       test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine5).toBe(request.address.line5)
       })
 
       test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.postcode).toBe(request.address.postcode)
       })
 
       test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const delivery = await db.delivery.findAll()
         expect(delivery.length).toBe(1)
       })
 
       test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         const delivery = await db.delivery.findOne()
@@ -490,28 +490,28 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save delivery with email method', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.method).toBe(EMAIL)
       })
 
       test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.completed).toBeNull()
       })
 
       test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBe(reference)
@@ -520,7 +520,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = null
 
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
@@ -529,21 +529,21 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = undefined
 
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
       })
 
       test('should save 1 failure', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findAll()
         expect(failure.length).toBe(1)
       })
 
       test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         const failure = await db.failure.findOne()
@@ -551,35 +551,35 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save failure with reason as INVALID', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.reason).toBe(INVALID)
       })
 
       test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.failed).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should send message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).toHaveBeenCalled()
       })
 
       test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
         expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
       })
 
       test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
           ...MESSAGE,
@@ -598,7 +598,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save 1 statement', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findAll()
         expect(statement.length).toBe(1)
@@ -611,7 +611,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'email', column: 'email' },
         { key: 'documentReference', column: 'documentReference' }
       ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, reason)
+        await saveRequest(request, reference, method, { reason })
 
         const statement = await db.statement.findOne()
         console.log(statement[column], request[key])
@@ -621,63 +621,63 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save statement with frn', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.frn).toBe(request.frn.toString())
       })
 
       test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine1).toBe(request.address.line1)
       })
 
       test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine2).toBe(request.address.line2)
       })
 
       test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine3).toBe(request.address.line3)
       })
 
       test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine4).toBe(request.address.line4)
       })
 
       test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.addressLine5).toBe(request.address.line5)
       })
 
       test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         expect(statement.postcode).toBe(request.address.postcode)
       })
 
       test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findAll()
         expect(delivery.length).toBe(1)
       })
 
       test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findOne()
         const delivery = await db.delivery.findOne()
@@ -685,28 +685,28 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save delivery with email method', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.method).toBe(EMAIL)
       })
 
       test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.completed).toBeNull()
       })
 
       test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBe(reference)
@@ -715,7 +715,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = null
 
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
@@ -724,21 +724,21 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should save delivery with null reference when reference is null', async () => {
         reference = undefined
 
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         expect(delivery.reference).toBeNull()
       })
 
       test('should save 1 failure', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findAll()
         expect(failure.length).toBe(1)
       })
 
       test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const delivery = await db.delivery.findOne()
         const failure = await db.failure.findOne()
@@ -746,35 +746,35 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should save failure with reason as REJECTED', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.reason).toBe(REJECTED)
       })
 
       test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const failure = await db.failure.findOne()
         expect(failure.failed).toStrictEqual(SYSTEM_TIME)
       })
 
       test('should send message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).toHaveBeenCalled()
       })
 
       test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
         expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
       })
 
       test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, EMAIL, reason)
+        await saveRequest(request, reference, EMAIL, { reason })
 
         expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
           ...MESSAGE,
@@ -793,28 +793,28 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       })
 
       test('should not save statement', async () => {
-        try { await saveRequest(request, reference, EMAIL, reason) } catch {}
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
 
         const statement = await db.statement.findAll()
         expect(statement.length).toBe(0)
       })
 
       test('should not save delivery', async () => {
-        try { await saveRequest(request, reference, EMAIL, reason) } catch {}
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
 
         const delivery = await db.delivery.findAll()
         expect(delivery.length).toBe(0)
       })
 
       test('should not save failure', async () => {
-        try { await saveRequest(request, reference, EMAIL, reason) } catch {}
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
 
         const failure = await db.failure.findAll()
         expect(failure.length).toBe(0)
       })
 
       test('should not send message to CRM', async () => {
-        try { await saveRequest(request, reference, EMAIL, reason) } catch {}
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
 
         expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()

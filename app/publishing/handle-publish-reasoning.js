@@ -1,4 +1,4 @@
-const { EMPTY, INVALID } = require('../constants/failure-reasons')
+const { EMPTY, INVALID, UNSUCCESFUL } = require('../constants/failure-reasons')
 
 const handlePublishReasoning = (error) => {
   switch (error?.message) {
@@ -8,7 +8,7 @@ const handlePublishReasoning = (error) => {
       return INVALID
     default:
       console.log(`Publish fail reason ${error.message} not recognised`)
-      return undefined
+      return UNSUCCESFUL
   }
 }
 
