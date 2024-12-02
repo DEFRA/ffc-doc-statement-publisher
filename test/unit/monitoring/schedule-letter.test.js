@@ -2,7 +2,7 @@ const { LETTER } = require('../../../app/constants/methods')
 const db = require('../../../app/data')
 const getStatementFileUrl = require('../../../app/publishing/get-statement-file-url')
 const publish = require('../../../app/publishing/publish')
-const isDpSchema = require('../../../app/publishing/is-dp-scheme')
+const isDpScheme = require('../../../app/publishing/is-dp-scheme')
 const scheduleLetter = require('../../../app/monitoring/schedule-letter')
 
 jest.mock('../../../app/data', () => ({
@@ -40,16 +40,15 @@ describe('scheduleLetter', () => {
     const response = { data: { id: '789' } }
 
     db.statement.findOne.mockResolvedValue(statement)
-    isDpSchema.mockReturnValue(true)
+    isDpScheme.mockReturnValue(true)
     getStatementFileUrl.mockReturnValue('file-url')
     publish.mockResolvedValue(response)
 
     await scheduleLetter(delivery)
 
     expect(db.statement.findOne).toHaveBeenCalledWith({ where: { statementId: delivery.statementId }, transaction })
-    expect(isDpSchema).toHaveBeenCalledWith(statement.schemeShortName)
-    expect(getStatementFileUrl).toHaveBeenCalledWith(statement.filename)
-    expect(publish).toHaveBeenCalledWith(statement.emailTemplate, statement.email, 'file-url', null, LETTER)
+    expect(isDpScheme).toHaveBeenCalledWith(statement.schemeShortName)
+    expect(publish).toHaveBeenCalledWith(statement.emailTemplate, statement.email, 'file.pdf', null, LETTER)
     expect(db.delivery.create).toHaveBeenCalledWith({
       statementId: delivery.statementId,
       method: delivery.method,
@@ -67,12 +66,12 @@ describe('scheduleLetter', () => {
     const statement = { statementId: '123', schemeShortName: 'Non-DP' }
 
     db.statement.findOne.mockResolvedValue(statement)
-    isDpSchema.mockReturnValue(false)
+    isDpScheme.mockReturnValue(false)
 
     await scheduleLetter(delivery)
 
     expect(db.statement.findOne).toHaveBeenCalledWith({ where: { statementId: delivery.statementId }, transaction })
-    expect(isDpSchema).toHaveBeenCalledWith(statement.schemeShortName)
+    expect(isDpScheme).toHaveBeenCalledWith(statement.schemeShortName)
     expect(db.delivery.create).not.toHaveBeenCalled()
     expect(db.delivery.update).not.toHaveBeenCalled()
     expect(transaction.commit).toHaveBeenCalled()
