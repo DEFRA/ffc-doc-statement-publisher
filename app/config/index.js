@@ -17,9 +17,9 @@ const schema = Joi.object({
 const config = {
   env: process.env.NODE_ENV,
   deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL,
-  notifyApiKey: process.env.DOC_NOTIFY_API_KEY,
-  notifyApiKeyLetter: process.env.DOC_NOTIFY_API_KEY_LETTER,
-  notifyEmailTemplateKey: process.env.DOC_NOTIFY_EMAIL_TEMPLATE_KEY,
+  notifyApiKey: process.env.NOTIFY_API_KEY,
+  notifyApiKeyLetter: process.env.NOTIFY_API_KEY_LETTER,
+  notifyEmailTemplateKey: process.env.NOTIFY_EMAIL_TEMPLATE_KEY,
   retentionPeriodInWeeks: process.env.RETENTION_PERIOD_IN_WEEKS,
   statementReceiverApiVersion: process.env.STATEMENT_RECEIVER_API_VERSION,
   statementReceiverEndpoint: process.env.STATEMENT_RECEIVER_ENDPOINT
