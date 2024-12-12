@@ -14,7 +14,7 @@ const scheduleLetter = async (delivery) => {
       await db.delivery.create({ statementId: delivery.statementId, method: delivery.method, reference: response.data.id, requested: timestamp }, { transaction })
       await db.delivery.update({ completed: timestamp }, { where: { deliveryId: delivery.deliveryId }, transaction })
     } else {
-      console.log('Letter not scheduled as not DP schema.')
+      console.log('Letter not scheduled as not a Delinked Payment.')
     }
 
     await transaction.commit()
