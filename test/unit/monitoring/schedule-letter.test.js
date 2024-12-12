@@ -34,7 +34,7 @@ describe('scheduleLetter', () => {
     db.sequelize.transaction.mockResolvedValue(transaction)
   })
 
-  test('should schedule a letter if the statement is DP schema', async () => {
+  test('Letter not scheduled as not a Delinked Payment.', async () => {
     const delivery = { statementId: '123', method: 'email', deliveryId: '456' }
     const statement = { statementId: '123', schemeShortName: 'DP', filename: 'file.pdf', emailTemplate: 'template', email: 'test@example.com' }
     const response = { data: { id: '789' } }
@@ -61,7 +61,7 @@ describe('scheduleLetter', () => {
     expect(transaction.commit).toHaveBeenCalled()
   })
 
-  test('should not schedule a letter if the statement is not DP schema', async () => {
+  test('should not schedule a letter if the statement is not Delinked schema', async () => {
     const delivery = { statementId: '123', method: 'email', deliveryId: '456' }
     const statement = { statementId: '123', schemeShortName: 'Non-DP' }
 
