@@ -11,7 +11,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     const deliveries = await getDeliveriesForReport(schemeName, startDate, endDate, transaction)
     if (deliveries.length) {
       const report = await createReport(schemeName, deliveries[deliveries.length - 1].deliveryId, startDate, endDate, new Date())
-      const {filename, filedata} = generateReportCsv(deliveries)
+      const { filename, filedata } = generateReportCsv(deliveries)
       const personlisation = {
         schemeName,
         startDate,

@@ -6,6 +6,8 @@ const schema = Joi.object({
   schemes: Joi.array().items(
     Joi.object({
       schemeName: Joi.string().required(),
+      email: Joi.string(),
+      template: Joi.string(),
       schedule: Joi.object({
         intervalNumber: Joi.number().integer().min(1).required(),
         intervalType: Joi.string().valid('day', 'week', 'month', 'year').required()
@@ -23,8 +25,8 @@ const config = {
   schemes: [
     {
       schemeName: DELINKED_SCHEME_NAME,
-      email: '', // todo
-      template: '', // todo
+      email: process.env.REPORT_DELINKED_EMAIL,
+      template: process.env.REPORT_TEMPLATE,
       schedule: {
         intervalNumber: 1,
         intervalType: 'month'
@@ -44,7 +46,7 @@ const result = schema.validate(config, {
 
 // Throw if config is invalid
 if (result.error) {
-  throw new Error(`The report storage config is invalid. ${result.error.message}`)
+  throw new Error(`The report config is invalid. ${result.error.message}`)
 }
 
 module.exports = result.value
