@@ -16,6 +16,7 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
         required: true
       }
     ],
+    raw: true,
     transaction
   })
 }

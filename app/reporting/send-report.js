@@ -11,14 +11,13 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     const deliveries = await getDeliveriesForReport(schemeName, startDate, endDate, transaction)
     if (deliveries.length) {
       const report = await createReport(schemeName, deliveries[deliveries.length - 1].deliveryId, startDate, endDate, new Date())
-      const reportCsv = generateReportCsv
-      const file = reportCsv
+      const {filename, filedata} = generateReportCsv(deliveries)
       const personlisation = {
         schemeName,
         startDate,
         endDate
       }
-      await publishByEmail(template, email, file, personlisation)
+      await publishByEmail(template, email, filedata, personlisation, filename)
       await completeReport(report.id, transaction)
     } else {
       console.log('[REPORTING] nothing to report for scheme: ', schemeName)

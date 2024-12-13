@@ -16,15 +16,19 @@ function setupEmailRequest (template, email, linkToFile, personalisation, notify
   }
 }
 
-const publishByEmail = async (template, email, file, personalisation) => {
+const publishByEmail = async (template, email, file, personalisation, filename = null) => {
   moment.locale('en-gb')
   const notifyClient = new NotifyClient(config.notifyApiKey)
+  const fileOptions = {
+    confirmEmailBeforeDownload: true,
+    retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
+  }
+  if (filename) {
+    fileOptions.filename = filename
+  }
   const linkToFile = await notifyClient.prepareUpload(
     file,
-    {
-      confirmEmailBeforeDownload: true,
-      retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
-    }
+    ...fileOptions
   )
   const emailRequest = setupEmailRequest(template, email, linkToFile, personalisation, notifyClient)
   return retry(emailRequest, 3, 100, true)

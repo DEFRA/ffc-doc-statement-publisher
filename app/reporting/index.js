@@ -3,7 +3,7 @@ const getTodaysReport = require('./get-todays-report')
 const sendReport = require('./send-report')
 const moment = require('moment')
 
-const startSchemeReport = async (schemeName, template, email, startDate, endDate, runDate) => {
+const startSchemeReport = async (schemeName, template, email, startDate, endDate) => {
   console.log('[REPORTING] Starting report for scheme: ', schemeName)
   const existingReport = await getTodaysReport(schemeName)
   if(!existingReport?.length){
@@ -31,7 +31,7 @@ const start = async () => {
         const startDate = moment().startOf('day').subtract(durationNumber, durationType).toDate()
         if(isToday(runDate)) {
           console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
-          await startSchemeReport(schemeName, template, email, startDate, endDate, runDate)
+          await startSchemeReport(schemeName, template, email, startDate, endDate)
         } else {
           console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
         }
