@@ -11,7 +11,7 @@ const fetchStatementFile = async (url) => {
 
     if (e.response) {
       console.error(`Fetch File Status code: ${e.response.status}`)
-      console.error(`Response data: ${JSON.stringify(e.response.data)}`)
+      console.error(`Error message: ${e.response.data.message || 'No message available'}`)
     } else if (e.request) {
       console.error('No response received from the server when fetching file.')
     } else {
