@@ -28,7 +28,7 @@ const publishByEmail = async (template, email, file, personalisation, filename =
   }
   const linkToFile = await notifyClient.prepareUpload(
     file,
-    ...fileOptions
+    fileOptions
   )
   const emailRequest = setupEmailRequest(template, email, linkToFile, personalisation, notifyClient)
   return retry(emailRequest, 3, 100, true)
