@@ -15,6 +15,24 @@ jest.mock('ffc-messaging')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
 const db = require('../../../app/data')
+jest.mock('../../../app/data', () => ({
+  sequelize: {
+    truncate: jest.fn(),
+    close: jest.fn()
+  },
+  statement: {
+    bulkCreate: jest.fn()
+  },
+  delivery: {
+    bulkCreate: jest.fn(),
+    update: jest.fn()
+  },
+  Sequelize: {
+    Op: {
+      ne: Symbol('ne')
+    }
+  }
+}))
 const rescheduleDelivery = require('../../../app/monitoring/reschedule-delivery')
 const path = require('path')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')

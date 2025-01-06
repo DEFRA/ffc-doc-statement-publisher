@@ -21,7 +21,12 @@ jest.mock('notifications-node-client', () => {
 jest.mock('ffc-messaging')
 jest.mock('../../../app/publishing/get-statement-file-url', () => mockGetStatementFileUrl)
 jest.mock('../../../app/publishing/fetch-statement-file', () => mockFetchStatementFile)
-
+jest.mock('../../../app/data', () => ({
+  sequelize: {
+    truncate: jest.fn(),
+    close: jest.fn()
+  }
+}))
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
 const db = require('../../../app/data')
