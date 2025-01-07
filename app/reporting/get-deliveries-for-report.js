@@ -4,7 +4,7 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
   return db.delivery.findAll({
     where: {
       requested: {
-        [db.Sequelize.Op.between]: [start, end]
+        [db.Op.between]: [start, end]
       }
     },
     include: [

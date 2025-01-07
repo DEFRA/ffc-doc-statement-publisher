@@ -9,8 +9,8 @@ const getTodaysReport = async (schemeName) => {
     where: {
       schemeName,
       sentDate: {
-        [db.SequelizeOp.gte]: startOfDay,
-        [db.SequelizeOp.lt]: endOfDay
+        [db.Op.gte]: startOfDay,
+        [db.Op.lt]: endOfDay
       }
     }
   })

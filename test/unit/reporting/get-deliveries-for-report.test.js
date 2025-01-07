@@ -22,7 +22,7 @@ describe('getDeliveriesForReport', () => {
     expect(db.delivery.findAll).toHaveBeenCalledWith({
       where: {
         requested: {
-          [db.Sequelize.Op.between]: [start, end]
+          [db.Op.between]: [start, end]
         }
       },
       include: [

@@ -2,7 +2,7 @@ jest.mock('../../../app/data', () => ({
   reports: {
     findAll: jest.fn()
   },
-  SequelizeOp: {
+  Op: {
     gte: Symbol('gte'),
     lt: Symbol('lt')
   }
@@ -38,8 +38,8 @@ describe('getTodaysReport', () => {
       where: {
         schemeName,
         sentDate: {
-          [db.SequelizeOp.gte]: startOfDay,
-          [db.SequelizeOp.lt]: endOfDay
+          [db.Op.gte]: startOfDay,
+          [db.Op.lt]: endOfDay
         }
       }
     })
