@@ -24,11 +24,25 @@ const start = async () => {
     for (const scheme of schemes) {
       try {
         const { schemeName, template, email, schedule, dateRange } = scheme
-        const { intervalNumber, intervalType } = schedule
+        const { intervalNumber, intervalType, dayOfMonth, dayOfYear, monthOfYear } = schedule
         const { durationNumber, durationType } = dateRange
-        const runDate = moment().add(intervalNumber, intervalType).startOf('day')
-        const endDate = moment().endOf('day').toDate()
-        const startDate = moment().startOf('day').subtract(durationNumber, durationType).toDate()
+
+        let runDate
+        if (intervalType === 'months' && dayOfMonth) {
+          runDate = moment().date(dayOfMonth).endOf('day')
+          console.log(runDate)
+        } else if (intervalType === 'years' && dayOfYear && monthOfYear) {
+          console.log('oh ehllo')
+          runDate = moment().month(monthOfYear - 1).date(dayOfYear).endOf('day')
+        } else {
+          runDate = moment().add(intervalNumber, intervalType).endOf('day')
+        }
+
+        const endDate = runDate.clone().toDate()
+        const startDate = runDate.clone().startOf('day').subtract(durationNumber, durationType).toDate()
+
+        console.log(`[REPORTING] A report schedule has been calculated for ${schemeName} schema with start date ${startDate} and end date ${endDate}`)
+
         if (isToday(runDate)) {
           console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
           await startSchemeReport(schemeName, template, email, startDate, endDate)

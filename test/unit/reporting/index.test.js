@@ -118,19 +118,21 @@ describe('Reporting', () => {
     })
 
     test('should pass correct dates to startSchemeReport for monthly schedule', async () => {
+      const dayOfMonth = 2
+      jest.useFakeTimers().setSystemTime(new Date(2022, 7, dayOfMonth, 15, 30, 10, 120))
       config.reportConfig = {
         schemes: [
           {
             schemeName: 'monthlyScheme',
             template: 'templateMonthly',
             email: 'monthly@example.com',
-            schedule: { intervalNumber: 0, intervalType: 'months' },
+            schedule: { intervalNumber: 0, intervalType: 'months', dayOfMonth },
             dateRange: { durationNumber: 1, durationType: 'months' }
           }
         ]
       }
-      const startDate = moment().startOf('day').subtract(1, 'months').toDate()
-      const endDate = moment().endOf('day').toDate()
+      const startDate = moment().subtract(1, 'months').date(dayOfMonth).startOf('day').toDate()
+      const endDate = moment().date(dayOfMonth).endOf('day').toDate()
       getTodaysReport.mockResolvedValue([])
 
       await start()
@@ -139,19 +141,23 @@ describe('Reporting', () => {
     })
 
     test('should pass correct dates to startSchemeReport for yearly schedule', async () => {
+      const monthOfYear = 6
+      const dayOfYear = 15
+      jest.useFakeTimers().setSystemTime(new Date(2022, monthOfYear - 1, dayOfYear, 15, 30, 10, 120))
       config.reportConfig = {
         schemes: [
           {
             schemeName: 'yearlyScheme',
             template: 'templateYearly',
             email: 'yearly@example.com',
-            schedule: { intervalNumber: 0, intervalType: 'years' },
+            schedule: { intervalNumber: 0, intervalType: 'years', dayOfYear, monthOfYear },
             dateRange: { durationNumber: 1, durationType: 'years' }
           }
         ]
       }
-      const startDate = moment().startOf('day').subtract(1, 'years').toDate()
-      const endDate = moment().endOf('day').toDate()
+      const startDate = moment().month(monthOfYear - 1).date(dayOfYear).startOf('day').subtract(1, 'years').toDate()
+      const endDate = moment().month(monthOfYear - 1).date(dayOfYear).endOf('day').toDate()
+
       getTodaysReport.mockResolvedValue([])
 
       await start()
