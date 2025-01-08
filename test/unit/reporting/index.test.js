@@ -15,7 +15,7 @@ describe('Reporting', () => {
 
   describe('start', () => {
     beforeEach(() => {
-      jest.useFakeTimers()
+      jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
       jest.spyOn(global, 'setTimeout')
     })
 
@@ -94,6 +94,69 @@ describe('Reporting', () => {
       await start()
 
       expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 1000)
+    })
+
+    test('should pass correct dates to startSchemeReport for daily schedule', async () => {
+      config.reportConfig = {
+        schemes: [
+          {
+            schemeName: 'dailyScheme',
+            template: 'templateDaily',
+            email: 'daily@example.com',
+            schedule: { intervalNumber: 0, intervalType: 'days' },
+            dateRange: { durationNumber: 1, durationType: 'days' }
+          }
+        ]
+      }
+      const startDate = moment().startOf('day').subtract(1, 'days').toDate()
+      const endDate = moment().endOf('day').toDate()
+      getTodaysReport.mockResolvedValue([])
+
+      await start()
+
+      expect(sendReport).toHaveBeenCalledWith('dailyScheme', 'templateDaily', 'daily@example.com', startDate, endDate)
+    })
+
+    test('should pass correct dates to startSchemeReport for monthly schedule', async () => {
+      config.reportConfig = {
+        schemes: [
+          {
+            schemeName: 'monthlyScheme',
+            template: 'templateMonthly',
+            email: 'monthly@example.com',
+            schedule: { intervalNumber: 0, intervalType: 'months' },
+            dateRange: { durationNumber: 1, durationType: 'months' }
+          }
+        ]
+      }
+      const startDate = moment().startOf('day').subtract(1, 'months').toDate()
+      const endDate = moment().endOf('day').toDate()
+      getTodaysReport.mockResolvedValue([])
+
+      await start()
+
+      expect(sendReport).toHaveBeenCalledWith('monthlyScheme', 'templateMonthly', 'monthly@example.com', startDate, endDate)
+    })
+
+    test('should pass correct dates to startSchemeReport for yearly schedule', async () => {
+      config.reportConfig = {
+        schemes: [
+          {
+            schemeName: 'yearlyScheme',
+            template: 'templateYearly',
+            email: 'yearly@example.com',
+            schedule: { intervalNumber: 0, intervalType: 'years' },
+            dateRange: { durationNumber: 1, durationType: 'years' }
+          }
+        ]
+      }
+      const startDate = moment().startOf('day').subtract(1, 'years').toDate()
+      const endDate = moment().endOf('day').toDate()
+      getTodaysReport.mockResolvedValue([])
+
+      await start()
+
+      expect(sendReport).toHaveBeenCalledWith('yearlyScheme', 'templateYearly', 'yearly@example.com', startDate, endDate)
     })
   })
 })
