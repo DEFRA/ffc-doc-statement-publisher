@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`start should call sendReport if no existing report is found and log the start of sending report 1`] = `"template"`;
