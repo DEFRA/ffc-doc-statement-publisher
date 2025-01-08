@@ -40,14 +40,13 @@ describe('sendReport', () => {
     getDeliveriesForReport.mockResolvedValue(deliveries)
     createReport.mockResolvedValue(report)
     generateReportCsv.mockReturnValue(csvData)
-
     await sendReport(schemeName, template, email, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, transaction)
     expect(createReport).toHaveBeenCalledWith(schemeName, deliveries[0].deliveryId, startDate, endDate, expect.any(Date))
-    expect(generateReportCsv).toHaveBeenCalledWith(deliveries)
+    expect(generateReportCsv).toHaveBeenCalledWith(schemeName, expect.any(Date), deliveries)
     expect(publishByEmail).toHaveBeenCalledWith(template, email, csvData.filedata, { schemeName, startDate, endDate }, csvData.filename)
-    expect(completeReport).toHaveBeenCalledWith(report.id, transaction)
+    expect(completeReport).toHaveBeenCalledWith(report.reportId, transaction)
     expect(transaction.commit).toHaveBeenCalled()
   })
 

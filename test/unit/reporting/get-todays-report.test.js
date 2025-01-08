@@ -1,10 +1,12 @@
 jest.mock('../../../app/data', () => ({
-  reports: {
+  report: {
     findAll: jest.fn()
   },
   Op: {
     gte: Symbol('gte'),
-    lt: Symbol('lt')
+    lt: Symbol('lt'),
+    between: Symbol('between'),
+    ne: Symbol('ne')
   }
 }))
 
@@ -30,16 +32,16 @@ describe('getTodaysReport', () => {
       { reportId: 2, schemeName: 'Test Scheme', sentDate: report2SentDate }
     ]
 
-    db.reports.findAll.mockResolvedValue(mockReports)
+    db.report.findAll.mockResolvedValue(mockReports)
 
     const result = await getTodaysReport(schemeName)
 
-    expect(db.reports.findAll).toHaveBeenCalledWith({
+    expect(db.report.findAll).toHaveBeenCalledWith({
       where: {
         schemeName,
-        sentDate: {
-          [db.Op.gte]: startOfDay,
-          [db.Op.lt]: endOfDay
+        sent: {
+          [db.Op.between]: [startOfDay, endOfDay],
+          [db.Op.ne]: null
         }
       }
     })

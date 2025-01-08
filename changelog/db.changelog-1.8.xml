@@ -14,17 +14,17 @@
       <column name="schemeName" type="VARCHAR(175)">
         <constraints nullable="false" />
       </column>
-      <column name="reportStartDate" type="TIMESTAMP">
+      <column name="reportStartDate" type="DATETIME">
         <constraints nullable="false" />
       </column>
-      <column name="reportEndDate" type="TIMESTAMP">
+      <column name="reportEndDate" type="DATETIME">
         <constraints nullable="false" />
       </column>
-      <column name="requested" type="TIMESTAMP">
-        <constraints nullable="false" />
+      <column name="requested" type="DATETIME">
+        <constraints nullable="true" />
       </column>
-      <column name="sent" type="TIMESTAMP">
-        <constraints nullable="false" />
+      <column name="sent" type="DATETIME">
+        <constraints nullable="true" />
       </column>
     </createTable>
   </changeSet>

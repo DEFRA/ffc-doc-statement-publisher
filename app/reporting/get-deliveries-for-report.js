@@ -1,6 +1,11 @@
 const db = require('../data')
 
 const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
+  console.log('get deliveries', {
+    schemeName,
+    start,
+    end
+  })
   return db.delivery.findAll({
     where: {
       requested: {
@@ -10,6 +15,7 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
     include: [
       {
         model: db.statement,
+        as: 'statement',
         where: {
           schemeName
         },

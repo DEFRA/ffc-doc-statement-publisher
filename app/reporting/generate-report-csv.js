@@ -5,6 +5,7 @@ const getReportCsv = (deliveries) => {
 }
 
 const generateReportCsv = (schemeName, runDate, deliveries) => {
+  console.log('csv de', deliveries)
   const csv = getReportCsv(deliveries)
   const scheme = schemeName.toLowerCase().replace(/ /g, '_')
   const isoString = runDate.toISOString()

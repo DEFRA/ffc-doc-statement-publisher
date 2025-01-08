@@ -27,6 +27,7 @@ describe('getDeliveriesForReport', () => {
       },
       include: [
         {
+          as: 'statement',
           model: db.statement,
           where: {
             schemeName
