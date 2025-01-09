@@ -9,6 +9,12 @@ const schema = Joi.object({
       email: Joi.string(),
       template: Joi.string(),
       schedule: Joi.object({
+        dayOfMonth: Joi.number().integer(),
+        dayOfYear: Joi.number().integer(),
+        monthOfYear: Joi.number().integer(),
+        hour: Joi.number().integer(),
+        minute: Joi.number().integer(),
+        second: Joi.number().integer(),
         intervalNumber: Joi.number().integer().min(1).required(),
         intervalType: Joi.string().valid('days', 'weeks', 'months', 'years').required()
       }).required(),
@@ -29,7 +35,8 @@ const config = {
       template: process.env.REPORT_TEMPLATE,
       schedule: {
         intervalNumber: 1,
-        intervalType: 'months'
+        intervalType: 'months',
+        dayOfMonth: 9
       },
       dateRange: {
         durationNumber: 1,

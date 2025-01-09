@@ -29,6 +29,8 @@ services:
       NOTIFY_EMAIL_TEMPLATE_KEY: ${NOTIFY_EMAIL_TEMPLATE_KEY}
       STATEMENT_RECEIVER_API_VERSION: v1
       STATEMENT_RECEIVER_ENDPOINT: http://host.docker.internal:3022
+      REPORT_DELINKED_EMAIL: ${REPORT_DELINKED_EMAIL}
+      REPORT_TEMPLATE: ${REPORT_TEMPLATE}
 
   ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine

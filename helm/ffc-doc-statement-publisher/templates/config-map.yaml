@@ -27,6 +27,8 @@ data:
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
   NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
+  REPORT_DELINKED_EMAIL: {{ quote .Values.container.reportDelinkedEmail }}
+  REPORT_TEMPLATE: {{ quote .Values.container.reportTemplate }}
   {{- if and (.Values.environmentCode) (ne (.Values.environmentCode | toString ) "snd") }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}-{{ .Values.environmentCode }}.{{ .Values.ingress.server }}
   {{ else }}
