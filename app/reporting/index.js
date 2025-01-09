@@ -24,21 +24,19 @@ const start = async () => {
     for (const scheme of schemes) {
       try {
         const { schemeName, template, email, schedule, dateRange } = scheme
-        const { intervalNumber, intervalType, dayOfMonth, dayOfYear, monthOfYear } = schedule
+        const { intervalNumber, intervalType, dayOfMonth, dayOfYear, monthOfYear, hour, minute, second } = schedule
         const { durationNumber, durationType } = dateRange
 
         let runDate
-        if (intervalType === 'months' && dayOfMonth) {
-          runDate = moment().date(dayOfMonth).endOf('day')
-          console.log(runDate)
-        } else if (intervalType === 'years' && dayOfYear && monthOfYear) {
-          console.log('oh ehllo')
-          runDate = moment().month(monthOfYear - 1).date(dayOfYear).endOf('day')
+        if (intervalType === 'months') {
+          runDate = moment().date(dayOfMonth || 1).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
+        } else if (intervalType === 'years') {
+          runDate = moment().month((monthOfYear || 1) - 1).date(dayOfYear || 1).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
         } else {
-          runDate = moment().add(intervalNumber, intervalType).endOf('day')
+          runDate = moment().add(intervalNumber, intervalType).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
         }
 
-        const endDate = runDate.clone().toDate()
+        const endDate = runDate.clone().endOf('day').toDate()
         const startDate = runDate.clone().startOf('day').subtract(durationNumber, durationType).toDate()
 
         console.log(`[REPORTING] A report schedule has been calculated for ${schemeName} schema with start date ${startDate} and end date ${endDate}`)

@@ -10,11 +10,11 @@ const schema = Joi.object({
       template: Joi.string(),
       schedule: Joi.object({
         intervalNumber: Joi.number().integer().min(1).required(),
-        intervalType: Joi.string().valid('day', 'week', 'month', 'year').required()
+        intervalType: Joi.string().valid('days', 'weeks', 'months', 'years').required()
       }).required(),
       dateRange: Joi.object({
         durationNumber: Joi.number().integer().min(1).required(),
-        durationType: Joi.string().valid('day', 'week', 'month', 'year').required()
+        durationType: Joi.string().valid('days', 'weeks', 'months', 'years').required()// todo correct this
       }).required()
     })
   ).required()
@@ -29,11 +29,11 @@ const config = {
       template: process.env.REPORT_TEMPLATE,
       schedule: {
         intervalNumber: 1,
-        intervalType: 'month'
+        intervalType: 'months'
       },
       dateRange: {
         durationNumber: 1,
-        durationType: 'month'
+        durationType: 'months'
       }
     }
   ]
