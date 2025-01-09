@@ -121,7 +121,7 @@ describe('start', () => {
 
     expect(publishByEmail).toHaveBeenCalledWith('monthlyScheme', 'templateMonthly', 'monthly@example.com', startDate, endDate)
   })
-  
+
   test.skip('should pass correct dates to startSchemeReport for yearly schedule', async () => {
     config.reportConfig.schemes = [
       {
