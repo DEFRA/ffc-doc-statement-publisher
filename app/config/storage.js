@@ -6,6 +6,7 @@ const schema = Joi.object({
   storageAccount: Joi.string().required(),
   container: Joi.string().default('statements'),
   folder: Joi.string().default('outbound'),
+  reportFolder: Joi.string().default('reports'),
   useConnectionStr: Joi.boolean().default(false),
   createContainers: Joi.boolean().default(true)
 })
@@ -16,6 +17,7 @@ const config = {
   storageAccount: process.env.AZURE_STORAGE_ACCOUNT_NAME,
   container: process.env.AZURE_STORAGE_CONTAINER,
   folder: process.env.AZURE_STORAGE_FOLDER,
+  reportFolder: process.AZURE_STORAGE_REPORT_FOLDER,
   useConnectionStr: process.env.AZURE_STORAGE_USE_CONNECTION_STRING,
   createContainers: process.env.AZURE_STORAGE_CREATE_CONTAINERS
 }

@@ -3,6 +3,7 @@ const createReport = require('./create-report')
 const completeReport = require('./complete-report')
 const publishByEmail = require('../publishing/publish-by-email')
 const generateReportCsv = require('./generate-report-csv')
+const { saveReportFile } = require('../storage')
 const db = require('../data')
 
 const sendReport = async (schemeName, template, email, startDate, endDate) => {
@@ -19,6 +20,9 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
         startDate,
         endDate
       }
+      // save file in blob storage
+      await saveReportFile(filename, filedata)
+      // send CRM message
       await publishByEmail(template, email, filedata, personlisation, filename)
       await completeReport(report.reportId, transaction)
     } else {
@@ -26,6 +30,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     }
     await transaction.commit()
   } catch (err) {
+    console.error('[REPORTING] Error sending report for scheme: ', schemeName, err)
     await transaction.rollback()
     throw err
   }

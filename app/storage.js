@@ -40,9 +40,23 @@ const getFile = async (filename) => {
   return blob.downloadToBuffer()
 }
 
+const saveReportFile = async (filename, filedata) => {
+  containersInitialised ?? await initialiseContainers()
+  const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
+  await client.upload(filedata, filedata.length)
+  console.log(`File ${filename} saved in ${config.reportFolder} folder`)
+}
+
+const getReportFile = async (filename) => {
+  containersInitialised ?? await initialiseContainers()
+  const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
+  return client.downloadToBuffer()
+}
+
 module.exports = {
   initialiseContainers,
-  blobServiceClient,
   getBlob,
-  getFile
+  getFile,
+  saveReportFile,
+  getReportFile
 }
