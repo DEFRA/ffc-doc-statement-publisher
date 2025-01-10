@@ -1,3 +1,4 @@
+const { QueryTypes } = require('sequelize')
 const db = require('../data')
 
 const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
@@ -6,24 +7,19 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
     start,
     end
   })
-  return db.delivery.findAll({
-    where: {
-      requested: {
-        [db.Op.between]: [start, end]
-      }
-    },
-    include: [
-      {
-        model: db.statement,
-        as: 'statement',
-        where: {
-          schemeName
-        },
-        required: true
-      }
-    ],
-    raw: true,
-    transaction
+
+  const query = `
+    SELECT d.*, s.*
+    FROM deliveries d
+    INNER JOIN statements s ON d.statementId = s.id
+    WHERE s.schemeName = :schemeName AND d.requested BETWEEN :start AND :end
+  `
+
+  return db.sequelize.query(query, {
+    replacements: { schemeName, start, end },
+    type: QueryTypes.SELECT,
+    transaction,
+    stream: true
   })
 }
 

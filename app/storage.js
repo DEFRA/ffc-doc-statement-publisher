@@ -40,10 +40,14 @@ const getFile = async (filename) => {
   return blob.downloadToBuffer()
 }
 
-const saveReportFile = async (filename, filedata) => {
+const saveReportFile = async (filename, fileStream) => {
   containersInitialised ?? await initialiseContainers()
   const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
-  await client.upload(filedata, filedata.length)
+  
+  const passThroughStream = new PassThrough()
+  fileStream.pipe(passThroughStream)
+
+  await client.uploadStream(passThroughStream)
   console.log(`File ${filename} saved in ${config.reportFolder} folder`)
 }
 
