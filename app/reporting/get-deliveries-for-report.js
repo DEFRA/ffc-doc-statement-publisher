@@ -1,5 +1,5 @@
-const { QueryTypes } = require('sequelize')
 const db = require('../data')
+const QueryStream = require('pg-query-stream')
 
 const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
   console.log('get deliveries', {
@@ -11,16 +11,16 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
   const query = `
     SELECT d.*, s.*
     FROM deliveries d
-    INNER JOIN statements s ON d.statementId = s.id
-    WHERE s.schemeName = :schemeName AND d.requested BETWEEN :start AND :end
+    INNER JOIN statements s ON d."statementId" = s."statementId"
+    WHERE s."schemeName" = $1 AND d.requested BETWEEN $2 AND $3
+    ORDER  BY d."deliveryId"
   `
 
-  return db.sequelize.query(query, {
-    replacements: { schemeName, start, end },
-    type: QueryTypes.SELECT,
-    transaction,
-    stream: true
-  })
+  const client = await db.sequelize.connectionManager.getConnection()
+  const stream = new QueryStream(query, [schemeName, start, end])
+  const queryStream = client.query(stream)
+
+  return queryStream
 }
 
 module.exports = getDeliveriesForReport

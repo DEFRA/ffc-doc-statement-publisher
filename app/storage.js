@@ -27,7 +27,9 @@ const initialiseContainers = async () => {
 const initialiseFolders = async () => {
   const placeHolderText = 'Placeholder'
   const client = container.getBlockBlobClient(`${config.folder}/default.txt`)
+  const reportClient = container.getBlockBlobClient(`${config.reportFolder}/default.txt`)
   await client.upload(placeHolderText, placeHolderText.length)
+  await reportClient.upload(placeHolderText, placeHolderText.length)
 }
 
 const getBlob = async (filename) => {
@@ -41,14 +43,33 @@ const getFile = async (filename) => {
 }
 
 const saveReportFile = async (filename, fileStream) => {
-  containersInitialised ?? await initialiseContainers()
-  const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
-  
-  const passThroughStream = new PassThrough()
-  fileStream.pipe(passThroughStream)
+  try {
+    console.log('[STORAGE] Starting report file save:', filename)
+    containersInitialised ?? await initialiseContainers()
+    
+    const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
+    const options = {
+      blobHTTPHeaders: {
+        blobContentType: 'text/csv'
+      }
+    }
 
-  await client.uploadStream(passThroughStream)
-  console.log(`File ${filename} saved in ${config.reportFolder} folder`)
+    // Define upload parameters (4MB chunks, 5 concurrent uploads)
+    const bufferSize = 4 * 1024 * 1024
+    const maxBuffers = 5
+    
+    await client.uploadStream(
+      fileStream,
+      bufferSize,
+      maxBuffers,
+      options
+    )
+
+    console.log('[STORAGE] File saved successfully:', filename)
+  } catch (error) {
+    console.error('[STORAGE] Error saving report file:', error)
+    throw error
+  }
 }
 
 const getReportFile = async (filename) => {

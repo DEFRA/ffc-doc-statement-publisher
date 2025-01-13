@@ -1,29 +1,25 @@
-const { createObjectCsvStringifier } = require('csv-writer')
-const { PassThrough } = require('stream')
+const { format } = require('@fast-csv/format')
+const { Transform } = require('stream')
 
 const generateReportCsv = (schemeName, runDate) => {
-  const passThroughStream = new PassThrough({ objectMode: true })
-  let headersSet = false
-  let csvStringifier
-
-  passThroughStream.on('data', (data) => {
-    if (!headersSet) {
-      const headers = Object.keys(data).map(key => ({ id: key, title: key }))
-      csvStringifier = createObjectCsvStringifier({ header: headers })
-      passThroughStream.write(csvStringifier.getHeaderString())
-      headersSet = true
+  console.log('[CSV] Creating CSV stream for:', schemeName)
+  const filename = `${schemeName}-${runDate}.csv`
+  
+  // Create a transform stream that converts objects to CSV
+  const transformStream = new Transform({
+    objectMode: true,
+    transform(data, encoding, callback) {
+      console.log('[CSV] Transforming row:', data)
+      const csvFormatter = format({ headers: true })
+      csvFormatter.pipe(this)
+      callback(null, data)
     }
-    passThroughStream.write(csvStringifier.stringifyRecords([data]))
   })
-
-  const scheme = schemeName.toLowerCase().replace(/ /g, '_')
-  const isoString = runDate.toISOString()
-  const filename = `${scheme}-${isoString}.csv`
 
   return {
     filename,
-    fileStream: passThroughStream
+    stream: transformStream
   }
 }
 
-module.exports = generateReportCsv
+module.exports = { generateReportCsv }
