@@ -5,6 +5,7 @@ const { generateReportCsv } = require('./generate-report-csv')
 const createReport = require('./create-report')
 const { saveReportFile } = require('../storage')
 const completeReport = require('./complete-report')
+const { format } = require('@fast-csv/format')
 
 const getReportFilename = (schemeName, date) => {
   const formattedDateTime = date.toISOString()
@@ -24,8 +25,13 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
 
     // Create CSV stream with consistent filename
     const filename = getReportFilename(schemeName, reportDate)
-    const { stream } = generateReportCsv(schemeName, reportDate)
+    // const { stream } = generateReportCsv(schemeName, reportDate)
 
+    const csvStream = format({ headers: true });
+
+
+    // deliveriesStream.pipe(stream)
+    // await saveReportFile(filename, stream)
     // Process delivery stream
     await new Promise((resolve, reject) => {
       deliveriesStream.on('error', (error) => {
@@ -36,19 +42,23 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
       deliveriesStream.on('data', (data) => {
         hasData = true
         lastDeliveryId = data.deliveryId
-        stream.write(data)
+        // stream.write(data)
+        csvStream.write(data)
       })
 
       deliveriesStream.on('end', async () => {
         try {
-          stream.end() //todo ending too soon?
+          csvStream.end() //todo ending too soon?
+
+          console.log('stream ended')
           
           if (hasData) {
             console.log('[REPORTING] create report as deliveries found for schema: ', schemeName)
-            const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate)
+            // const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate)
             
-            await saveReportFile(filename, stream)
-            await completeReport(report.reportId, transaction)
+      
+            await saveReportFile(filename, csvStream)
+            // await completeReport(report.reportId, transaction)
             await transaction.commit()
             resolve()
           } else {

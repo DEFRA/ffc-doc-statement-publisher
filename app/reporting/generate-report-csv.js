@@ -9,9 +9,10 @@ const generateReportCsv = (schemeName, runDate) => {
   const transformStream = new Transform({
     objectMode: true,
     transform(data, encoding, callback) {
-      console.log('[CSV] Transforming row:', data)
+      console.log('[CSV] Transforming row:')
       const csvFormatter = format({ headers: true })
       csvFormatter.pipe(this)
+      // csvFormatter.write(data)
       callback(null, data)
     }
   })
