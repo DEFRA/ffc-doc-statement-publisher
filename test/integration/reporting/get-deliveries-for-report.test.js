@@ -1,64 +1,61 @@
 const db = require('../../../app/data')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
-const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
-const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
+const QueryStream = require('pg-query-stream')
+
+jest.mock('../../../app/data')
+jest.mock('pg-query-stream')
 
 describe('getDeliveriesForReport', () => {
-  beforeEach(async () => {
+  const mockClient = {
+    query: jest.fn()
+  }
+
+  beforeEach(() => {
     jest.clearAllMocks()
-    jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1, mockStatement2])
-    await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
+    db.sequelize.connectionManager.getConnection.mockResolvedValue(mockClient)
   })
 
-  afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
-  })
+  test('returns stream of deliveries for date range and scheme', async () => {
+    const schemeName = 'TEST'
+    const start = new Date('2024-12-01T00:00:00Z')
+    const end = new Date('2024-12-31T23:59:59Z')
+    const transaction = {}
 
-  test('returns deliveries within the specified date range and scheme name', async () => {
-    const transaction = await db.sequelize.transaction()
-    const result = await getDeliveriesForReport(
-      mockStatement1.schemeName,
-      new Date(2022, 6, 1),
-      new Date(2022, 8, 1),
-      transaction
+    const mockDeliveries = [
+      { deliveryId: 1, statementId: 101, method: 'email', reference: '123e4567-e89b-12d3-a456-426614174000', requested: new Date('2024-12-01T10:00:00Z'), completed: new Date('2024-12-02T10:00:00Z') },
+      { deliveryId: 2, statementId: 102, method: 'sms', reference: '123e4567-e89b-12d3-a456-426614174001', requested: new Date('2024-12-03T10:00:00Z'), completed: new Date('2024-12-04T10:00:00Z') }
+    ]
+
+    const mockStream = {
+      on: jest.fn((event, callback) => {
+        if (event === 'data') {
+          mockDeliveries.forEach(delivery => callback(delivery))
+        }
+        if (event === 'end') {
+          callback()
+        }
+        return mockStream
+      })
+    }
+
+    mockClient.query.mockReturnValue(mockStream)
+
+    const result = await getDeliveriesForReport(schemeName, start, end, transaction)
+
+    expect(QueryStream).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT d.*, s.*'),
+      [schemeName, start, end]
     )
-    await transaction.commit()
+    expect(db.sequelize.connectionManager.getConnection).toHaveBeenCalled()
+    expect(mockClient.query).toHaveBeenCalled()
+    expect(result).toBe(mockStream)
 
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ deliveryId: mockDelivery1.deliveryId }),
-        expect.objectContaining({ deliveryId: mockDelivery2.deliveryId })
-      ])
-    )
-  })
+    const collected = []
+    await new Promise(resolve => {
+      result.on('data', data => collected.push(data))
+      result.on('end', resolve)
+    })
 
-  test('does not return deliveries outside the specified date range', async () => {
-    const transaction = await db.sequelize.transaction()
-    const result = await getDeliveriesForReport(
-      mockStatement1.schemeName,
-      new Date(2022, 8, 2),
-      new Date(2022, 8, 3),
-      transaction
-    )
-    await transaction.commit()
-
-    expect(result.length).toBe(0)
-  })
-
-  test('does not return deliveries for a different scheme name', async () => {
-    const transaction = await db.sequelize.transaction()
-    const result = await getDeliveriesForReport(
-      'DifferentSchemeName',
-      new Date(2022, 6, 1),
-      new Date(2022, 8, 1),
-      transaction
-    )
-    await transaction.commit()
-
-    expect(result.length).toBe(0)
+    expect(collected).toEqual(mockDeliveries)
   })
 })

@@ -1,11 +1,22 @@
-const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const db = require('../../../app/data')
+const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
+const QueryStream = require('pg-query-stream')
 
 jest.mock('../../../app/data')
+jest.mock('pg-query-stream')
 
 describe('getDeliveriesForReport', () => {
-  test('should fetch deliveries for the given scheme name and date range', async () => {
-    const schemeName = 'Test Scheme'
+  const mockClient = {
+    query: jest.fn()
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    db.sequelize.connectionManager.getConnection.mockResolvedValue(mockClient)
+  })
+
+  test('returns stream of deliveries for date range and scheme', async () => {
+    const schemeName = 'TEST'
     const start = new Date('2024-12-01T00:00:00Z')
     const end = new Date('2024-12-31T23:59:59Z')
     const transaction = {}
@@ -15,30 +26,36 @@ describe('getDeliveriesForReport', () => {
       { deliveryId: 2, statementId: 102, method: 'sms', reference: '123e4567-e89b-12d3-a456-426614174001', requested: new Date('2024-12-03T10:00:00Z'), completed: new Date('2024-12-04T10:00:00Z') }
     ]
 
-    db.delivery.findAll.mockResolvedValue(mockDeliveries)
+    const mockStream = {
+      on: jest.fn((event, callback) => {
+        if (event === 'data') {
+          mockDeliveries.forEach(delivery => callback(delivery))
+        }
+        if (event === 'end') {
+          callback()
+        }
+        return mockStream
+      })
+    }
+
+    mockClient.query.mockReturnValue(mockStream)
 
     const result = await getDeliveriesForReport(schemeName, start, end, transaction)
 
-    expect(db.delivery.findAll).toHaveBeenCalledWith({
-      where: {
-        requested: {
-          [db.Op.between]: [start, end]
-        }
-      },
-      include: [
-        {
-          as: 'statement',
-          model: db.statement,
-          where: {
-            schemeName
-          },
-          required: true
-        }
-      ],
-      raw: true,
-      transaction
+    expect(QueryStream).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT d.*, s.*'),
+      [schemeName, start, end]
+    )
+    expect(db.sequelize.connectionManager.getConnection).toHaveBeenCalled()
+    expect(mockClient.query).toHaveBeenCalled()
+    expect(result).toBe(mockStream)
+
+    const collected = []
+    await new Promise(resolve => {
+      result.on('data', data => collected.push(data))
+      result.on('end', resolve)
     })
 
-    expect(result).toEqual(mockDeliveries)
+    expect(collected).toEqual(mockDeliveries)
   })
 })

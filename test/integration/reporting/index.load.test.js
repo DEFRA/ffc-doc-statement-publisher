@@ -1,19 +1,19 @@
 const { v4: uuidv4 } = require('uuid')
 const db = require('../../../app/data')
-const publishByEmail = require('../../../app/publishing/publish-by-email')
-
+const getTodaysReport = require('../../../app/reporting/get-todays-report')
+const sendReport = require('../../../app/reporting/send-report')
 const config = require('../../../app/config')
 
 jest.mock('../../../app/reporting/get-todays-report')
-jest.mock('../../../app/publishing/publish-by-email')
+jest.mock('../../../app/reporting/send-report')
 
 const { start } = require('../../../app/reporting/index')
 const currentTimestamp = Math.floor(Date.now() / 1000)
-const numberOfRecords = 4500
+const numberOfRecords = 10000
 
 const generateMockStatements = (count) => {
   const mockScheme = {
-    schemeName: 'Sustainable Farming Incentive',
+    schemeName: 'TEST',
     schemeShortName: 'SFI',
     schemeYear: '2022',
     schemeFrequency: 'Quarterly'
@@ -27,7 +27,7 @@ const generateMockStatements = (count) => {
     addressLine3: 'Line 3',
     addressLine4: 'Line4',
     addressLine5: 'Line5',
-    postcode: `SW${i + 1} ${i + 1}A`.substring(0, 8), // Ensure postcode is 8 characters long
+    postcode: `SW${i + 1} ${i + 1}A`.substring(0, 8),
     filename: `FFC_PaymentStatement_SFI_2022_${i + 1}_2022080515301012.pdf`,
     sbi: 123456789 + i,
     frn: 1234567890 + i,
@@ -41,72 +41,68 @@ const generateMockStatements = (count) => {
 const generateMockDeliveries = (statements) => {
   return statements.map((statement, i) => ({
     deliveryId: currentTimestamp + i + 1,
-    statementId: statement.statementId, // Reference the corresponding statement integer ID
-    reference: uuidv4(), // Generate a UUID for reference
+    statementId: statement.statementId,
+    reference: uuidv4(),
     method: 'EMAIL',
     requested: new Date(2022, 7, 5, 15, 30, 10, 120),
     completed: i % 2 === 0 ? null : new Date(2022, 7, 5, 15, 30, 10, 120)
   }))
 }
 
-describe('start', () => {
-  let mockStatements
+describe('load test for reporting', () => {
+  const mockScheme = {
+    schemeName: 'TEST',
+    template: 'test-template',
+    email: 'test@test.com',
+    schedule: {
+      intervalType: 'months',
+      dayOfMonth: 5,
+      hour: 15,
+      minute: 30
+    },
+    dateRange: {
+      durationNumber: 1,
+      durationType: 'months'
+    }
+  }
 
   beforeEach(async () => {
     jest.clearAllMocks()
+    config.reportConfig.schemes = [mockScheme]
   })
 
   beforeAll(async () => {
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-
     await db.sequelize.truncate({ cascade: true })
-
-    try {
-      mockStatements = generateMockStatements(numberOfRecords)
-      await db.statement.bulkCreate(mockStatements)
-    } catch (e) {
-    //   console.error('Error creating mock statements:', e)
-    }
-
-    try {
-      await db.delivery.bulkCreate(generateMockDeliveries(mockStatements))
-    } catch (e) {
-    //   console.error('Error creating mock deliveries:', e)
-    }
+    const mockStatements = generateMockStatements(numberOfRecords)
+    await db.statement.bulkCreate(mockStatements)
+    await db.delivery.bulkCreate(generateMockDeliveries(mockStatements))
   })
 
   afterAll(async () => {
     await db.sequelize.truncate({ cascade: true })
+    await db.sequelize.close()
   })
 
-  test('should call sendReport if no existing report is found and log the start of sending report', async () => {
+  test('should process large number of records efficiently', async () => {
+    getTodaysReport.mockResolvedValue([])
+    sendReport.mockResolvedValue()
     console.log = jest.fn()
-    publishByEmail.mockResolvedValue()
-
-    config.reportConfig.schemes = [
-      {
-        schemeName: 'Sustainable Farming Incentive',
-        template: 'template',
-        email: 'test@example.com',
-        schedule: { intervalNumber: 1, intervalType: 'months', dayOfMonth: 5 },
-        dateRange: { durationNumber: 1, durationType: 'months' }
-      }
-    ]
 
     await start()
 
-    expect(console.log).toHaveBeenCalledWith('[REPORTING] start send report for scheme: ', 'Sustainable Farming Incentive')
-    expect(console.log).toHaveBeenCalledWith('[REPORTING] A report is due to run today for scheme: ', 'Sustainable Farming Incentive')
-    expect(publishByEmail).toHaveBeenCalled()
+    expect(console.log).toHaveBeenCalledWith('[REPORTING] Starting reporting')
+    expect(console.log).toHaveBeenCalledWith('[REPORTING] A report is due to run today for scheme: ', 'TEST')
+    expect(getTodaysReport).toHaveBeenCalledWith('TEST')
+    expect(sendReport).toHaveBeenCalled()
+  })
 
-    const buffer = publishByEmail.mock.calls[0][2]
-    console.info('Buffer size:', buffer.length)
+  test('should handle errors and continue execution', async () => {
+    getTodaysReport.mockRejectedValue(new Error('Test error'))
+    console.error = jest.fn()
 
-    const bufferSizeInBytes = buffer.length
-    const bufferSizeInMB = bufferSizeInBytes / (1024 * 1024)
-    console.info(`Buffer size: ${bufferSizeInMB.toFixed(2)} MB`)
+    await start()
 
-    expect(buffer.length).toBeGreaterThan(0)
-    expect(bufferSizeInMB).toBeLessThanOrEqual(2)
+    expect(console.error).toHaveBeenCalledWith('Error processing scheme:', 'TEST', expect.any(Error))
   })
 })
