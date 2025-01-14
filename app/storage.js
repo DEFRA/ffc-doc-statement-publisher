@@ -42,13 +42,11 @@ const getFile = async (filename) => {
   return blob.downloadToBuffer()
 }
 
-const { PassThrough } = require('stream')
-
 const saveReportFile = async (filename, readableStream) => {
   try {
     console.log('[STORAGE] Starting report file save:', filename)
     containersInitialised ?? await initialiseContainers()
-    
+
     const client = container.getBlockBlobClient(`${config.reportFolder}/${filename}`)
     const options = {
       blobHTTPHeaders: {
@@ -57,17 +55,15 @@ const saveReportFile = async (filename, readableStream) => {
     }
 
     return new Promise((resolve, reject) => {
-      // Track if we received any data
       let hasData = false
-      
+
       readableStream.on('data', (chunk) => {
         hasData = true
-        console.log('[STORAGE] Received chunk:', chunk)//todo gets object not csv
-        // console.log('[STORAGE] Received chunk:', chunk.toString().substring(0, 50))
+        console.debug('[STORAGE] Received chunk:', chunk)
       })
 
       readableStream.on('end', () => {
-        console.log('[STORAGE] Stream ended, had data:', hasData)
+        console.debug('[STORAGE] Stream ended, had data:', hasData)
       })
 
       readableStream.on('error', (err) => {
@@ -77,15 +73,15 @@ const saveReportFile = async (filename, readableStream) => {
 
       client.uploadStream(
         readableStream,
-        4 * 1024 * 1024,  // 4MB chunks
-        5,                 // 5 concurrent uploads
+        4 * 1024 * 1024,
+        5,
         options
       )
-      .then(() => {
-        console.log('[STORAGE] Upload completed')
-        resolve()
-      })
-      .catch(reject)
+        .then(() => {
+          console.log('[STORAGE] Upload completed')
+          resolve()
+        })
+        .catch(reject)
     })
   } catch (error) {
     console.error('[STORAGE] Error saving report file:', error)
