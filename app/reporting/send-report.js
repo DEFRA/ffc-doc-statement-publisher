@@ -22,31 +22,33 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     const reportDate = new Date()
 
     const filename = getReportFilename(schemeName, reportDate)
-    const csvStream = format({ headers: [
-      'Status',
-      'Error(s)',
-      'FRN',
-      'SBI',
-      'Payment Reference',
-      'Scheme Name',
-      'Scheme Short Name',
-      'Scheme Year',
-      'Delivery Method',
-      'Business Name',
-      'Address Line 1',
-      'Address Line 2',
-      'Address Line 3',
-      'Address Line 4',
-      'Address Line 5',
-      'Postcode',
-      'Email',
-      'Filename',
-      'Document DB ID',
-      'Statement Data Received',
-      'Notify Email Requested',
-      'Statement Failure Notification',
-      'Statement Delivery Notification'
-    ]})
+    const csvStream = format({
+      headers: [
+        'Status',
+        'Error(s)',
+        'FRN',
+        'SBI',
+        'Payment Reference',
+        'Scheme Name',
+        'Scheme Short Name',
+        'Scheme Year',
+        'Delivery Method',
+        'Business Name',
+        'Address Line 1',
+        'Address Line 2',
+        'Address Line 3',
+        'Address Line 4',
+        'Address Line 5',
+        'Postcode',
+        'Email',
+        'Filename',
+        'Document DB ID',
+        'Statement Data Received',
+        'Notify Email Requested',
+        'Statement Failure Notification',
+        'Statement Delivery Notification'
+      ]
+    })
 
     await new Promise((resolve, reject) => {
       deliveriesStream.on('error', (error) => {
