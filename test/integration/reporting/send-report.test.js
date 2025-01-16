@@ -60,7 +60,7 @@ describe('sendReport', () => {
     await sendReport(schemeName, template, email, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date))
+    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date), expect.any(Object))
     expect(saveReportFile).toHaveBeenCalledWith(expect.stringContaining('test-'), expect.any(Object))
     expect(completeReport).toHaveBeenCalledWith(1, expect.any(Object))
   })
