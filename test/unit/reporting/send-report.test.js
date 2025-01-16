@@ -4,6 +4,7 @@ const createReport = require('../../../app/reporting/create-report')
 const completeReport = require('../../../app/reporting/complete-report')
 const { saveReportFile } = require('../../../app/storage')
 const db = require('../../../app/data')
+const { PassThrough } = require('stream')
 
 jest.mock('../../../app/reporting/get-deliveries-for-report')
 jest.mock('../../../app/reporting/create-report')
@@ -50,13 +51,24 @@ describe('sendReport', () => {
 
     getDeliveriesForReport.mockResolvedValue(mockStream)
     createReport.mockResolvedValue({ reportId: 1 })
-    saveReportFile.mockResolvedValue()
+    saveReportFile.mockImplementation((filename, stream) => {
+      const passThrough = new PassThrough()
+      stream.pipe(passThrough)
+      let data = ''
+      passThrough.on('data', chunk => {
+        data += chunk.toString()
+      })
+      passThrough.on('end', () => {
+        // console.info('data::',data)
+        expect(data).toMatchSnapshot()
+      })
+    })
     completeReport.mockResolvedValue()
 
     await sendReport(schemeName, template, email, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date))
+    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date), expect.any(Object))
     expect(saveReportFile).toHaveBeenCalledWith(expect.stringContaining('test-'), expect.any(Object))
     expect(completeReport).toHaveBeenCalledWith(1, expect.any(Object))
     expect(transaction.commit).toHaveBeenCalled()

@@ -22,7 +22,33 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     const reportDate = new Date()
 
     const filename = getReportFilename(schemeName, reportDate)
-    const csvStream = format({ headers: true })
+    const csvStream = format({
+      headers: [
+        'Status',
+        'Error(s)',
+        'FRN',
+        'SBI',
+        'Payment Reference',
+        'Scheme Name',
+        'Scheme Short Name',
+        'Scheme Year',
+        'Delivery Method',
+        'Business Name',
+        'Address Line 1',
+        'Address Line 2',
+        'Address Line 3',
+        'Address Line 4',
+        'Address Line 5',
+        'Postcode',
+        'Email',
+        'Filename',
+        'Document DB ID',
+        'Statement Data Received',
+        'Notify Email Requested',
+        'Statement Failure Notification',
+        'Statement Delivery Notification'
+      ]
+    })
 
     await new Promise((resolve, reject) => {
       deliveriesStream.on('error', (error) => {
@@ -33,7 +59,31 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
       deliveriesStream.on('data', (data) => {
         hasData = true
         lastDeliveryId = data.deliveryId
-        csvStream.write(data)
+        csvStream.write({
+          Status: '',
+          'Error(s)': '',
+          FRN: data.frn ? data.frn.toString() : '',
+          SBI: data.sbi ? data.sbi.toString() : '',
+          'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
+          'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
+          'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
+          'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
+          'Delivery Method': data.method ? data.method.toString() : '',
+          'Business Name': data.businessName ? data.businessName.toString() : '',
+          'Address Line 1': data.addressLine1 ? data.addressLine1.toString() : '',
+          'Address Line 2': data.addressLine2 ? data.addressLine2.toString() : '',
+          'Address Line 3': data.addressLine3 ? data.addressLine3.toString() : '',
+          'Address Line 4': data.addressLine4 ? data.addressLine4.toString() : '',
+          'Address Line 5': data.addressLine5 ? data.addressLine5.toString() : '',
+          Postcode: data.postcode ? data.postcode.toString() : '',
+          Email: data.email ? data.email.toString() : '',
+          Filename: data.filename ? data.filename.toString() : '',
+          'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
+          'Statement Data Received': data.received ? data.received.toString() : '',
+          'Notify Email Requested': data.requested ? data.requested.toString() : '',
+          'Statement Failure Notification': '',
+          'Statement Delivery Notification': data.completed ? data.completed.toString() : ''
+        })
       })
 
       deliveriesStream.on('end', async () => {
@@ -41,10 +91,10 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           csvStream.end()
           if (hasData) {
             console.log('[REPORTING] create report as deliveries found for schema: ', schemeName)
-            const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate)
-            console.log('[REPORTING] report created: ', report.reportId)
+            const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate, transaction)
             await saveReportFile(filename, csvStream)
             await completeReport(report.reportId, transaction)
+            console.log('[REPORTING] report created: ', report.reportId)
             await transaction.commit()
             resolve()
           } else {
@@ -53,6 +103,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
             resolve()
           }
         } catch (error) {
+          console.log('[REPORTING] failure for schema: ', schemeName)
           await transaction.rollback()
           reject(error)
         }
