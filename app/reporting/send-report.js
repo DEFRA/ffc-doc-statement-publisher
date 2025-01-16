@@ -22,33 +22,31 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
     const reportDate = new Date()
 
     const filename = getReportFilename(schemeName, reportDate)
-    const csvStream = format({
-      headers: [
-        'Status',
-        'Error(s)',
-        'FRN',
-        'SBI',
-        'Payment Reference',
-        'Scheme Name',
-        'Scheme Short Name',
-        'Scheme Year',
-        'Delivery Method',
-        'Business Name',
-        'Address Line 1',
-        'Address Line 2',
-        'Address Line 3',
-        'Address Line 4',
-        'Address Line 5',
-        'Postcode',
-        'Email',
-        'Filename',
-        'Document DB ID',
-        'Statement Data Received',
-        'Notify Email Requested',
-        'Statement Failure Notification',
-        'Statement Delivery Notification'
-      ]
-    })
+    const csvStream = format({ headers: [
+      'Status',
+      'Error(s)',
+      'FRN',
+      'SBI',
+      'Payment Reference',
+      'Scheme Name',
+      'Scheme Short Name',
+      'Scheme Year',
+      'Delivery Method',
+      'Business Name',
+      'Address Line 1',
+      'Address Line 2',
+      'Address Line 3',
+      'Address Line 4',
+      'Address Line 5',
+      'Postcode',
+      'Email',
+      'Filename',
+      'Document DB ID',
+      'Statement Data Received',
+      'Notify Email Requested',
+      'Statement Failure Notification',
+      'Statement Delivery Notification'
+    ]})
 
     await new Promise((resolve, reject) => {
       deliveriesStream.on('error', (error) => {
@@ -59,9 +57,16 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
       deliveriesStream.on('data', (data) => {
         hasData = true
         lastDeliveryId = data.deliveryId
+        const errors = [
+          data.statusCode ? `Status Code: ${data.statusCode}` : '',
+          data.reason ? `Reason: ${data.reason}` : '',
+          data.error ? `Error: ${data.error}` : '',
+          data.message ? `Message: ${data.message}` : ''
+        ].filter(Boolean).join(', ')
+
         csvStream.write({
           Status: '',
-          'Error(s)': '',
+          'Error(s)': errors,
           FRN: data.frn ? data.frn.toString() : '',
           SBI: data.sbi ? data.sbi.toString() : '',
           'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
@@ -90,20 +95,16 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
         try {
           csvStream.end()
           if (hasData) {
-            console.log('[REPORTING] create report as deliveries found for schema: ', schemeName)
             const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate, transaction)
             await saveReportFile(filename, csvStream)
             await completeReport(report.reportId, transaction)
-            console.log('[REPORTING] report created: ', report.reportId)
             await transaction.commit()
             resolve()
           } else {
-            console.log('[REPORTING] no deliveries found for schema: ', schemeName)
             await transaction.rollback()
             resolve()
           }
         } catch (error) {
-          console.log('[REPORTING] failure for schema: ', schemeName)
           await transaction.rollback()
           reject(error)
         }

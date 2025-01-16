@@ -2,6 +2,7 @@ const sendReport = require('../../../app/reporting/send-report')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const createReport = require('../../../app/reporting/create-report')
 const completeReport = require('../../../app/reporting/complete-report')
+const publishByEmail = require('../../../app/publishing/publish-by-email')
 const { saveReportFile } = require('../../../app/storage')
 const db = require('../../../app/data')
 const { PassThrough } = require('stream')
@@ -34,7 +35,8 @@ describe('sendReport', () => {
 
     const mockDeliveries = [
       { deliveryId: 1, statementId: 101, method: 'email', reference: '123e4567-e89b-12d3-a456-426614174000', requested: new Date('2022-07-01T10:00:00Z'), completed: new Date('2022-07-02T10:00:00Z') },
-      { deliveryId: 2, statementId: 102, method: 'sms', reference: '123e4567-e89b-12d3-a456-426614174001', requested: new Date('2022-07-03T10:00:00Z'), completed: new Date('2022-07-04T10:00:00Z') }
+      { deliveryId: 2, statementId: 102, method: 'sms', reference: '123e4567-e89b-12d3-a456-426614174001', requested: new Date('2022-07-03T10:00:00Z'), completed: new Date('2022-07-04T10:00:00Z') },
+      { deliveryId: 3, statementId: 103, method: 'letter', reference: '123e4567-e89b-12d3-a456-426614174002', requested: new Date('2022-07-03T10:00:00Z'), completed: new Date('2022-07-04T10:00:00Z'), statusCode: 500, reason: 'Server Error', error: 'Internal Server Error', message: 'Failed to deliver', failed: new Date('2022-07-04T12:00:00Z') }
     ]
 
     const mockStream = {
@@ -59,7 +61,6 @@ describe('sendReport', () => {
         data += chunk.toString()
       })
       passThrough.on('end', () => {
-        // console.info('data::',data)
         expect(data).toMatchSnapshot()
       })
     })
@@ -68,7 +69,7 @@ describe('sendReport', () => {
     await sendReport(schemeName, template, email, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date), expect.any(Object))
+    expect(createReport).toHaveBeenCalledWith(schemeName, 3, startDate, endDate, expect.any(Date), transaction)
     expect(saveReportFile).toHaveBeenCalledWith(expect.stringContaining('test-'), expect.any(Object))
     expect(completeReport).toHaveBeenCalledWith(1, expect.any(Object))
     expect(transaction.commit).toHaveBeenCalled()

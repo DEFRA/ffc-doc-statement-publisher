@@ -9,11 +9,12 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
   })
 
   const query = `
-    SELECT d.*, s.*
+    SELECT d.*, s.*, f.*
     FROM deliveries d
     INNER JOIN statements s ON d."statementId" = s."statementId"
+    LEFT JOIN failures f ON d."deliveryId" = f."deliveryId"
     WHERE s."schemeName" = $1 AND d.requested BETWEEN $2 AND $3
-    ORDER  BY d."deliveryId"
+    ORDER BY d."deliveryId"
   `
 
   const client = await db.sequelize.connectionManager.getConnection()
