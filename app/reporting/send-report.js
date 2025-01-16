@@ -71,7 +71,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           'Error(s)': errors,
           FRN: data.frn ? data.frn.toString() : '',
           SBI: data.sbi ? data.sbi.toString() : '',
-          'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
+          'Payment Reference': data.paymentReference ? data.paymentReference.toString() : '',
           'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
           'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
           'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',

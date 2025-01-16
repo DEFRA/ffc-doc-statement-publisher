@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     schemeFrequency: DataTypes.STRING,
     received: DataTypes.DATE,
     documentReference: DataTypes.INTEGER,
-    emailTemplate: DataTypes.STRING
+    emailTemplate: DataTypes.STRING,
+    paymentReference: DataTypes.STRING
   },
   {
     tableName: 'statements',
