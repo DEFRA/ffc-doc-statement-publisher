@@ -34,12 +34,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
         'Scheme Year',
         'Delivery Method',
         'Business Name',
-        'Address Line 1',
-        'Address Line 2',
-        'Address Line 3',
-        'Address Line 4',
-        'Address Line 5',
-        'Postcode',
+        'Address',
         'Email',
         'Filename',
         'Document DB ID',
@@ -68,23 +63,27 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           data.message ? `Message: ${data.message}` : ''
         ].filter(Boolean).join(', ')
 
+        const address = [
+          data.addressLine1,
+          data.addressLine2,
+          data.addressLine3,
+          data.addressLine4,
+          data.addressLine5,
+          data.postcode
+        ].filter(Boolean).join(', ')
+
         csvStream.write({
           Status: status,
           'Error(s)': errors,
           FRN: data.frn ? data.frn.toString() : '',
           SBI: data.sbi ? data.sbi.toString() : '',
-          'Payment Reference': data.paymentReference ? data.paymentReference.toString() : '',
+          'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
           'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
           'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
           'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
           'Delivery Method': data.method ? data.method.toString() : '',
           'Business Name': data.businessName ? data.businessName.toString() : '',
-          'Address Line 1': data.addressLine1 ? data.addressLine1.toString() : '',
-          'Address Line 2': data.addressLine2 ? data.addressLine2.toString() : '',
-          'Address Line 3': data.addressLine3 ? data.addressLine3.toString() : '',
-          'Address Line 4': data.addressLine4 ? data.addressLine4.toString() : '',
-          'Address Line 5': data.addressLine5 ? data.addressLine5.toString() : '',
-          Postcode: data.postcode ? data.postcode.toString() : '',
+          Address: address,
           Email: data.email ? data.email.toString() : '',
           Filename: data.filename ? data.filename.toString() : '',
           'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
