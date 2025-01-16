@@ -57,6 +57,8 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
       deliveriesStream.on('data', (data) => {
         hasData = true
         lastDeliveryId = data.deliveryId
+
+        const status = data.failureId ? 'Failed' : (data.completed ? 'Success' : 'Pending')
         const errors = [
           data.statusCode ? `Status Code: ${data.statusCode}` : '',
           data.reason ? `Reason: ${data.reason}` : '',
@@ -65,7 +67,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
         ].filter(Boolean).join(', ')
 
         csvStream.write({
-          Status: '',
+          Status: status,
           'Error(s)': errors,
           FRN: data.frn ? data.frn.toString() : '',
           SBI: data.sbi ? data.sbi.toString() : '',
