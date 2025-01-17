@@ -14,7 +14,7 @@ const numberOfRecords = 10000
 const generateMockStatements = (count) => {
   const mockScheme = {
     schemeName: 'TEST',
-    schemeShortName: 'SFI',
+    schemeShortName: 'TT',
     schemeYear: '2022',
     schemeFrequency: 'Quarterly'
   }
