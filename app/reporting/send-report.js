@@ -91,6 +91,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
           'Statement Data Received': formatDate(data.received),
           'Notify Email Requested': formatDate(data.requested),
+          'Statement Failure Notification': formatDate(data.failed),
           'Statement Delivery Notification': formatDate(data.completed)
         })
       })
