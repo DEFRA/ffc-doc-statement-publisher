@@ -72,6 +72,8 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           data.postcode
         ].filter(Boolean).join(', ')
 
+        const formatDate = (date) => date ? new Date(date).toISOString().replace('T', ' ').split('.')[0] : ''
+
         csvStream.write({
           Status: status,
           'Error(s)': errors,
@@ -87,10 +89,9 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           Email: data.email ? data.email.toString() : '',
           Filename: data.filename ? data.filename.toString() : '',
           'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
-          'Statement Data Received': data.received ? data.received.toString() : '',
-          'Notify Email Requested': data.requested ? data.requested.toString() : '',
-          'Statement Failure Notification': '',
-          'Statement Delivery Notification': data.completed ? data.completed.toString() : ''
+          'Statement Data Received': formatDate(data.received),
+          'Notify Email Requested': formatDate(data.requested),
+          'Statement Delivery Notification': formatDate(data.completed)
         })
       })
 
