@@ -49,6 +49,18 @@ const generateMockDeliveries = (statements) => {
   }))
 }
 
+const generateMockFailures = (deliveries, failureCount) => {
+  return deliveries.slice(0, failureCount).map((delivery, i) => ({
+    failureId: currentTimestamp + i + 1,
+    deliveryId: delivery.deliveryId,
+    statusCode: 500,
+    reason: 'Server Error',
+    error: 'Internal Server Error',
+    message: 'Failed to deliver',
+    failed: new Date(2022, 7, 5, 15, 30, 10, 120)
+  }))
+}
+
 describe('load test for reporting', () => {
   const mockScheme = {
     schemeName: 'TEST',
@@ -76,7 +88,10 @@ describe('load test for reporting', () => {
     await db.sequelize.truncate({ cascade: true })
     const mockStatements = generateMockStatements(numberOfRecords)
     await db.statement.bulkCreate(mockStatements)
-    await db.delivery.bulkCreate(generateMockDeliveries(mockStatements))
+    const mockDeliveries = generateMockDeliveries(mockStatements)
+    await db.delivery.bulkCreate(mockDeliveries)
+    const mockFailures = generateMockFailures(mockDeliveries, Math.floor(numberOfRecords / 4))
+    await db.failure.bulkCreate(mockFailures)
   })
 
   afterAll(async () => {
