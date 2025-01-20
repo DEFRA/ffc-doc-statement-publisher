@@ -1,5 +1,5 @@
 const Joi = require('joi')
-const { DELINKED: DELINKED_SCHEME_NAME } = require('../constants/scheme-names').LONG_NAMES
+const { DELINKED: DELINKED_SCHEME_NAME, SFI } = require('../constants/scheme-names').LONG_NAMES
 
 // Define config schema
 const schema = Joi.object({
@@ -18,7 +18,7 @@ const schema = Joi.object({
       }).required(),
       dateRange: Joi.object({
         durationNumber: Joi.number().integer().min(1).required(),
-        durationType: Joi.string().valid('days', 'weeks', 'months', 'years').required()// todo correct this
+        durationType: Joi.string().valid('days', 'weeks', 'months', 'years').required()
       }).required()
     })
   ).required()
@@ -28,15 +28,27 @@ const schema = Joi.object({
 const config = {
   schemes: [
     {
-      schemeName: DELINKED_SCHEME_NAME,
+      schemeName: process.env.DELINKED_SCHEME_NAME || DELINKED_SCHEME_NAME,
       schedule: {
-        intervalNumber: 1,
-        intervalType: 'months',
-        dayOfMonth: 15
+        intervalNumber: process.env.DELINKED_INTERVAL_NUMBER || 1,
+        intervalType: process.env.DELINKED_INTERVAL_TYPE || 'months',
+        dayOfMonth: process.env.DELINKED_DAY_OF_MONTH || 15
       },
       dateRange: {
-        durationNumber: 1,
-        durationType: 'months'
+        durationNumber: process.env.DELINKED_DURATION_NUMBER || 1,
+        durationType: process.env.DELINKED_DURATION_TYPE || 'months'
+      }
+    },
+    {
+      schemeName: process.env.SFI_SCHEME_NAME || SFI,
+      schedule: {
+        intervalNumber: process.env.SFI_INTERVAL_NUMBER || 1,
+        intervalType: process.env.SFI_INTERVAL_TYPE || 'months',
+        dayOfMonth: process.env.SFI_DAY_OF_MONTH || 15
+      },
+      dateRange: {
+        durationNumber: process.env.SFI_DURATION_NUMBER || 1,
+        durationType: process.env.SFI_DURATION_TYPE || 'months'
       }
     }
   ]

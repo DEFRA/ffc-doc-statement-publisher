@@ -27,8 +27,16 @@ data:
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
   NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
-  REPORT_DELINKED_EMAIL: {{ quote .Values.container.reportDelinkedEmail }}
-  REPORT_TEMPLATE: {{ quote .Values.container.reportTemplate }}
+  DELINKED_INTERVAL_NUMBER: {{ quote .Values.container.DelinkedIntervalNumber }}
+  DELINKED_INTERVAL_TYPE: {{ quote .Values.container.DelinkedIntervalType }}
+  DELINKED_DAY_OF_MONTH: {{ quote .Values.container.DelinkedDayOfMonth }}
+  DELINKED_DURATION_NUMBER: {{ quote .Values.container.DelinkedDurationNumber }}
+  DELINKED_DURATION_TYPE: {{ quote .Values.container.DelinkedDurationType }}
+  SFI_INTERVAL_NUMBER: {{ quote .Values.container.SfiIntervalNumber }}
+  SFI_INTERVAL_TYPE: {{ quote .Values.container.SfiIntervalType }}
+  SFI_DAY_OF_MONTH: {{ quote .Values.container.SfiDayOfMonth }}
+  SFI_DURATION_NUMBER: {{ quote .Values.container.SfiDurationNumber }}
+  SFI_DURATION_TYPE: {{ quote .Values.container.SfiDurationType }}
   {{- if and (.Values.environmentCode) (ne (.Values.environmentCode | toString ) "snd") }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}-{{ .Values.environmentCode }}.{{ .Values.ingress.server }}
   {{ else }}
