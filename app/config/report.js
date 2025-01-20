@@ -6,8 +6,6 @@ const schema = Joi.object({
   schemes: Joi.array().items(
     Joi.object({
       schemeName: Joi.string().required(),
-      email: Joi.string(),
-      template: Joi.string(),
       schedule: Joi.object({
         dayOfMonth: Joi.number().integer(),
         dayOfYear: Joi.number().integer(),
@@ -31,8 +29,6 @@ const config = {
   schemes: [
     {
       schemeName: DELINKED_SCHEME_NAME,
-      email: process.env.REPORT_DELINKED_EMAIL,
-      template: process.env.REPORT_TEMPLATE,
       schedule: {
         intervalNumber: 1,
         intervalType: 'months',

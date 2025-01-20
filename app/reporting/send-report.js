@@ -4,6 +4,7 @@ const createReport = require('./create-report')
 const { saveReportFile } = require('../storage')
 const completeReport = require('./complete-report')
 const { format } = require('@fast-csv/format')
+const { FAILED, PENDING, SUCCESS } = require('../constants/report')
 
 const getReportFilename = (schemeName, date) => {
   const formattedDateTime = date.toISOString()
@@ -55,7 +56,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
         hasData = true
         lastDeliveryId = data.deliveryId
 
-        const status = data.failureId ? 'Failed' : (data.completed ? 'Success' : 'Pending')
+        const status = data.failureId ? FAILED : (data.completed ? SUCCESS : PENDING)
         const errors = [
           data.statusCode ? `Status Code: ${data.statusCode}` : '',
           data.reason ? `Reason: ${data.reason}` : '',
@@ -85,7 +86,7 @@ const sendReport = async (schemeName, template, email, startDate, endDate) => {
           'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
           'Delivery Method': data.method ? data.method.toString() : '',
           'Business Name': data.businessName ? data.businessName.toString() : '',
-          Address: address,
+          'Business Address': address,
           Email: data.email ? data.email.toString() : '',
           Filename: data.filename ? data.filename.toString() : '',
           'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
