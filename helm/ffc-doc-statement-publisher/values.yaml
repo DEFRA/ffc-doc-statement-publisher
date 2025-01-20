@@ -39,6 +39,7 @@ container:
   azureStorageCreateContainers: false
   storageContainer: statements
   storageFolder: outbound
+  storageReportFolder: reports
   notifyApiKey: dummy
   notifyApiKeyLetter: dummy
   notifyEmailTemplateKey: dummy
