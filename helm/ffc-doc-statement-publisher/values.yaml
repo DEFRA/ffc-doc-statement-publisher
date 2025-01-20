@@ -43,7 +43,17 @@ container:
   notifyApiKeyLetter: dummy
   notifyEmailTemplateKey: dummy
   statementReceiverApiVersion: v1
-  statementReceiverEndpoint: https://ffc-doc-statement-receiver  
+  statementReceiverEndpoint: https://ffc-doc-statement-receiver
+  DelinkedIntervalNumber: 1
+  DelinkedIntervalType: month
+  DelinkedDayOfMonth: 15
+  DelinkedDurationNumber: 1
+  DelinkedDurationType: month
+  SfiIntervalNumber: 1
+  SfiIntervalType: month
+  SfiDayOfMonth: 15
+  SfiDurationNumber: 1
+  SfiDurationType: month
 
 ingress:
   server: example.com
