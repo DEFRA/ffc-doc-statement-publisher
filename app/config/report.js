@@ -36,7 +36,7 @@ const config = {
       schedule: {
         intervalNumber: 1,
         intervalType: 'months',
-        dayOfMonth: 9
+        dayOfMonth: 15
       },
       dateRange: {
         durationNumber: 1,
