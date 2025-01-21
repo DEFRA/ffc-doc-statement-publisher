@@ -43,14 +43,20 @@ const start = async () => {
           const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day')
           const endDate = moment().endOf('day')
           await startSchemeReport(schemeName, template, email, startDate, endDate)
+        } else {
+          console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
         }
-      } catch (err) {
-        console.error(`[REPORTING] Error processing scheme: ${scheme.schemeName}`, err)
+      } catch (error) {
+        console.error('Error processing scheme:', scheme.schemeName, error)
       }
     }
   } catch (err) {
-    console.error('[REPORTING] Error starting reporting', err)
+    console.error(err)
+  } finally {
+    setTimeout(start, config.reportingCheckInterval)
   }
 }
 
-module.exports = { start }
+module.exports = {
+  start
+}
