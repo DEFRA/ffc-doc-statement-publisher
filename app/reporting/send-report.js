@@ -6,10 +6,76 @@ const completeReport = require('./complete-report')
 const { format } = require('@fast-csv/format')
 const { FAILED, PENDING, SUCCESS } = require('../constants/report')
 
+const headers = [
+  'Status',
+  'Error(s)',
+  'FRN',
+  'SBI',
+  'Payment Reference',
+  'Scheme Name',
+  'Scheme Short Name',
+  'Scheme Year',
+  'Delivery Method',
+  'Business Name',
+  'Address',
+  'Email',
+  'Filename',
+  'Document DB ID',
+  'Statement Data Received',
+  'Notify Email Requested',
+  'Statement Failure Notification',
+  'Statement Delivery Notification'
+]
+
 const getReportFilename = (schemeName, date) => {
   const formattedDateTime = date.toISOString()
   const formattedName = schemeName.toLowerCase().replace(/ /g, '-')
   return `${formattedName}-${formattedDateTime}.csv`
+}
+
+const getErrors = (data) => {
+  return [
+    data.statusCode ? `Status Code: ${data.statusCode}` : '',
+    data.reason ? `Reason: ${data.reason}` : '',
+    data.error ? `Error: ${data.error}` : '',
+    data.message ? `Message: ${data.message}` : ''
+  ].filter(Boolean).join(', ')
+}
+
+const getAddress = (data) => {
+  return [
+    data.addressLine1,
+    data.addressLine2,
+    data.addressLine3,
+    data.addressLine4,
+    data.addressLine5,
+    data.postcode
+  ].filter(Boolean).join(', ')
+}
+
+const formatDate = (date) => date ? new Date(date).toISOString().replace('T', ' ').split('.')[0] : ''
+
+const getDataRow = (data, status, address, errors) => {
+  return {
+    Status: status,
+    'Error(s)': errors,
+    FRN: data.frn ? data.frn.toString() : '',
+    SBI: data.sbi ? data.sbi.toString() : '',
+    'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
+    'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
+    'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
+    'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
+    'Delivery Method': data.method ? data.method.toString() : '',
+    'Business Name': data.businessName ? data.businessName.toString() : '',
+    'Business Address': address,
+    Email: data.email ? data.email.toString() : '',
+    Filename: data.filename ? data.filename.toString() : '',
+    'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
+    'Statement Data Received': formatDate(data.received),
+    'Notify Email Requested': formatDate(data.requested),
+    'Statement Failure Notification': formatDate(data.failed),
+    'Statement Delivery Notification': formatDate(data.completed)
+  }
 }
 
 const sendReport = async (schemeName, startDate, endDate) => {
@@ -24,26 +90,7 @@ const sendReport = async (schemeName, startDate, endDate) => {
 
     const filename = getReportFilename(schemeName, reportDate)
     const csvStream = format({
-      headers: [
-        'Status',
-        'Error(s)',
-        'FRN',
-        'SBI',
-        'Payment Reference',
-        'Scheme Name',
-        'Scheme Short Name',
-        'Scheme Year',
-        'Delivery Method',
-        'Business Name',
-        'Address',
-        'Email',
-        'Filename',
-        'Document DB ID',
-        'Statement Data Received',
-        'Notify Email Requested',
-        'Statement Failure Notification',
-        'Statement Delivery Notification'
-      ]
+      headers
     })
 
     await new Promise((resolve, reject) => {
@@ -57,44 +104,10 @@ const sendReport = async (schemeName, startDate, endDate) => {
         lastDeliveryId = data.deliveryId
 
         const status = data.failureId ? FAILED : (data.completed ? SUCCESS : PENDING)
-        const errors = [
-          data.statusCode ? `Status Code: ${data.statusCode}` : '',
-          data.reason ? `Reason: ${data.reason}` : '',
-          data.error ? `Error: ${data.error}` : '',
-          data.message ? `Message: ${data.message}` : ''
-        ].filter(Boolean).join(', ')
+        const errors = getErrors(data)
+        const address = getAddress(data)
 
-        const address = [
-          data.addressLine1,
-          data.addressLine2,
-          data.addressLine3,
-          data.addressLine4,
-          data.addressLine5,
-          data.postcode
-        ].filter(Boolean).join(', ')
-
-        const formatDate = (date) => date ? new Date(date).toISOString().replace('T', ' ').split('.')[0] : ''
-
-        csvStream.write({
-          Status: status,
-          'Error(s)': errors,
-          FRN: data.frn ? data.frn.toString() : '',
-          SBI: data.sbi ? data.sbi.toString() : '',
-          'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
-          'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
-          'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
-          'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
-          'Delivery Method': data.method ? data.method.toString() : '',
-          'Business Name': data.businessName ? data.businessName.toString() : '',
-          'Business Address': address,
-          Email: data.email ? data.email.toString() : '',
-          Filename: data.filename ? data.filename.toString() : '',
-          'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
-          'Statement Data Received': formatDate(data.received),
-          'Notify Email Requested': formatDate(data.requested),
-          'Statement Failure Notification': formatDate(data.failed),
-          'Statement Delivery Notification': formatDate(data.completed)
-        })
+        csvStream.write(getDataRow(data, status, address, errors))
       })
 
       deliveriesStream.on('end', async () => {
