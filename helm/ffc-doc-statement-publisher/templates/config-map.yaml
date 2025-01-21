@@ -43,4 +43,7 @@ data:
   {{ else }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}.{{ .Values.ingress.server }}
   {{- end }}
+  DELIVERY_CHECK_INTERVAL: {{ quote .Values.container.deliveryCheckInterval }}
+  REPORTING_CHECK_INTERVAL: {{ quote .Values.container.reportingCheckInterval }}
+  RETENTION_PERIOD_IN_WEEKS: {{ quote .Values.container.retentionPeriodInWeeks }}
 {{- end -}}

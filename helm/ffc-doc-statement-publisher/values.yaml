@@ -46,15 +46,18 @@ container:
   statementReceiverApiVersion: v1
   statementReceiverEndpoint: https://ffc-doc-statement-receiver
   DelinkedIntervalNumber: 1
-  DelinkedIntervalType: month
+  DelinkedIntervalType: months
   DelinkedDayOfMonth: 15
   DelinkedDurationNumber: 1
-  DelinkedDurationType: month
+  DelinkedDurationType: months
   SfiIntervalNumber: 1
-  SfiIntervalType: month
+  SfiIntervalType: months
   SfiDayOfMonth: 15
   SfiDurationNumber: 1
-  SfiDurationType: month
+  SfiDurationType: months
+  deliveryCheckInterval: 30000
+  reportingCheckInterval: 30000
+  retentionPeriodInWeeks: 78
 
 ingress:
   server: example.com

@@ -30,25 +30,25 @@ const config = {
     {
       schemeName: process.env.DELINKED_SCHEME_NAME || DELINKED_SCHEME_NAME,
       schedule: {
-        intervalNumber: process.env.DELINKED_INTERVAL_NUMBER || 1,
-        intervalType: process.env.DELINKED_INTERVAL_TYPE || 'months',
-        dayOfMonth: process.env.DELINKED_DAY_OF_MONTH || 15
+        intervalNumber: process.env.DELINKED_INTERVAL_NUMBER,
+        intervalType: process.env.DELINKED_INTERVAL_TYPE,
+        dayOfMonth: process.env.DELINKED_DAY_OF_MONTH
       },
       dateRange: {
-        durationNumber: process.env.DELINKED_DURATION_NUMBER || 1,
-        durationType: process.env.DELINKED_DURATION_TYPE || 'months'
+        durationNumber: process.env.DELINKED_DURATION_NUMBER,
+        durationType: process.env.DELINKED_DURATION_TYPE
       }
     },
     {
       schemeName: process.env.SFI_SCHEME_NAME || SFI,
       schedule: {
-        intervalNumber: process.env.SFI_INTERVAL_NUMBER || 1,
-        intervalType: process.env.SFI_INTERVAL_TYPE || 'months',
-        dayOfMonth: process.env.SFI_DAY_OF_MONTH || 15
+        intervalNumber: process.env.SFI_INTERVAL_NUMBER,
+        intervalType: process.env.SFI_INTERVAL_TYPE,
+        dayOfMonth: process.env.SFI_DAY_OF_MONTH
       },
       dateRange: {
-        durationNumber: process.env.SFI_DURATION_NUMBER || 1,
-        durationType: process.env.SFI_DURATION_TYPE || 'months'
+        durationNumber: process.env.SFI_DURATION_NUMBER,
+        durationType: process.env.SFI_DURATION_TYPE
       }
     }
   ]
