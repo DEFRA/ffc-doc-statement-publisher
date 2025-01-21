@@ -17,6 +17,18 @@ const isToday = (date) => {
   return moment(date).isSame(moment(), 'day')
 }
 
+const getRunDate = (schedule) => {
+  const { intervalType, dayOfMonth, dayOfYear, monthOfYear, hour, minute, second } = schedule
+  const baseDate = moment().hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
+
+  if (intervalType === 'months') {
+    return baseDate.date(dayOfMonth || 1)
+  } else if (intervalType === 'years') {
+    return baseDate.month((monthOfYear || 1) - 1).date(dayOfYear || 1)
+  }
+  return baseDate
+}
+
 const start = async () => {
   try {
     console.log('[REPORTING] Starting reporting')
@@ -24,40 +36,21 @@ const start = async () => {
     for (const scheme of schemes) {
       try {
         const { schemeName, template, email, schedule, dateRange } = scheme
-        const { intervalNumber, intervalType, dayOfMonth, dayOfYear, monthOfYear, hour, minute, second } = schedule
-        const { durationNumber, durationType } = dateRange
-
-        let runDate
-        if (intervalType === 'months') {
-          runDate = moment().date(dayOfMonth || 1).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
-        } else if (intervalType === 'years') {
-          runDate = moment().month((monthOfYear || 1) - 1).date(dayOfYear || 1).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
-        } else {
-          runDate = moment().add(intervalNumber, intervalType).hour(hour || 0).minute(minute || 0).second(second || 0).startOf('day')
-        }
-
-        const endDate = runDate.clone().endOf('day').toDate()
-        const startDate = runDate.clone().startOf('day').subtract(durationNumber, durationType).toDate()
-
-        console.log(`[REPORTING] A report schedule has been calculated for ${schemeName} schema with start date ${startDate} and end date ${endDate}`)
+        const runDate = getRunDate(schedule)
 
         if (isToday(runDate)) {
           console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
+          const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day')
+          const endDate = moment().endOf('day')
           await startSchemeReport(schemeName, template, email, startDate, endDate)
-        } else {
-          console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
         }
-      } catch (error) {
-        console.error('Error processing scheme:', scheme.schemeName, error)
+      } catch (err) {
+        console.error(`[REPORTING] Error processing scheme: ${scheme.schemeName}`, err)
       }
     }
   } catch (err) {
-    console.error(err)
-  } finally {
-    setTimeout(start, config.reportingCheckInterval)
+    console.error('[REPORTING] Error starting reporting', err)
   }
 }
 
-module.exports = {
-  start
-}
+module.exports = { start }
