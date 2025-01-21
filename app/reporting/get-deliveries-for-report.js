@@ -17,7 +17,7 @@ const getDeliveriesForReport = async (schemeName, start, end, transaction) => {
     ORDER BY d."deliveryId" ASC, d."method"
   `
 
-  const client = await db.sequelize.connectionManager.getConnection()
+  const client = transaction ? transaction.connection : await db.sequelize.connectionManager.getConnection()
   const stream = new QueryStream(query, [schemeName, start, end])
   const queryStream = client.query(stream)
 
