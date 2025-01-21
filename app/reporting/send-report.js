@@ -12,7 +12,7 @@ const getReportFilename = (schemeName, date) => {
   return `${formattedName}-${formattedDateTime}.csv`
 }
 
-const sendReport = async (schemeName, template, email, startDate, endDate) => {
+const sendReport = async (schemeName, startDate, endDate) => {
   const transaction = await db.sequelize.transaction()
   console.log('[REPORTING] start send report for scheme: ', schemeName)
 

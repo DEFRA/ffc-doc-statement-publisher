@@ -31,8 +31,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'scheme1',
-            template: 'template1',
-            email: 'email@example.com',
             schedule: { intervalNumber: 0, intervalType: 'days' },
             dateRange: { durationNumber: 1, durationType: 'days' }
           }
@@ -45,7 +43,7 @@ describe('Reporting', () => {
       await start()
 
       expect(getTodaysReport).toHaveBeenCalledWith('scheme1')
-      expect(sendReport).toHaveBeenCalledWith('scheme1', 'template1', 'email@example.com', startDate, endDate)
+      expect(sendReport).toHaveBeenCalledWith('scheme1', startDate, endDate)
     })
 
     test('should not call startSchemeReport if report is not due today', async () => {
@@ -53,8 +51,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'scheme1',
-            template: 'template1',
-            email: 'email@example.com',
             schedule: { intervalNumber: 1, intervalType: 'days' },
             dateRange: { durationNumber: 1, durationType: 'days' }
           }
@@ -72,8 +68,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'scheme1',
-            template: 'template1',
-            email: 'email@example.com',
             schedule: { intervalNumber: 0, intervalType: 'days' },
             dateRange: { durationNumber: 1, durationType: 'days' }
           }
@@ -101,8 +95,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'dailyScheme',
-            template: 'templateDaily',
-            email: 'daily@example.com',
             schedule: { intervalNumber: 0, intervalType: 'days' },
             dateRange: { durationNumber: 1, durationType: 'days' }
           }
@@ -114,7 +106,7 @@ describe('Reporting', () => {
 
       await start()
 
-      expect(sendReport).toHaveBeenCalledWith('dailyScheme', 'templateDaily', 'daily@example.com', startDate, endDate)
+      expect(sendReport).toHaveBeenCalledWith('dailyScheme', startDate, endDate)
     })
 
     test('should pass correct dates to startSchemeReport for monthly schedule', async () => {
@@ -124,8 +116,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'monthlyScheme',
-            template: 'templateMonthly',
-            email: 'monthly@example.com',
             schedule: { intervalNumber: 0, intervalType: 'months', dayOfMonth },
             dateRange: { durationNumber: 1, durationType: 'months' }
           }
@@ -137,7 +127,7 @@ describe('Reporting', () => {
 
       await start()
 
-      expect(sendReport).toHaveBeenCalledWith('monthlyScheme', 'templateMonthly', 'monthly@example.com', startDate, endDate)
+      expect(sendReport).toHaveBeenCalledWith('monthlyScheme', startDate, endDate)
     })
 
     test('should pass correct dates to startSchemeReport for yearly schedule', async () => {
@@ -148,8 +138,6 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'yearlyScheme',
-            template: 'templateYearly',
-            email: 'yearly@example.com',
             schedule: { intervalNumber: 0, intervalType: 'years', dayOfYear, monthOfYear },
             dateRange: { durationNumber: 1, durationType: 'years' }
           }
@@ -162,7 +150,7 @@ describe('Reporting', () => {
 
       await start()
 
-      expect(sendReport).toHaveBeenCalledWith('yearlyScheme', 'templateYearly', 'yearly@example.com', startDate, endDate)
+      expect(sendReport).toHaveBeenCalledWith('yearlyScheme', startDate, endDate)
     })
   })
 })

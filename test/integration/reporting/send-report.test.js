@@ -30,8 +30,6 @@ describe('sendReport', () => {
 
   test('should create and send report when deliveries are found', async () => {
     const schemeName = 'TEST'
-    const template = 'test-template'
-    const email = 'test@test.com'
     const startDate = new Date('2022-07-01T00:00:00Z')
     const endDate = new Date('2022-07-31T23:59:59Z')
 
@@ -57,7 +55,7 @@ describe('sendReport', () => {
     saveReportFile.mockResolvedValue()
     completeReport.mockResolvedValue()
 
-    await sendReport(schemeName, template, email, startDate, endDate)
+    await sendReport(schemeName, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
     expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date), expect.any(Object))
@@ -67,8 +65,6 @@ describe('sendReport', () => {
 
   test('should handle no deliveries found', async () => {
     const schemeName = 'TEST'
-    const template = 'test-template'
-    const email = 'test@test.com'
     const startDate = new Date('2022-07-01T00:00:00Z')
     const endDate = new Date('2022-07-31T23:59:59Z')
 
@@ -83,7 +79,7 @@ describe('sendReport', () => {
 
     getDeliveriesForReport.mockResolvedValue(mockStream)
 
-    await sendReport(schemeName, template, email, startDate, endDate)
+    await sendReport(schemeName, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
     expect(createReport).not.toHaveBeenCalled()
@@ -93,14 +89,12 @@ describe('sendReport', () => {
 
   test('should handle errors and rollback transaction', async () => {
     const schemeName = 'TEST'
-    const template = 'test-template'
-    const email = 'test@test.com'
     const startDate = new Date('2022-07-01T00:00:00Z')
     const endDate = new Date('2022-07-31T23:59:59Z')
 
     getDeliveriesForReport.mockRejectedValue(new Error('Test error'))
 
-    await expect(sendReport(schemeName, template, email, startDate, endDate)).rejects.toThrow('Test error')
+    await expect(sendReport(schemeName, startDate, endDate)).rejects.toThrow('Test error')
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
     expect(createReport).not.toHaveBeenCalled()

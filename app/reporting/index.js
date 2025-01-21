@@ -3,11 +3,11 @@ const getTodaysReport = require('./get-todays-report')
 const sendReport = require('./send-report')
 const moment = require('moment')
 
-const startSchemeReport = async (schemeName, template, email, startDate, endDate) => {
+const startSchemeReport = async (schemeName, startDate, endDate) => {
   console.log('[REPORTING] Starting report for scheme: ', schemeName)
   const existingReport = await getTodaysReport(schemeName)
   if (!existingReport?.length) {
-    await sendReport(schemeName, template, email, startDate, endDate)
+    await sendReport(schemeName, startDate, endDate)
   } else {
     console.log('[REPORTING] A report has already run today for scheme: ', schemeName)
   }
@@ -35,14 +35,14 @@ const start = async () => {
     const schemes = config.reportConfig.schemes
     for (const scheme of schemes) {
       try {
-        const { schemeName, template, email, schedule, dateRange } = scheme
+        const { schemeName, schedule, dateRange } = scheme
         const runDate = getRunDate(schedule)
 
         if (isToday(runDate)) {
           console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
           const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day')
           const endDate = moment().endOf('day')
-          await startSchemeReport(schemeName, template, email, startDate, endDate)
+          await startSchemeReport(schemeName, startDate, endDate)
         } else {
           console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
         }
