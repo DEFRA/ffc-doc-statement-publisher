@@ -1,7 +1,7 @@
 const db = require('../data')
 
 const createReport = async (schemeName, lastDeliveryId, reportStartDate, reportEndDate, requested, transaction) => {
-  return await db.report.create({
+  return db.report.create({
     lastDeliveryId,
     schemeName,
     reportStartDate,
