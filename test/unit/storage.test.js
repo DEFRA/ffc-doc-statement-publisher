@@ -1,5 +1,6 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
+const { Readable } = require('stream')
 const config = require('../../app/config').storageConfig
 
 jest.mock('@azure/identity')
@@ -10,11 +11,18 @@ describe('storage', () => {
   let mockContainerClient
   let mockBlockBlobClient
 
+  beforeAll(() => {
+    console.log = jest.fn()
+    console.error = jest.fn()
+    console.debug = jest.fn()
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
 
     mockBlockBlobClient = {
       upload: jest.fn(),
+      uploadStream: jest.fn(),
       downloadToBuffer: jest.fn()
     }
 
@@ -69,6 +77,70 @@ describe('storage', () => {
       const fileContent = await storage.getFile(filename)
       expect(mockBlockBlobClient.downloadToBuffer).toHaveBeenCalled()
       expect(fileContent).toBe(buffer)
+    })
+  })
+
+  test('should save report file successfully', async () => {
+    await jest.isolateModules(async () => {
+      const filename = 'test.csv'
+      const mockStream = new Readable({
+        read () {
+          this.push('test data')
+          this.push(null)
+        }
+      })
+
+      mockBlockBlobClient.uploadStream.mockResolvedValue()
+
+      const storage = require('../../app/storage')
+      await storage.saveReportFile(filename, mockStream)
+
+      expect(mockContainerClient.getBlockBlobClient)
+        .toHaveBeenCalledWith(`${config.reportFolder}/${filename}`)
+      expect(mockBlockBlobClient.uploadStream).toHaveBeenCalledWith(
+        mockStream,
+        4 * 1024 * 1024,
+        5,
+        expect.objectContaining({
+          blobHTTPHeaders: {
+            blobContentType: 'text/csv'
+          }
+        })
+      )
+    })
+  })
+
+  test('should handle stream error when saving report file', async () => {
+    mockBlockBlobClient.uploadStream.mockRejectedValue(new Error('Stream failed'))
+    await jest.isolateModules(async () => {
+      const filename = 'test.csv'
+      const mockStream = new Readable({
+        read () {
+          this.emit('error', new Error('Stream failed'))
+        }
+      })
+
+      const storage = require('../../app/storage')
+      await expect(storage.saveReportFile(filename, mockStream))
+        .rejects.toThrow('Stream failed')
+    })
+  })
+
+  test('should initialize containers before saving report file', async () => {
+    await jest.isolateModules(async () => {
+      const filename = 'test.csv'
+      const mockStream = new Readable({
+        read () {
+          this.push(null)
+        }
+      })
+
+      mockBlockBlobClient.uploadStream.mockResolvedValue()
+
+      const storage = require('../../app/storage')
+      await storage.saveReportFile(filename, mockStream)
+
+      expect(mockContainerClient.createIfNotExists).toHaveBeenCalled()
     })
   })
 })
