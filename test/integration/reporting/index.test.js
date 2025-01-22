@@ -12,8 +12,6 @@ jest.mock('../../../app/reporting/send-report')
 describe('start', () => {
   const mockScheme = {
     schemeName: 'TEST',
-    template: 'test-template',
-    email: 'test@test.com',
     schedule: {
       intervalType: 'months',
       dayOfMonth: 5,
@@ -54,8 +52,6 @@ describe('start', () => {
     expect(getTodaysReport).toHaveBeenCalledWith('TEST')
     expect(sendReport).toHaveBeenCalledWith(
       'TEST',
-      'test-template',
-      'test@test.com',
       new Date('2022-07-05T00:00:00.000Z'),
       new Date('2022-08-05T23:59:59.999Z')
     )

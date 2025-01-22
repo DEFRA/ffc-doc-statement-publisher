@@ -51,7 +51,7 @@ describe('Reporting', () => {
         schemes: [
           {
             schemeName: 'scheme1',
-            schedule: { intervalNumber: 1, intervalType: 'days' },
+            schedule: { intervalNumber: 1, intervalType: 'months' },
             dateRange: { durationNumber: 1, durationType: 'days' }
           }
         ]

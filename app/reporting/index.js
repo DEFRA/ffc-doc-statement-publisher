@@ -40,8 +40,8 @@ const start = async () => {
 
         if (isToday(runDate)) {
           console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
-          const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day')
-          const endDate = moment().endOf('day')
+          const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day').toDate()
+          const endDate = moment().endOf('day').toDate()
           await startSchemeReport(schemeName, startDate, endDate)
         } else {
           console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
