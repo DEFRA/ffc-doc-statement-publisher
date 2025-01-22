@@ -143,4 +143,20 @@ describe('storage', () => {
       expect(mockContainerClient.createIfNotExists).toHaveBeenCalled()
     })
   })
+
+  test('should get report file content', async () => {
+    await jest.isolateModules(async () => {
+      const filename = 'test.csv'
+      const buffer = Buffer.from('test content')
+      mockBlockBlobClient.downloadToBuffer.mockResolvedValue(buffer)
+
+      const storage = require('../../app/storage')
+      const fileContent = await storage.getReportFile(filename)
+
+      expect(mockContainerClient.getBlockBlobClient)
+        .toHaveBeenCalledWith(`${config.reportFolder}/${filename}`)
+      expect(mockBlockBlobClient.downloadToBuffer).toHaveBeenCalled()
+      expect(fileContent).toBe(buffer)
+    })
+  })
 })
