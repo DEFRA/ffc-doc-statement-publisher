@@ -1,7 +1,6 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const { Readable } = require('stream')
-const config = require('../../app/config').storageConfig
 
 jest.mock('@azure/identity')
 jest.mock('@azure/storage-blob')
@@ -41,15 +40,30 @@ describe('storage', () => {
   })
 
   test('should initialize BlobServiceClient with connection string', () => {
-    config.useConnectionStr = true
     jest.isolateModules(() => {
+      const config = require('../../app/config').storageConfig
+      config.useConnectionStr = true
       require('../../app/storage')
       expect(BlobServiceClient.fromConnectionString).toHaveBeenCalledWith(config.connectionStr)
     })
   })
 
+  test('should initialize BlobServiceClient using DefaultAzureCredential', () => {
+    jest.isolateModules(() => {
+      const config = require('../../app/config').storageConfig
+      config.storageAccount = 'test'
+      config.useConnectionStr = false
+      const uri = `https://${config.storageAccount}.blob.core.windows.net`
+      const mockCredential = {}
+      DefaultAzureCredential.mockImplementation(() => mockCredential)
+      require('../../app/storage')
+      expect(BlobServiceClient).toHaveBeenCalledWith(uri, mockCredential)
+    })
+  })
+
   test('should create containers if not exist', async () => {
     jest.isolateModules(async () => {
+      const config = require('../../app/config').storageConfig
       config.createContainers = true
       const storage = require('../../app/storage')
       await storage.initialiseContainers()
@@ -60,6 +74,7 @@ describe('storage', () => {
 
   test('should get blob client', async () => {
     jest.isolateModules(async () => {
+      const config = require('../../app/config').storageConfig
       const filename = 'test.txt'
       const storage = require('../../app/storage')
       const blobClient = await storage.getBlob(filename)
@@ -82,6 +97,7 @@ describe('storage', () => {
 
   test('should save report file successfully', async () => {
     await jest.isolateModules(async () => {
+      const config = require('../../app/config').storageConfig
       const filename = 'test.csv'
       const mockStream = new Readable({
         read () {
@@ -146,6 +162,7 @@ describe('storage', () => {
 
   test('should get report file content', async () => {
     await jest.isolateModules(async () => {
+      const config = require('../../app/config').storageConfig
       const filename = 'test.csv'
       const buffer = Buffer.from('test content')
       mockBlockBlobClient.downloadToBuffer.mockResolvedValue(buffer)

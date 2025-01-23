@@ -15,10 +15,23 @@ jest.mock('../../../app/data')
 
 describe('sendReport', () => {
   let transaction
+  let mockStream
+
+  beforeAll(() => {
+    console.log = jest.fn()
+    console.error = jest.fn()
+    console.debug = jest.fn()
+  })
 
   beforeEach(() => {
     transaction = { commit: jest.fn(), rollback: jest.fn() }
     db.sequelize.transaction.mockResolvedValue(transaction)
+
+    mockStream = {
+      on: jest.fn(),
+      end: jest.fn(),
+      write: jest.fn()
+    }
   })
 
   afterEach(() => {
@@ -111,5 +124,32 @@ describe('sendReport', () => {
     expect(saveReportFile).not.toHaveBeenCalled()
     expect(completeReport).not.toHaveBeenCalled()
     expect(transaction.rollback).toHaveBeenCalled()
+  })
+
+  test('should rollback transaction and throw error on stream error', async () => {
+    const error = new Error('Stream error')
+    const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
+    getDeliveriesForReport.mockImplementation(() => {
+      const stream = mockStream
+      process.nextTick(() => stream.on.mock.calls.find(x => x[0] === 'error')[1](error))
+      return stream
+    })
+
+    await expect(sendReport('TEST', new Date(), new Date()))
+      .rejects.toThrow('Stream error')
+    expect(transaction.rollback).toHaveBeenCalled()
+  })
+
+  test('should rollback transaction when no data is received', async () => {
+    const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
+    getDeliveriesForReport.mockImplementation(() => {
+      const stream = mockStream
+      process.nextTick(() => stream.on.mock.calls.find(x => x[0] === 'end')[1]())
+      return stream
+    })
+
+    await sendReport('TEST', new Date(), new Date())
+    expect(transaction.rollback).toHaveBeenCalled()
+    expect(transaction.commit).not.toHaveBeenCalled()
   })
 })
