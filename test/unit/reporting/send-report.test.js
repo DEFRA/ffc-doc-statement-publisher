@@ -152,4 +152,25 @@ describe('sendReport', () => {
     expect(transaction.rollback).toHaveBeenCalled()
     expect(transaction.commit).not.toHaveBeenCalled()
   })
+
+  test('should rollback transaction when no data received', async () => {
+    const schemeName = 'TEST'
+    const startDate = new Date('2022-07-01T00:00:00Z')
+    const endDate = new Date('2022-07-31T23:59:59Z')
+
+    const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
+    getDeliveriesForReport.mockImplementation(() => {
+      const stream = mockStream
+      process.nextTick(() => {
+        stream.on.mock.calls.find(x => x[0] === 'end')[1]()
+      })
+      return stream
+    })
+
+    const sendReport = require('../../../app/reporting/send-report')
+    await sendReport(schemeName, startDate, endDate)
+
+    expect(transaction.rollback).toHaveBeenCalled()
+    expect(transaction.commit).not.toHaveBeenCalled()
+  })
 })
