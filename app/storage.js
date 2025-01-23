@@ -1,6 +1,10 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('./config').storageConfig
+
+const BUFFER_SIZE = 4 * 1024 * 1024 // 4 MB
+const MAX_CONCURRENCY = 5
+
 let blobServiceClient
 let containersInitialised
 
@@ -73,8 +77,8 @@ const saveReportFile = async (filename, readableStream) => {
 
       client.uploadStream(
         readableStream,
-        4 * 1024 * 1024,
-        5,
+        BUFFER_SIZE,
+        MAX_CONCURRENCY,
         options
       )
         .then(() => {

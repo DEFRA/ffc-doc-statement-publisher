@@ -55,26 +55,43 @@ const getAddress = (data) => {
 
 const formatDate = (date) => date ? new Date(date).toISOString().replace('T', ' ').split('.')[0] : ''
 
+const getFieldValue = (field) => field ? field.toString() : ''
+
+const getFormattedData = (data) => ({
+  FRN: getFieldValue(data.frn),
+  SBI: getFieldValue(data.sbi),
+  'Payment Reference': getFieldValue(data.PaymentReference),
+  'Scheme Name': getFieldValue(data.schemeName),
+  'Scheme Short Name': getFieldValue(data.schemeShortName),
+  'Scheme Year': getFieldValue(data.schemeYear),
+  'Delivery Method': getFieldValue(data.method),
+  'Business Name': getFieldValue(data.businessName),
+  Email: getFieldValue(data.email),
+  Filename: getFieldValue(data.filename),
+  'Document DB ID': getFieldValue(data.deliveryId),
+  'Statement Data Received': formatDate(data.received),
+  'Notify Email Requested': formatDate(data.requested),
+  'Statement Failure Notification': formatDate(data.failed),
+  'Statement Delivery Notification': formatDate(data.completed)
+})
+
 const getDataRow = (data, status, address, errors) => {
+  const formattedData = getFormattedData(data)
   return {
     Status: status,
     'Error(s)': errors,
-    FRN: data.frn ? data.frn.toString() : '',
-    SBI: data.sbi ? data.sbi.toString() : '',
-    'Payment Reference': data.PaymentReference ? data.PaymentReference.toString() : '',
-    'Scheme Name': data.schemeName ? data.schemeName.toString() : '',
-    'Scheme Short Name': data.schemeShortName ? data.schemeShortName.toString() : '',
-    'Scheme Year': data.schemeYear ? data.schemeYear.toString() : '',
-    'Delivery Method': data.method ? data.method.toString() : '',
-    'Business Name': data.businessName ? data.businessName.toString() : '',
     'Business Address': address,
-    Email: data.email ? data.email.toString() : '',
-    Filename: data.filename ? data.filename.toString() : '',
-    'Document DB ID': data.deliveryId ? data.deliveryId.toString() : '',
-    'Statement Data Received': formatDate(data.received),
-    'Notify Email Requested': formatDate(data.requested),
-    'Statement Failure Notification': formatDate(data.failed),
-    'Statement Delivery Notification': formatDate(data.completed)
+    ...formattedData
+  }
+}
+
+const determineStatus = (data) => {
+  if (data.failureId) {
+    return FAILED
+  } else if (data.completed) {
+    return SUCCESS
+  } else {
+    return PENDING
   }
 }
 
@@ -103,7 +120,7 @@ const sendReport = async (schemeName, startDate, endDate) => {
         hasData = true
         lastDeliveryId = data.deliveryId
 
-        const status = data.failureId ? FAILED : (data.completed ? SUCCESS : PENDING)
+        const status = determineStatus(data)
         const errors = getErrors(data)
         const address = getAddress(data)
 

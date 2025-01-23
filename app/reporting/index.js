@@ -25,8 +25,23 @@ const getRunDate = (schedule) => {
     return baseDate.date(dayOfMonth || 1)
   } else if (intervalType === 'years') {
     return baseDate.month((monthOfYear || 1) - 1).date(dayOfYear || 1)
+  } else {
+    return baseDate
   }
-  return baseDate
+}
+
+const processScheme = async (scheme) => {
+  const { schemeName, schedule, dateRange } = scheme
+  const runDate = getRunDate(schedule)
+
+  if (isToday(runDate)) {
+    console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
+    const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day').toDate()
+    const endDate = moment().endOf('day').toDate()
+    await startSchemeReport(schemeName, startDate, endDate)
+  } else {
+    console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
+  }
 }
 
 const start = async () => {
@@ -35,17 +50,7 @@ const start = async () => {
     const schemes = config.reportConfig.schemes
     for (const scheme of schemes) {
       try {
-        const { schemeName, schedule, dateRange } = scheme
-        const runDate = getRunDate(schedule)
-
-        if (isToday(runDate)) {
-          console.log('[REPORTING] A report is due to run today for scheme: ', schemeName)
-          const startDate = moment().subtract(dateRange.durationNumber, dateRange.durationType).startOf('day').toDate()
-          const endDate = moment().endOf('day').toDate()
-          await startSchemeReport(schemeName, startDate, endDate)
-        } else {
-          console.log('[REPORTING] No report is due to run today for scheme: ', schemeName)
-        }
+        await processScheme(scheme)
       } catch (error) {
         console.error('Error processing scheme:', scheme.schemeName, error)
       }
