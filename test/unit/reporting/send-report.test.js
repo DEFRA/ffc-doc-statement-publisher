@@ -1,4 +1,4 @@
-const sendReport = require('../../../app/reporting/send-report')
+const { sendReport, getDataRow } = require('../../../app/reporting/send-report')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const createReport = require('../../../app/reporting/create-report')
 const completeReport = require('../../../app/reporting/complete-report')
@@ -167,10 +167,194 @@ describe('sendReport', () => {
       return stream
     })
 
-    const sendReport = require('../../../app/reporting/send-report')
+    const { sendReport } = require('../../../app/reporting/send-report')
     await sendReport(schemeName, startDate, endDate)
 
     expect(transaction.rollback).toHaveBeenCalled()
     expect(transaction.commit).not.toHaveBeenCalled()
+  })
+})
+
+describe('getDataRow', () => {
+  test('should return row data with FAILED status', () => {
+    const data = {
+      failureId: 1,
+      frn: 1234567890,
+      sbi: 123456789,
+      PaymentReference: 'PR123',
+      schemeName: 'Scheme Name',
+      schemeShortName: 'Scheme Short Name',
+      schemeYear: 2022,
+      method: 'Email',
+      businessName: 'Business Name',
+      addressLine1: 'Address Line 1',
+      addressLine2: 'Address Line 2',
+      addressLine3: 'Address Line 3',
+      addressLine4: 'Address Line 4',
+      addressLine5: 'Address Line 5',
+      postcode: 'AB12 3CD',
+      email: 'email@example.com',
+      filename: 'filename.pdf',
+      deliveryId: '12345',
+      received: '2022-07-01T00:00:00Z',
+      requested: '2022-07-01T01:00:00Z',
+      failed: '2022-07-01T02:00:00Z',
+      completed: '2022-07-01T03:00:00Z',
+      statusCode: 400,
+      reason: 'Bad Request',
+      error: 'Invalid data',
+      message: 'Data validation failed'
+    }
+    const status = 'FAILED'
+    const address = 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD'
+    const errors = 'Status Code: 400, Reason: Bad Request, Error: Invalid data, Message: Data validation failed'
+    const row = getDataRow(data, status, address, errors)
+    expect(row).toEqual({
+      Status: 'FAILED',
+      'Error(s)': 'Status Code: 400, Reason: Bad Request, Error: Invalid data, Message: Data validation failed',
+      FRN: '1234567890',
+      SBI: '123456789',
+      'Payment Reference': 'PR123',
+      'Scheme Name': 'Scheme Name',
+      'Scheme Short Name': 'Scheme Short Name',
+      'Scheme Year': '2022',
+      'Delivery Method': 'Email',
+      'Business Name': 'Business Name',
+      'Business Address': 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD',
+      Email: 'email@example.com',
+      Filename: 'filename.pdf',
+      'Document DB ID': '12345',
+      'Statement Data Received': '2022-07-01 00:00:00',
+      'Notify Email Requested': '2022-07-01 01:00:00',
+      'Statement Failure Notification': '2022-07-01 02:00:00',
+      'Statement Delivery Notification': '2022-07-01 03:00:00'
+    })
+  })
+
+  test('should return row data with SUCCESS status', () => {
+    const data = {
+      completed: '2022-07-01T03:00:00Z',
+      frn: 1234567890,
+      sbi: 123456789,
+      PaymentReference: 'PR123',
+      schemeName: 'Scheme Name',
+      schemeShortName: 'Scheme Short Name',
+      schemeYear: 2022,
+      method: 'Email',
+      businessName: 'Business Name',
+      addressLine1: 'Address Line 1',
+      addressLine2: 'Address Line 2',
+      addressLine3: 'Address Line 3',
+      addressLine4: 'Address Line 4',
+      addressLine5: 'Address Line 5',
+      postcode: 'AB12 3CD',
+      email: 'email@example.com',
+      filename: 'filename.pdf',
+      deliveryId: '12345',
+      received: '2022-07-01T00:00:00Z',
+      requested: '2022-07-01T01:00:00Z',
+      failed: '2022-07-01T02:00:00Z'
+    }
+    const status = 'SUCCESS'
+    const address = 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD'
+    const errors = ''
+    const row = getDataRow(data, status, address, errors)
+    expect(row).toEqual({
+      Status: 'SUCCESS',
+      'Error(s)': '',
+      FRN: '1234567890',
+      SBI: '123456789',
+      'Payment Reference': 'PR123',
+      'Scheme Name': 'Scheme Name',
+      'Scheme Short Name': 'Scheme Short Name',
+      'Scheme Year': '2022',
+      'Delivery Method': 'Email',
+      'Business Name': 'Business Name',
+      'Business Address': 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD',
+      Email: 'email@example.com',
+      Filename: 'filename.pdf',
+      'Document DB ID': '12345',
+      'Statement Data Received': '2022-07-01 00:00:00',
+      'Notify Email Requested': '2022-07-01 01:00:00',
+      'Statement Failure Notification': '2022-07-01 02:00:00',
+      'Statement Delivery Notification': '2022-07-01 03:00:00'
+    })
+  })
+
+  test('should return row data with PENDING status', () => {
+    const data = {
+      frn: 1234567890,
+      sbi: 123456789,
+      PaymentReference: 'PR123',
+      schemeName: 'Scheme Name',
+      schemeShortName: 'Scheme Short Name',
+      schemeYear: 2022,
+      method: 'Email',
+      businessName: 'Business Name',
+      addressLine1: 'Address Line 1',
+      addressLine2: 'Address Line 2',
+      addressLine3: 'Address Line 3',
+      addressLine4: 'Address Line 4',
+      addressLine5: 'Address Line 5',
+      postcode: 'AB12 3CD',
+      email: 'email@example.com',
+      filename: 'filename.pdf',
+      deliveryId: '12345',
+      received: '2022-07-01T00:00:00Z',
+      requested: '2022-07-01T01:00:00Z',
+      failed: '2022-07-01T02:00:00Z'
+    }
+    const status = 'PENDING'
+    const address = 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD'
+    const errors = ''
+    const row = getDataRow(data, status, address, errors)
+    expect(row).toEqual({
+      Status: 'PENDING',
+      'Error(s)': '',
+      FRN: '1234567890',
+      SBI: '123456789',
+      'Payment Reference': 'PR123',
+      'Scheme Name': 'Scheme Name',
+      'Scheme Short Name': 'Scheme Short Name',
+      'Scheme Year': '2022',
+      'Delivery Method': 'Email',
+      'Business Name': 'Business Name',
+      'Business Address': 'Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD',
+      Email: 'email@example.com',
+      Filename: 'filename.pdf',
+      'Document DB ID': '12345',
+      'Statement Data Received': '2022-07-01 00:00:00',
+      'Notify Email Requested': '2022-07-01 01:00:00',
+      'Statement Failure Notification': '2022-07-01 02:00:00',
+      'Statement Delivery Notification': ''
+    })
+  })
+
+  test('should return row data with missing fields', () => {
+    const data = {}
+    const status = 'PENDING'
+    const address = ''
+    const errors = ''
+    const row = getDataRow(data, status, address, errors)
+    expect(row).toEqual({
+      Status: 'PENDING',
+      'Error(s)': '',
+      FRN: '',
+      SBI: '',
+      'Payment Reference': '',
+      'Scheme Name': '',
+      'Scheme Short Name': '',
+      'Scheme Year': '',
+      'Delivery Method': '',
+      'Business Name': '',
+      'Business Address': '',
+      Email: '',
+      Filename: '',
+      'Document DB ID': '',
+      'Statement Data Received': '',
+      'Notify Email Requested': '',
+      'Statement Failure Notification': '',
+      'Statement Delivery Notification': ''
+    })
   })
 })

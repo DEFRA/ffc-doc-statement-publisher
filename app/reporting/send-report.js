@@ -135,4 +135,7 @@ const sendReport = async (schemeName, startDate, endDate) => {
   }
 }
 
-module.exports = sendReport
+module.exports = {
+  getDataRow,
+  sendReport
+}

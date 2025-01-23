@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid')
 const db = require('../../../app/data')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
-const sendReport = require('../../../app/reporting/send-report')
+const { sendReport } = require('../../../app/reporting/send-report')
 const config = require('../../../app/config')
 
 jest.mock('../../../app/reporting/get-todays-report')

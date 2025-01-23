@@ -1,6 +1,6 @@
 const config = require('../config')
 const getTodaysReport = require('./get-todays-report')
-const sendReport = require('./send-report')
+const { sendReport } = require('./send-report')
 const moment = require('moment')
 
 const startSchemeReport = async (schemeName, startDate, endDate) => {

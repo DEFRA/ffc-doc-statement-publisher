@@ -3,7 +3,7 @@ const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-fo
 const createReport = require('../../../app/reporting/create-report')
 const { saveReportFile } = require('../../../app/storage')
 const completeReport = require('../../../app/reporting/complete-report')
-const sendReport = require('../../../app/reporting/send-report')
+const { sendReport } = require('../../../app/reporting/send-report')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 

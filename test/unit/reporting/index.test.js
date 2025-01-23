@@ -1,7 +1,7 @@
 const moment = require('moment')
 const config = require('../../../app/config')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
-const sendReport = require('../../../app/reporting/send-report')
+const { sendReport } = require('../../../app/reporting/send-report')
 const { start } = require('../../../app/reporting')
 
 jest.mock('../../../app/config')

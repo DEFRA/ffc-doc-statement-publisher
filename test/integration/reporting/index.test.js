@@ -1,6 +1,6 @@
 const db = require('../../../app/data')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
-const sendReport = require('../../../app/reporting/send-report')
+const { sendReport } = require('../../../app/reporting/send-report')
 const config = require('../../../app/config')
 const { start } = require('../../../app/reporting/index')
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
