@@ -5,27 +5,7 @@ const { saveReportFile } = require('../storage')
 const completeReport = require('./complete-report')
 const { format } = require('@fast-csv/format')
 const { FAILED, PENDING, SUCCESS } = require('../constants/report')
-
-const headers = [
-  'Status',
-  'Error(s)',
-  'FRN',
-  'SBI',
-  'Payment Reference',
-  'Scheme Name',
-  'Scheme Short Name',
-  'Scheme Year',
-  'Delivery Method',
-  'Business Name',
-  'Address',
-  'Email',
-  'Filename',
-  'Document DB ID',
-  'Statement Data Received',
-  'Notify Email Requested',
-  'Statement Failure Notification',
-  'Statement Delivery Notification'
-]
+const headers = require('../constants/report-headers')
 
 const getReportFilename = (schemeName, date) => {
   const formattedDateTime = date.toISOString()
