@@ -101,4 +101,10 @@ describe('Publish by email', () => {
     const result = await publishByEmail(EMAIL_TEMPLATE, EMAIL, FILE_BUFFER, PERSONALISATION)
     expect(result).toBe(await mockNotifyClient().sendEmail())
   })
+
+  test('should call mockNotifyClient.prepareUpload with FILE_BUFFER and { confirmEmailBeforeDownload: true, retentionPeriod: config.retentionPeriodInWeeks weeks, filename: "testfile.txt" } when filename is provided', async () => {
+    const filename = 'testfile.txt'
+    await publishByEmail(EMAIL_TEMPLATE, EMAIL, FILE_BUFFER, PERSONALISATION, filename)
+    expect(mockNotifyClient().prepareUpload).toHaveBeenCalledWith(FILE_BUFFER, { confirmEmailBeforeDownload: true, retentionPeriod: `${config.retentionPeriodInWeeks} weeks`, filename })
+  })
 })

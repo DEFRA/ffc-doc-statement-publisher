@@ -22,7 +22,19 @@ services:
       DOC_NOTIFY_API_KEY: A_TEST_KEY
       DOC_NOTIFY_API_KEY_LETTER: A_TEST_KEY
       DOC_NOTIFY_EMAIL_TEMPLATE_KEY: A_TEST_KEY
-
+      DELINKED_INTERVAL_NUMBER: 1
+      DELINKED_INTERVAL_TYPE: months
+      DELINKED_DAY_OF_MONTH: 15
+      DELINKED_DURATION_NUMBER: 1
+      DELINKED_DURATION_TYPE: months
+      SFI_INTERVAL_NUMBER: 1
+      SFI_INTERVAL_TYPE: months
+      SFI_DAY_OF_MONTH: 15
+      SFI_DURATION_NUMBER: 1
+      SFI_DURATION_TYPE: months
+      DELIVERY_CHECK_INTERVAL: 30000
+      REPORTING_CHECK_INTERVAL: 30000
+      RETENTION_PERIOD_IN_WEEKS: 78
   ffc-doc-statement-publisher-postgres:
     volumes:
       - postgres_data:/var/lib/postgresql/data

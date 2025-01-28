@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { Sequelize, DataTypes } = require('sequelize')
+const { Sequelize, DataTypes, Op } = require('sequelize')
 const config = require('../config')
 const dbConfig = config.dbConfig[config.env]
 const modelPath = path.join(__dirname, 'models')
@@ -25,5 +25,6 @@ Object.keys(db).forEach(modelName => {
 
 db.sequelize = sequelize
 db.Sequelize = Sequelize
+db.Op = Op
 
 module.exports = db

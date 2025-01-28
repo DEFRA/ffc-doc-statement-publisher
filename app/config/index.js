@@ -2,14 +2,16 @@ const Joi = require('joi')
 const mqConfig = require('./message')
 const dbConfig = require('./database')
 const storageConfig = require('./storage')
+const reportConfig = require('./report')
 
 const schema = Joi.object({
   env: Joi.string().valid('development', 'test', 'production').default('development'),
-  deliveryCheckInterval: Joi.number().default(30000),
+  deliveryCheckInterval: Joi.number().required(),
+  reportingCheckInterval: Joi.number().required(),
   notifyApiKey: Joi.string().required(),
   notifyApiKeyLetter: Joi.string().required(),
   notifyEmailTemplateKey: Joi.string().required(),
-  retentionPeriodInWeeks: Joi.number().default(78),
+  retentionPeriodInWeeks: Joi.number().required(),
   statementReceiverApiVersion: Joi.string().required(),
   statementReceiverEndpoint: Joi.string().required()
 })
@@ -17,6 +19,7 @@ const schema = Joi.object({
 const config = {
   env: process.env.NODE_ENV,
   deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL,
+  reportingCheckInterval: process.env.REPORTING_CHECK_INTERVAL,
   notifyApiKey: process.env.NOTIFY_API_KEY,
   notifyApiKeyLetter: process.env.NOTIFY_API_KEY_LETTER,
   notifyEmailTemplateKey: process.env.NOTIFY_EMAIL_TEMPLATE_KEY,
@@ -42,5 +45,6 @@ value.publishSubscription = mqConfig.publishSubscription
 value.crmTopic = mqConfig.crmTopic
 value.dbConfig = dbConfig
 value.storageConfig = storageConfig
+value.reportConfig = reportConfig
 
 module.exports = value

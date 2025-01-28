@@ -2,6 +2,7 @@ const moment = require('moment')
 const config = require('../config')
 const { NotifyClient } = require('notifications-node-client')
 const { retry } = require('../retry')
+const { RETRIES, RETRY_INTERVAL } = require('../constants/publish')
 
 function setupEmailRequest (template, email, linkToFile, personalisation, notifyClient) {
   const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
@@ -16,18 +17,22 @@ function setupEmailRequest (template, email, linkToFile, personalisation, notify
   }
 }
 
-const publishByEmail = async (template, email, file, personalisation) => {
+const publishByEmail = async (template, email, file, personalisation, filename = null) => {
   moment.locale('en-gb')
   const notifyClient = new NotifyClient(config.notifyApiKey)
+  const fileOptions = {
+    confirmEmailBeforeDownload: true,
+    retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
+  }
+  if (filename) {
+    fileOptions.filename = filename
+  }
   const linkToFile = await notifyClient.prepareUpload(
     file,
-    {
-      confirmEmailBeforeDownload: true,
-      retentionPeriod: `${config.retentionPeriodInWeeks} weeks`
-    }
+    fileOptions
   )
   const emailRequest = setupEmailRequest(template, email, linkToFile, personalisation, notifyClient)
-  return retry(emailRequest, 3, 100, true)
+  return retry(emailRequest, RETRIES, RETRY_INTERVAL, true)
     .then(result => {
       return result
     })
