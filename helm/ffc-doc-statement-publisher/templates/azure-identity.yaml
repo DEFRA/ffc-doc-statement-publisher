@@ -1,5 +1,0 @@
-{{- if .Values.aadPodIdentity }}
-{{- include "ffc-helm-library.azure-identity" (list . "ffc-doc-statement-publisher.azure-identity") -}}
-{{- end }}
-{{- define "ffc-doc-statement-publisher.azure-identity" -}}
-{{- end -}}
