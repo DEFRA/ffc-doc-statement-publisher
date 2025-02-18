@@ -7,10 +7,11 @@ function isProd () {
 const hooks = {
   beforeConnect: async (cfg) => {
     if (isProd()) {
+      const dbAuthEndpoint = 'https://ossrdbms-aad.database.windows.net/.default'
       const credential = new DefaultAzureCredential({ managedIdentityClientId: process.env.AZURE_CLIENT_ID })
       const tokenProvider = getBearerTokenProvider(
         credential,
-        'https://ossrdbms-aad.database.windows.net/.default'
+        dbAuthEndpoint
       )
       cfg.password = tokenProvider
     }
