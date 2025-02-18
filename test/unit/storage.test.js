@@ -31,8 +31,6 @@ describe('storage', () => {
     jest.resetModules()
     jest.clearAllMocks()
 
-    // const mockUpload = jest.fn().mockResolvedValue({})
-
     require('@azure/storage-blob').BlobServiceClient.fromConnectionString = jest
       .fn()
       .mockReturnValue(mockBlobServiceClient)
