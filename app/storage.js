@@ -10,7 +10,7 @@ if (config.useConnectionStr) {
 } else {
   console.log('Using DefaultAzureCredential for BlobServiceClient')
   const uri = `https://${config.storageAccount}.blob.core.windows.net`
-  blobServiceClient = new BlobServiceClient(uri, new DefaultAzureCredential())
+  blobServiceClient = new BlobServiceClient(uri, new DefaultAzureCredential({ managedIdentityClientId: config.managedIdentityClientId }))
 }
 
 const container = blobServiceClient.getContainerClient(config.container)
@@ -20,7 +20,9 @@ const initialiseContainers = async () => {
     console.log('Making sure blob containers exist')
     await container.createIfNotExists()
   }
+
   await initialiseFolders()
+
   containersInitialised = true
 }
 
@@ -30,19 +32,19 @@ const initialiseFolders = async () => {
   await client.upload(placeHolderText, placeHolderText.length)
 }
 
-const getBlob = async (filename) => {
+const getOutboundBlobClient = async (filename) => {
   containersInitialised ?? await initialiseContainers()
   return container.getBlockBlobClient(`${config.folder}/${filename}`)
 }
 
 const getFile = async (filename) => {
-  const blob = await getBlob(filename)
+  const blob = await getOutboundBlobClient(filename)
   return blob.downloadToBuffer()
 }
 
 module.exports = {
   initialiseContainers,
   blobServiceClient,
-  getBlob,
+  getOutboundBlobClient,
   getFile
 }
