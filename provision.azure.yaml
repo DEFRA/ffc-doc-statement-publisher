@@ -1,7 +1,7 @@
 resources:
   identity: doc-statement-publisher
   postgreSql:
-    name: ffc_doc_statement_publisher
+    name: ffc-doc-statement-publisher
   topics:
     - name: ffc-doc-statement-crm
       role: sender
