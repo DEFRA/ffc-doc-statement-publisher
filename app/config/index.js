@@ -6,12 +6,12 @@ const reportConfig = require('./report')
 
 const schema = Joi.object({
   env: Joi.string().valid('development', 'test', 'production').default('development'),
-  deliveryCheckInterval: Joi.number().required(),
-  reportingCheckInterval: Joi.number().required(),
+  deliveryCheckInterval: Joi.string().required(),
+  reportingCheckInterval: Joi.string().required(),
   notifyApiKey: Joi.string().required(),
   notifyApiKeyLetter: Joi.string().required(),
   notifyEmailTemplateKey: Joi.string().required(),
-  retentionPeriodInWeeks: Joi.number().required(),
+  retentionPeriodInWeeks: Joi.string().required(),
   statementReceiverApiVersion: Joi.string().required(),
   statementReceiverEndpoint: Joi.string().required()
 })
