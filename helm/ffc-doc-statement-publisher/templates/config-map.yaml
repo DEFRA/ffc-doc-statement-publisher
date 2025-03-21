@@ -38,12 +38,12 @@ data:
   SFI_DAY_OF_MONTH: {{ quote .Values.container.SfiDayOfMonth }}
   SFI_DURATION_NUMBER: {{ quote .Values.container.SfiDurationNumber }}
   SFI_DURATION_TYPE: {{ quote .Values.container.SfiDurationType }}
+  DELIVERY_CHECK_INTERVAL: {{ quote .Values.container.deliveryCheckInterval }}
+  REPORTING_CHECK_INTERVAL: {{ quote .Values.container.reportingCheckInterval }}
+  RETENTION_PERIOD_IN_WEEKS: {{ quote .Values.container.retentionPeriodInWeeks }}
   {{- if and (.Values.environmentCode) (ne (.Values.environmentCode | toString ) "snd") }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}-{{ .Values.environmentCode }}.{{ .Values.ingress.server }}
   {{ else }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}.{{ .Values.ingress.server }}
   {{- end }}
-  DELIVERY_CHECK_INTERVAL: {{ quote .Values.container.deliveryCheckInterval }}
-  REPORTING_CHECK_INTERVAL: {{ quote .Values.container.reportingCheckInterval }}
-  RETENTION_PERIOD_IN_WEEKS: {{ quote .Values.container.retentionPeriodInWeeks }}
 {{- end -}}
