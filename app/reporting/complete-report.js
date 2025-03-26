@@ -1,8 +1,11 @@
 const db = require('../data')
 
-const completeReport = async (reportId, transaction) => {
+const completeReport = async (reportId, lastDeliveryId, transaction) => {
   await db.report.update(
-    { sent: new Date() },
+    {
+      sent: new Date(),
+      lastDeliveryId
+    },
     { where: { reportId } },
     { transaction })
 }

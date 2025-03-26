@@ -9,7 +9,7 @@ const startSchemeReport = async (schemeName, startDate, endDate) => {
   if (!existingReport?.length) {
     await sendReport(schemeName, startDate, endDate)
   } else {
-    console.log('[REPORTING] A report has already run today for scheme: ', schemeName)
+    console.log('[REPORTING] A report is already running or has already run today for scheme: ', schemeName)
   }
 }
 

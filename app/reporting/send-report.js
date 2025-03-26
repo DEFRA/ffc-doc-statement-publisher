@@ -76,16 +76,20 @@ const determineStatus = (data) => {
 }
 
 const sendReport = async (schemeName, startDate, endDate) => {
+  let lastDeliveryId = null
+  const reportDate = new Date()
+  const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate)
+
   const transaction = await db.sequelize.transaction()
-  console.log('[REPORTING] start send report for scheme: ', schemeName)
+  console.log('[REPORTING] start building report for scheme: ', schemeName)
 
   try {
     const deliveriesStream = await getDeliveriesForReport(schemeName, startDate, endDate, transaction)
+
     let hasData = false
-    let lastDeliveryId = null
-    const reportDate = new Date()
 
     const filename = getReportFilename(schemeName, reportDate)
+
     const csvStream = format({
       headers
     })
@@ -103,7 +107,6 @@ const sendReport = async (schemeName, startDate, endDate) => {
         const status = determineStatus(data)
         const errors = getErrors(data)
         const address = getAddress(data)
-
         csvStream.write(getDataRow(data, status, address, errors))
       })
 
@@ -111,12 +114,12 @@ const sendReport = async (schemeName, startDate, endDate) => {
         try {
           csvStream.end()
           if (hasData) {
-            const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate, transaction)
             await saveReportFile(filename, csvStream)
-            await completeReport(report.reportId, transaction)
+            await completeReport(report.reportId, lastDeliveryId, transaction)
             await transaction.commit()
             resolve()
           } else {
+            console.log('There was no data for this report')
             await transaction.rollback()
             resolve()
           }
