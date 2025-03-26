@@ -58,9 +58,9 @@ describe('sendReport', () => {
     await sendReport(schemeName, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).toHaveBeenCalledWith(schemeName, 2, startDate, endDate, expect.any(Date), expect.any(Object))
+    expect(createReport).toHaveBeenCalledWith(schemeName, null, startDate, endDate, expect.any(Date))
     expect(saveReportFile).toHaveBeenCalledWith(expect.stringContaining('test-'), expect.any(Object))
-    expect(completeReport).toHaveBeenCalledWith(1, expect.any(Object))
+    expect(completeReport).toHaveBeenCalledWith(1, 2, expect.any(Object))
   })
 
   test('should handle no deliveries found', async () => {
@@ -82,7 +82,6 @@ describe('sendReport', () => {
     await sendReport(schemeName, startDate, endDate)
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).not.toHaveBeenCalled()
     expect(saveReportFile).not.toHaveBeenCalled()
     expect(completeReport).not.toHaveBeenCalled()
   })
@@ -97,7 +96,6 @@ describe('sendReport', () => {
     await expect(sendReport(schemeName, startDate, endDate)).rejects.toThrow('Test error')
 
     expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
-    expect(createReport).not.toHaveBeenCalled()
     expect(saveReportFile).not.toHaveBeenCalled()
     expect(completeReport).not.toHaveBeenCalled()
   })

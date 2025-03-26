@@ -37,20 +37,4 @@ describe('createReport', () => {
       sent: null
     })
   })
-
-  test('does not create a report if transaction is rolled back', async () => {
-    const transaction = await db.sequelize.transaction()
-    await createReport(
-      mockReport1.schemeName,
-      mockReport1.lastDeliveryId,
-      mockReport1.reportStartDate,
-      mockReport1.reportEndDate,
-      mockReport1.requested,
-      transaction
-    )
-    await transaction.rollback()
-
-    const reports = await db.report.findAll()
-    expect(reports.length).toBe(0)
-  })
 })

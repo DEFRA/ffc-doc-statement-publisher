@@ -39,10 +39,18 @@ describe('getTodaysReport', () => {
     expect(db.report.findAll).toHaveBeenCalledWith({
       where: {
         schemeName,
-        sent: {
-          [db.Op.between]: [startOfDay, endOfDay],
-          [db.Op.ne]: null
-        }
+        [db.Op.or]: [
+          {
+            sent: {
+              [db.Op.between]: [startOfDay, endOfDay]
+            }
+          },
+          {
+            sent: {
+              [db.Op.eq]: null
+            }
+          }
+        ]
       }
     })
 

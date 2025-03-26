@@ -10,7 +10,6 @@ describe('createReport', () => {
     const reportStartDate = new Date('2024-12-01')
     const reportEndDate = new Date('2024-12-31')
     const requested = new Date('2024-12-12')
-    const transaction = {}
 
     const mockReport = {
       lastDeliveryId,
@@ -23,7 +22,7 @@ describe('createReport', () => {
     // Mock the create method
     db.report.create.mockResolvedValue(mockReport)
 
-    const result = await createReport(schemeName, lastDeliveryId, reportStartDate, reportEndDate, requested, transaction)
+    const result = await createReport(schemeName, lastDeliveryId, reportStartDate, reportEndDate, requested)
 
     expect(db.report.create).toHaveBeenCalledWith(
       {
@@ -32,8 +31,7 @@ describe('createReport', () => {
         reportStartDate,
         reportEndDate,
         requested
-      },
-      { transaction }
+      }
     )
 
     expect(result).toEqual(mockReport)

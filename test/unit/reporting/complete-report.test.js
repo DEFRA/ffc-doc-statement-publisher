@@ -8,6 +8,7 @@ describe('completeReport', () => {
     const reportId = 1
     const transaction = {}
     const mockDate = new Date('2024-12-12T00:00:00Z')
+    const lastDeliveryId = 123
 
     // Mock the Date object
     global.Date = jest.fn(() => mockDate)
@@ -15,10 +16,13 @@ describe('completeReport', () => {
     // Mock the update method
     db.report.update.mockResolvedValue([1])
 
-    await completeReport(reportId, transaction)
+    await completeReport(reportId, lastDeliveryId, transaction)
 
     expect(db.report.update).toHaveBeenCalledWith(
-      { sent: mockDate },
+      {
+        lastDeliveryId,
+        sent: mockDate
+      },
       { where: { reportId } },
       { transaction }
     )

@@ -63,7 +63,7 @@ describe('start', () => {
 
     await start()
 
-    expect(console.log).toHaveBeenCalledWith('[REPORTING] A report has already run today for scheme: ', 'TEST')
+    expect(console.log).toHaveBeenCalledWith('[REPORTING] A report is already running or has already run today for scheme: ', 'TEST')
     expect(sendReport).not.toHaveBeenCalled()
   })
 
