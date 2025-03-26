@@ -1,4 +1,11 @@
 resources:
+  identity: doc-statement-publisher
+  postgreSql:
+    name: ffc-doc-statement-publisher
   topics:
-    - name: publish
-    - name: crm
+    - name: ffc-doc-statement-crm
+      role: sender
+    - name: ffc-doc-statement-publish
+      role: receiver
+      subscriptions:
+          - name: ffc-doc-statement-publisher

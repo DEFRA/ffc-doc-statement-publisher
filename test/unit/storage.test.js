@@ -1,179 +1,185 @@
-const { DefaultAzureCredential } = require('@azure/identity')
-const { BlobServiceClient } = require('@azure/storage-blob')
-const { Readable } = require('stream')
-
-jest.mock('@azure/identity')
 jest.mock('@azure/storage-blob')
+jest.mock('@azure/identity')
 
 describe('storage', () => {
-  let mockBlobServiceClient
-  let mockContainerClient
-  let mockBlockBlobClient
+  let storage
+  const mockstorage = {
+    upload: jest.fn().mockResolvedValue({}),
+    url: 'test-url'
+  }
 
-  beforeAll(() => {
-    console.log = jest.fn()
-    console.error = jest.fn()
-    console.debug = jest.fn()
-  })
+  const mockContainer = {
+    createIfNotExists: jest.fn(),
+    getBlockBlobClient: jest.fn().mockReturnValue(mockstorage)
+  }
+
+  const mockStorageConfig = {
+    useConnectionStr: true,
+    connectionStr: 'connection-string',
+    createContainers: true,
+    storageAccount: 'fakestorageaccount',
+    managedIdentityClientId: 'fake-client-id',
+    container: 'test-container',
+    folder: 'test-folder'
+  }
+
+  const mockBlobServiceClient = {
+    getContainerClient: jest.fn().mockReturnValue(mockContainer)
+  }
 
   beforeEach(() => {
+    jest.resetModules()
     jest.clearAllMocks()
 
-    mockBlockBlobClient = {
-      upload: jest.fn(),
-      uploadStream: jest.fn(),
-      downloadToBuffer: jest.fn()
-    }
+    require('@azure/storage-blob').BlobServiceClient.fromConnectionString = jest
+      .fn()
+      .mockReturnValue(mockBlobServiceClient)
 
-    mockContainerClient = {
-      getBlockBlobClient: jest.fn().mockReturnValue(mockBlockBlobClient),
-      createIfNotExists: jest.fn()
-    }
+    require('@azure/storage-blob').BlobServiceClient.mockImplementation(() => mockBlobServiceClient)
 
-    mockBlobServiceClient = {
-      getContainerClient: jest.fn().mockReturnValue(mockContainerClient)
-    }
+    require('@azure/identity').DefaultAzureCredential.mockImplementation(() => ({}))
 
-    BlobServiceClient.fromConnectionString.mockReturnValue(mockBlobServiceClient)
-    BlobServiceClient.mockImplementation(() => mockBlobServiceClient)
-    DefaultAzureCredential.mockImplementation(() => ({}))
+    jest.mock('../../app/config', () => ({
+      storageConfig: mockStorageConfig
+    }))
+
+    jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    storage = require('../../app/storage')
   })
 
-  test('should initialize BlobServiceClient with connection string', () => {
-    jest.isolateModules(() => {
-      const config = require('../../app/config').storageConfig
-      config.useConnectionStr = true
+  afterEach(() => {
+    console.log.mockRestore()
+  })
+
+  test('uses connection string when config.useConnectionStr is true', async () => {
+    expect(require('@azure/storage-blob').BlobServiceClient.fromConnectionString)
+      .toHaveBeenCalledWith(mockStorageConfig.connectionStr)
+    expect(console.log).toHaveBeenCalledWith('Using connection string for BlobServiceClient')
+  })
+
+  test('uses DefaultAzureCredential when config.useConnectionStr is false', async () => {
+    jest.resetModules()
+    mockStorageConfig.useConnectionStr = false
+
+    jest.mock('../../app/config', () => ({
+      storageConfig: mockStorageConfig
+    }))
+
+    storage = require('../../app/storage')
+
+    expect(require('@azure/identity').DefaultAzureCredential).toHaveBeenCalledWith({
+      managedIdentityClientId: 'fake-client-id'
+    })
+
+    expect(require('@azure/storage-blob').BlobServiceClient).toHaveBeenCalledWith(
+      `https://${mockStorageConfig.storageAccount}.blob.core.windows.net`,
+      expect.any(Object)
+    )
+
+    expect(console.log).toHaveBeenCalledWith('Using DefaultAzureCredential for BlobServiceClient')
+  })
+
+  test('initializes containers if required', async () => {
+    await storage.initialiseContainers()
+    expect(mockContainer.createIfNotExists).toHaveBeenCalled()
+  })
+
+  test('gets outbound blob client', async () => {
+    const result = await storage.getOutboundBlobClient('test-file.txt')
+    expect(result.url).toBe('test-url')
+    expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/test-file.txt')
+  })
+
+  test('logs message and creates container when createContainers is true', async () => {
+    mockStorageConfig.createContainers = true
+    await storage.initialiseContainers()
+
+    expect(console.log).toHaveBeenCalledWith('Making sure blob containers exist')
+    expect(mockContainer.createIfNotExists).toHaveBeenCalled()
+  })
+
+  test('does not create container when createContainers is false', async () => {
+    mockStorageConfig.createContainers = false
+    await storage.initialiseContainers()
+
+    expect(console.log).not.toHaveBeenCalledWith('Making sure blob containers exist')
+    expect(mockContainer.createIfNotExists).not.toHaveBeenCalled()
+  })
+
+  describe('when using managed identity', () => {
+    test('creates blob service client with DefaultAzureCredential', () => {
+      jest.resetModules()
+      mockStorageConfig.useConnectionStr = false
+
+      jest.mock('../../app/config', () => ({
+        storageConfig: mockStorageConfig
+      }))
+
       require('../../app/storage')
-      expect(BlobServiceClient.fromConnectionString).toHaveBeenCalledWith(config.connectionStr)
+
+      expect(require('@azure/storage-blob').BlobServiceClient)
+        .toHaveBeenCalledWith(
+          `https://${mockStorageConfig.storageAccount}.blob.core.windows.net`,
+          expect.any(Object)
+        )
     })
   })
 
-  test('should initialize BlobServiceClient using DefaultAzureCredential', () => {
-    jest.isolateModules(() => {
-      const config = require('../../app/config').storageConfig
-      config.storageAccount = 'test'
-      config.useConnectionStr = false
-      const uri = `https://${config.storageAccount}.blob.core.windows.net`
-      const mockCredential = {}
-      DefaultAzureCredential.mockImplementation(() => mockCredential)
-      require('../../app/storage')
-      expect(BlobServiceClient).toHaveBeenCalledWith(uri, mockCredential)
-    })
-  })
+  describe('container initialization', () => {
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
 
-  test('should create containers if not exist', async () => {
-    jest.isolateModules(async () => {
-      const config = require('../../app/config').storageConfig
-      config.createContainers = true
-      const storage = require('../../app/storage')
+      require('@azure/storage-blob').BlobServiceClient.fromConnectionString = jest
+        .fn()
+        .mockReturnValue(mockBlobServiceClient)
+
+      require('@azure/storage-blob').BlobServiceClient.mockImplementation(() => mockBlobServiceClient)
+
+      jest.mock('../../app/config', () => ({
+        storageConfig: mockStorageConfig
+      }))
+
+      storage = require('../../app/storage')
+    })
+
+    test('initializes folders on first call', async () => {
+      await storage.getOutboundBlobClient('test.txt')
+
+      expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(1, 'test-folder/default.txt')
+      expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(2, 'test-folder/test.txt')
+      expect(mockstorage.upload).toHaveBeenCalledWith('Placeholder', 'Placeholder'.length)
+    })
+
+    test('skips folder initialization on subsequent calls', async () => {
       await storage.initialiseContainers()
-      expect(mockContainerClient.createIfNotExists).toHaveBeenCalled()
-      expect(mockBlockBlobClient.upload).toHaveBeenCalledTimes(2)
+      await storage.getOutboundBlobClient('test.txt')
+
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledTimes(2)
+      expect(mockstorage.upload).toHaveBeenCalledTimes(1)
     })
-  })
 
-  test('should get blob client', async () => {
-    jest.isolateModules(async () => {
-      const config = require('../../app/config').storageConfig
-      const filename = 'test.txt'
-      const storage = require('../../app/storage')
-      const blobClient = await storage.getBlob(filename)
-      expect(mockContainerClient.getBlockBlobClient).toHaveBeenCalledWith(`${config.folder}/${filename}`)
-      expect(blobClient).toBe(mockBlockBlobClient)
+    test('initializes containers when createContainers is true', async () => {
+      mockStorageConfig.createContainers = true
+      await storage.initialiseContainers()
+
+      expect(mockContainer.createIfNotExists).toHaveBeenCalled()
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/default.txt')
     })
-  })
 
-  test('should get file content', async () => {
-    jest.isolateModules(async () => {
-      const filename = 'test.txt'
-      const buffer = Buffer.from('test content')
-      mockBlockBlobClient.downloadToBuffer.mockResolvedValue(buffer)
-      const storage = require('../../app/storage')
-      const fileContent = await storage.getFile(filename)
-      expect(mockBlockBlobClient.downloadToBuffer).toHaveBeenCalled()
-      expect(fileContent).toBe(buffer)
+    test('skips container creation when createContainers is false', async () => {
+      mockStorageConfig.createContainers = false
+      await storage.initialiseContainers()
+
+      expect(mockContainer.createIfNotExists).not.toHaveBeenCalled()
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/default.txt')
     })
-  })
 
-  test('should save report file successfully', async () => {
-    await jest.isolateModules(async () => {
-      const config = require('../../app/config').storageConfig
-      const filename = 'test.csv'
-      const mockStream = new Readable({
-        read () {
-          this.push('test data')
-          this.push(null)
-        }
-      })
-
-      mockBlockBlobClient.uploadStream.mockResolvedValue()
-
-      const storage = require('../../app/storage')
-      await storage.saveReportFile(filename, mockStream)
-
-      expect(mockContainerClient.getBlockBlobClient)
-        .toHaveBeenCalledWith(`${config.reportFolder}/${filename}`)
-      expect(mockBlockBlobClient.uploadStream).toHaveBeenCalledWith(
-        mockStream,
-        4 * 1024 * 1024,
-        5,
-        expect.objectContaining({
-          blobHTTPHeaders: {
-            blobContentType: 'text/csv'
-          }
-        })
-      )
-    })
-  })
-
-  test('should handle stream error when saving report file', async () => {
-    mockBlockBlobClient.uploadStream.mockRejectedValue(new Error('Stream failed'))
-    await jest.isolateModules(async () => {
-      const filename = 'test.csv'
-      const mockStream = new Readable({
-        read () {
-          this.emit('error', new Error('Stream failed'))
-        }
-      })
-
-      const storage = require('../../app/storage')
-      await expect(storage.saveReportFile(filename, mockStream))
-        .rejects.toThrow('Stream failed')
-    })
-  })
-
-  test('should initialize containers before saving report file', async () => {
-    await jest.isolateModules(async () => {
-      const filename = 'test.csv'
-      const mockStream = new Readable({
-        read () {
-          this.push(null)
-        }
-      })
-
-      mockBlockBlobClient.uploadStream.mockResolvedValue()
-
-      const storage = require('../../app/storage')
-      await storage.saveReportFile(filename, mockStream)
-
-      expect(mockContainerClient.createIfNotExists).toHaveBeenCalled()
-    })
-  })
-
-  test('should get report file content', async () => {
-    await jest.isolateModules(async () => {
-      const config = require('../../app/config').storageConfig
-      const filename = 'test.csv'
-      const buffer = Buffer.from('test content')
-      mockBlockBlobClient.downloadToBuffer.mockResolvedValue(buffer)
-
-      const storage = require('../../app/storage')
-      const fileContent = await storage.getReportFile(filename)
-
-      expect(mockContainerClient.getBlockBlobClient)
-        .toHaveBeenCalledWith(`${config.reportFolder}/${filename}`)
-      expect(mockBlockBlobClient.downloadToBuffer).toHaveBeenCalled()
-      expect(fileContent).toBe(buffer)
+    test('initializes folders if containersInitialised is false', async () => {
+      await storage.initialiseContainers()
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/default.txt')
+      expect(mockstorage.upload).toHaveBeenCalledTimes(1)
     })
   })
 })

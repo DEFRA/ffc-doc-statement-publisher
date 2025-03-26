@@ -8,7 +8,8 @@ const schema = Joi.object({
   folder: Joi.string().default('outbound'),
   reportFolder: Joi.string().default('reports'),
   useConnectionStr: Joi.boolean().default(false),
-  createContainers: Joi.boolean().default(true)
+  createContainers: Joi.boolean().default(true),
+  managedIdentityClientId: Joi.string().optional()
 })
 
 // Build config
@@ -19,7 +20,8 @@ const config = {
   folder: process.env.AZURE_STORAGE_FOLDER,
   reportFolder: process.AZURE_STORAGE_REPORT_FOLDER,
   useConnectionStr: process.env.AZURE_STORAGE_USE_CONNECTION_STRING,
-  createContainers: process.env.AZURE_STORAGE_CREATE_CONTAINERS
+  createContainers: process.env.AZURE_STORAGE_CREATE_CONTAINERS,
+  managedIdentityClientId: process.env.AZURE_CLIENT_ID
 }
 
 // Validate config
