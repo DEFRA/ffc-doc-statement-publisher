@@ -1,6 +1,6 @@
 {
   "name": "ffc-doc-statement-publisher",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Publish statements",
   "homepage": "https://github.com/DEFRA/ffc-doc-statement-publisher",
   "main": "app/index.js",
@@ -27,14 +27,16 @@
   "dependencies": {
     "@azure/identity": "4.2.1",
     "@azure/storage-blob": "12.10.0",
-    "applicationinsights": "2.9.6",
-    "axios": "1.7.7",
+    "@fast-csv/format": "^5.0.2",
+    "applicationinsights": "3.6.0",
+    "axios": "^1.8.4",
     "ffc-messaging": "2.9.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
     "notifications-node-client": "7.0.4",
     "pg": "8.7.3",
     "pg-hstore": "2.3.4",
+    "pg-query-stream": "^4.7.1",
     "sequelize": "6.29.3"
   },
   "devDependencies": {

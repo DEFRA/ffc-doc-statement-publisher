@@ -20,7 +20,8 @@ describe('storage', () => {
     storageAccount: 'fakestorageaccount',
     managedIdentityClientId: 'fake-client-id',
     container: 'test-container',
-    folder: 'test-folder'
+    folder: 'test-folder',
+    reportFolder: 'test-report-folder'
   }
 
   const mockBlobServiceClient = {
@@ -148,7 +149,8 @@ describe('storage', () => {
       await storage.getOutboundBlobClient('test.txt')
 
       expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(1, 'test-folder/default.txt')
-      expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(2, 'test-folder/test.txt')
+      expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(2, 'test-report-folder/default.txt')
+      expect(mockContainer.getBlockBlobClient).toHaveBeenNthCalledWith(3, 'test-folder/test.txt')
       expect(mockstorage.upload).toHaveBeenCalledWith('Placeholder', 'Placeholder'.length)
     })
 
@@ -156,8 +158,8 @@ describe('storage', () => {
       await storage.initialiseContainers()
       await storage.getOutboundBlobClient('test.txt')
 
-      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledTimes(2)
-      expect(mockstorage.upload).toHaveBeenCalledTimes(1)
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledTimes(3)
+      expect(mockstorage.upload).toHaveBeenCalledTimes(2)
     })
 
     test('initializes containers when createContainers is true', async () => {
@@ -179,7 +181,7 @@ describe('storage', () => {
     test('initializes folders if containersInitialised is false', async () => {
       await storage.initialiseContainers()
       expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/default.txt')
-      expect(mockstorage.upload).toHaveBeenCalledTimes(1)
+      expect(mockstorage.upload).toHaveBeenCalledTimes(2)
     })
   })
 })

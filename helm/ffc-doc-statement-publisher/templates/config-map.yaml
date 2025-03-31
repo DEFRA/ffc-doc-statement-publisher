@@ -23,10 +23,24 @@ data:
   AZURE_STORAGE_CREATE_CONTAINERS: {{ quote .Values.container.azureStorageCreateContainers }}
   AZURE_STORAGE_CONTAINER: {{ quote .Values.container.storageContainer }}
   AZURE_STORAGE_FOLDER: {{ quote .Values.container.storageFolder }}
+  AZURE_STORAGE_REPORT_FOLDER: {{ quote .Values.container.storageReportFolder }}
   NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
   NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
+  DELINKED_INTERVAL_NUMBER: {{ quote .Values.container.DelinkedIntervalNumber }}
+  DELINKED_INTERVAL_TYPE: {{ quote .Values.container.DelinkedIntervalType }}
+  DELINKED_DAY_OF_MONTH: {{ quote .Values.container.DelinkedDayOfMonth }}
+  DELINKED_DURATION_NUMBER: {{ quote .Values.container.DelinkedDurationNumber }}
+  DELINKED_DURATION_TYPE: {{ quote .Values.container.DelinkedDurationType }}
+  SFI_INTERVAL_NUMBER: {{ quote .Values.container.SfiIntervalNumber }}
+  SFI_INTERVAL_TYPE: {{ quote .Values.container.SfiIntervalType }}
+  SFI_DAY_OF_MONTH: {{ quote .Values.container.SfiDayOfMonth }}
+  SFI_DURATION_NUMBER: {{ quote .Values.container.SfiDurationNumber }}
+  SFI_DURATION_TYPE: {{ quote .Values.container.SfiDurationType }}
+  DELIVERY_CHECK_INTERVAL: {{ quote .Values.container.deliveryCheckInterval }}
+  REPORTING_CHECK_INTERVAL: {{ quote .Values.container.reportingCheckInterval }}
+  RETENTION_PERIOD_IN_WEEKS: {{ quote .Values.container.retentionPeriodInWeeks }}
   {{- if and (.Values.environmentCode) (ne (.Values.environmentCode | toString ) "snd") }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}-{{ .Values.environmentCode }}.{{ .Values.ingress.server }}
   {{ else }}
