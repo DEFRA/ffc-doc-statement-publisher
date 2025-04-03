@@ -17,6 +17,115 @@ let reference
 let method
 let reason
 
+describe('When database operation fails', () => {
+  beforeEach(async () => {
+    jest.spyOn(db.statement, 'create').mockRejectedValueOnce(new Error('Database error'))
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  test('should rollback transaction and throw error', async () => {
+    await expect(saveRequest(reference, EMAIL)).rejects.toThrow('Database error')
+
+    const statement = await db.statement.findAll()
+    expect(statement.length).toBe(0)
+
+    const delivery = await db.delivery.findAll()
+    expect(delivery.length).toBe(0)
+
+    const failure = await db.failure.findAll()
+    expect(failure.length).toBe(0)
+
+    expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+    expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+  })
+})
+
+describe('When CRM message sending fails', () => {
+  beforeEach(async () => {
+    reason = EMPTY
+    mockMessageSender().sendMessage.mockRejectedValueOnce(new Error('CRM error'))
+  })
+
+  test('should save data but handle CRM error gracefully', async () => {
+    await expect(saveRequest(reference, EMAIL, { reason })).resolves.not.toThrow()
+
+    const statement = await db.statement.findAll()
+    expect(statement.length).toBe(1)
+
+    const delivery = await db.delivery.findAll()
+    expect(delivery.length).toBe(1)
+
+    const failure = await db.failure.findAll()
+    expect(failure.length).toBe(1)
+
+    expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
+    expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('When email or FRN is missing', () => {
+  beforeEach(async () => {
+    reason = EMPTY
+  })
+
+  test('should not send CRM message if email is missing', async () => {
+    const requestWithoutEmail = { email: undefined }
+
+    await saveRequest(requestWithoutEmail, reference, EMAIL, { reason })
+
+    const statement = await db.statement.findAll()
+    expect(statement.length).toBe(1)
+
+    const delivery = await db.delivery.findAll()
+    expect(delivery.length).toBe(1)
+
+    const failure = await db.failure.findAll()
+    expect(failure.length).toBe(1)
+
+    expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+    expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+  })
+
+  test('should not send CRM message if FRN is missing', async () => {
+    const requestWithoutFrn = { frn: undefined }
+
+    await saveRequest(requestWithoutFrn, reference, EMAIL, { reason })
+
+    const statement = await db.statement.findAll()
+    expect(statement.length).toBe(1)
+
+    const delivery = await db.delivery.findAll()
+    expect(delivery.length).toBe(1)
+
+    const failure = await db.failure.findAll()
+    expect(failure.length).toBe(1)
+
+    expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+    expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+  })
+})
+
+describe('Performance logging', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'log')
+  })
+
+  afterEach(() => {
+    console.log.mockRestore()
+  })
+
+  test('should log performance metrics', async () => {
+    await saveRequest(reference, EMAIL)
+
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringMatching(/Request saved successfully in \d+ms. StatementId: \d+/)
+    )
+  })
+})
+
 describe('Save statement and delivery and send to CRM and save failure if so', () => {
   beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
@@ -792,29 +901,18 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         reason = 'Not known failure reason'
       })
 
-      test('should not save statement', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+      test('should save statement and delivery but not send to CRM', async () => {
+        await saveRequest(request, reference, EMAIL, { reason })
 
         const statement = await db.statement.findAll()
-        expect(statement.length).toBe(0)
-      })
-
-      test('should not save delivery', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+        expect(statement.length).toBe(1)
 
         const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(0)
-      })
-
-      test('should not save failure', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+        expect(delivery.length).toBe(1)
 
         const failure = await db.failure.findAll()
-        expect(failure.length).toBe(0)
-      })
-
-      test('should not send message to CRM', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+        expect(failure.length).toBe(1)
+        expect(failure[0].reason).toBe(reason)
 
         expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()

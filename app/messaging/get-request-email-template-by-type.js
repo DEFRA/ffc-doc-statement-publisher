@@ -1,12 +1,17 @@
-const getRequestEmailTemplateByType = (requestType, documentTypes) => {
-  const documentType = documentTypes.find(documentType => documentType.type === requestType)
-  if (!documentType) {
-    throw new Error(`Document type ${requestType} not found`)
+const documentTypes = require('../constants/document-types')
+const templateMap = new Map()
+
+documentTypes.forEach(docType => {
+  if (docType.type && docType.template) {
+    templateMap.set(docType.type, docType.template)
   }
-  if (!documentType.template) {
-    throw new Error(`Document type ${requestType} has no template specified`)
+})
+
+const getRequestEmailTemplateByType = (requestType) => {
+  if (!templateMap.has(requestType)) {
+    throw new Error(`Document type ${requestType} not found or has no template`)
   }
-  return documentType.template
+  return templateMap.get(requestType)
 }
 
 module.exports = getRequestEmailTemplateByType
