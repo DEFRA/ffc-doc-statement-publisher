@@ -7,46 +7,49 @@ const getOutstandingDeliveries = async (options = {}) => {
     includeStatement = false
   } = options
 
-  return db.delivery.findAll({
-    attributes: ['deliveryId', 'statementId', 'method', 'reference', 'requested'],
+  const queryOptions = {
     where: {
-      completed: null,
-      reference: {
-        [db.Sequelize.Op.ne]: null
-      }
+      reference: { [db.Sequelize.Op.not]: null },
+      completed: null
     },
-    include: includeStatement
-      ? [{
-          model: db.statement,
-          as: 'statement',
-          required: false
-        }]
-      : [],
-    order: [['requested', 'ASC']],
     limit,
-    offset
-  })
+    offset,
+    order: [['requested', 'ASC']]
+  }
+
+  if (includeStatement) {
+    queryOptions.include = [
+      {
+        model: db.statement,
+        as: 'statement',
+        required: false
+      }
+    ]
+  }
+
+  return db.delivery.findAll(queryOptions)
 }
 
 const processAllOutstandingDeliveries = async (processFn, batchSize = 100) => {
   let offset = 0
-  let batchCount = 0
-  let totalProcessed = 0
-  let batch
+  let deliveries
+  let processedCount = 0
 
   do {
-    batch = await getOutstandingDeliveries({ limit: batchSize, offset })
+    deliveries = await getOutstandingDeliveries({
+      limit: batchSize,
+      offset
+    })
 
-    if (batch.length > 0) {
-      await processFn(batch)
-      totalProcessed += batch.length
-      batchCount++
+    if (deliveries.length > 0) {
+      await Promise.all(deliveries.map(processFn))
+      processedCount += deliveries.length
     }
 
     offset += batchSize
-  } while (batch.length === batchSize)
+  } while (deliveries.length === batchSize)
 
-  return { totalProcessed, batchCount }
+  return processedCount
 }
 
 module.exports = {

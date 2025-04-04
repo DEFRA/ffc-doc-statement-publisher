@@ -5,7 +5,7 @@ const CACHE_TTL = 60000
 let notifyClient
 let cache
 
-function initialize() {
+function initialize () {
   notifyClient = new NotifyClient(config.notifyApiKey)
   cache = new Map()
   setInterval(() => {

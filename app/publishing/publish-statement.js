@@ -62,7 +62,7 @@ const publishStatement = async (request) => {
     await saveRequest(request, response?.data?.id, publishStatementType, errorObject)
   } catch (err) {
     console.error(`Critical error processing statement ${request.documentReference}:`, err)
-    throw err
+    throw new Error(`Critical error processing statement ${request.documentReference}: ${err.message}`)
   }
 }
 

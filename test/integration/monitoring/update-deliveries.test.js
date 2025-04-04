@@ -49,6 +49,16 @@ const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
 let blobServiceClient
 let container
 
+beforeEach(() => {
+  jest.spyOn(console, 'log').mockImplementation(() => { })
+  jest.spyOn(console, 'error').mockImplementation(() => { })
+})
+
+afterEach(() => {
+  console.log.mockRestore()
+  console.error.mockRestore()
+})
+
 describe('update deliveries', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -113,12 +123,12 @@ describe('update deliveries', () => {
   test('should handle errors in individual delivery processing', async () => {
     mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
       const deliveries = [
-        { ...mockDelivery1, deliveryId: 1 },
-        { ...mockDelivery2, deliveryId: 2 }
+        { ...mockDelivery1, deliveryId: 1, reference: 'reference1' },
+        { ...mockDelivery2, deliveryId: 2, reference: 'reference2' }
       ]
 
       mockCheckDeliveryStatus.mockImplementation((reference) => {
-        if (reference === mockDelivery2.reference) {
+        if (reference === 'reference2') {
           throw new Error('Test error')
         }
         return Promise.resolve({ data: { status: DELIVERED } })

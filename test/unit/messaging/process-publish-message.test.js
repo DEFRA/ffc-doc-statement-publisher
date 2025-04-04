@@ -1,4 +1,3 @@
-.js
 jest.mock('../../../app/messaging/validate-request')
 const validateRequest = require('../../../app/messaging/validate-request')
 
@@ -22,12 +21,19 @@ let receiver
 describe('Process publish message', () => {
   beforeEach(() => {
     receiver = mockMessageReceiver()
+    receiver.abandonMessage = jest.fn()
+
     publishStatement.mockResolvedValue(undefined)
     getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => { })
   })
 
   afterEach(() => {
     jest.clearAllMocks()
+    console.log.mockRestore()
+    console.error.mockRestore()
   })
 
   describe.each([

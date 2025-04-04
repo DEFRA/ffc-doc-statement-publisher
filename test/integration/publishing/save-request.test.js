@@ -17,6 +17,19 @@ let reference
 let method
 let reason
 
+beforeAll(async () => {
+  await db.sequelize.truncate({ cascade: true })
+})
+
+beforeEach(async () => {
+  jest.clearAllMocks()
+  jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
+  reference = REFERENCE
+  method = EMAIL
+
+  await db.sequelize.truncate({ cascade: true })
+})
+
 describe('When database operation fails', () => {
   beforeEach(async () => {
     jest.spyOn(db.statement, 'create').mockRejectedValueOnce(new Error('Database error'))
@@ -27,7 +40,31 @@ describe('When database operation fails', () => {
   })
 
   test('should rollback transaction and throw error', async () => {
-    await expect(saveRequest(reference, EMAIL)).rejects.toThrow('Database error')
+    // Create a complete valid request object with scheme information
+    const mockRequest = {
+      frn: '1234567890',
+      email: 'test@example.com',
+      businessName: 'Test Business',
+      sbi: '123456789',
+      filename: 'test-file.pdf',
+      documentReference: '123',
+      address: {
+        line1: 'Address Line 1',
+        line2: 'Address Line 2',
+        line3: 'Address Line 3',
+        line4: 'Address Line 4',
+        line5: 'Address Line 5',
+        postcode: 'AB12 3CD'
+      },
+      scheme: {
+        name: 'Test Scheme',
+        shortName: 'TS',
+        year: '2023',
+        frequency: 'Annual'
+      }
+    }
+
+    await expect(saveRequest(mockRequest, reference, EMAIL)).rejects.toThrow('Database error')
 
     const statement = await db.statement.findAll()
     expect(statement.length).toBe(0)
@@ -44,13 +81,45 @@ describe('When database operation fails', () => {
 })
 
 describe('When CRM message sending fails', () => {
+  let mockSender
+
   beforeEach(async () => {
+    await db.sequelize.truncate({ cascade: true })
     reason = EMPTY
-    mockMessageSender().sendMessage.mockRejectedValueOnce(new Error('CRM error'))
+
+    mockSender = {
+      sendMessage: jest.fn().mockRejectedValueOnce(new Error('CRM error')),
+      closeConnection: jest.fn().mockResolvedValue(undefined)
+    }
+
+    mockMessageSender.mockReturnValue(mockSender)
   })
 
   test('should save data but handle CRM error gracefully', async () => {
-    await expect(saveRequest(reference, EMAIL, { reason })).resolves.not.toThrow()
+    const mockRequest = {
+      frn: '1234567890',
+      email: 'test@example.com',
+      businessName: 'Test Business',
+      sbi: '123456789',
+      filename: 'test-file.pdf',
+      documentReference: '123',
+      address: {
+        line1: 'Address Line 1',
+        line2: 'Address Line 2',
+        line3: 'Address Line 3',
+        line4: 'Address Line 4',
+        line5: 'Address Line 5',
+        postcode: 'AB12 3CD'
+      },
+      scheme: {
+        name: 'Test Scheme',
+        shortName: 'TS',
+        year: '2023',
+        frequency: 'Annual'
+      }
+    }
+
+    await expect(saveRequest(mockRequest, reference, EMAIL, { reason })).resolves.not.toThrow()
 
     const statement = await db.statement.findAll()
     expect(statement.length).toBe(1)
@@ -61,8 +130,9 @@ describe('When CRM message sending fails', () => {
     const failure = await db.failure.findAll()
     expect(failure.length).toBe(1)
 
-    expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-    expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
+    // Fix: Use the mockSender variable directly instead of mockMessageSender()
+    expect(mockSender.sendMessage).toHaveBeenCalledTimes(1)
+    expect(mockSender.closeConnection).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -72,7 +142,27 @@ describe('When email or FRN is missing', () => {
   })
 
   test('should not send CRM message if email is missing', async () => {
-    const requestWithoutEmail = { email: undefined }
+    const requestWithoutEmail = {
+      frn: '1234567890',
+      businessName: 'Test Business',
+      sbi: '123456789',
+      filename: 'test-file.pdf',
+      documentReference: '123',
+      address: {
+        line1: 'Address Line 1',
+        line2: 'Address Line 2',
+        line3: 'Address Line 3',
+        line4: 'Address Line 4',
+        line5: 'Address Line 5',
+        postcode: 'AB12 3CD'
+      },
+      scheme: {
+        name: 'Test Scheme',
+        shortName: 'TS',
+        year: '2023',
+        frequency: 'Annual'
+      }
+    }
 
     await saveRequest(requestWithoutEmail, reference, EMAIL, { reason })
 
@@ -90,7 +180,27 @@ describe('When email or FRN is missing', () => {
   })
 
   test('should not send CRM message if FRN is missing', async () => {
-    const requestWithoutFrn = { frn: undefined }
+    const requestWithoutFrn = {
+      email: 'test@example.com',
+      businessName: 'Test Business',
+      sbi: '123456789',
+      filename: 'test-file.pdf',
+      documentReference: '123',
+      address: {
+        line1: 'Address Line 1',
+        line2: 'Address Line 2',
+        line3: 'Address Line 3',
+        line4: 'Address Line 4',
+        line5: 'Address Line 5',
+        postcode: 'AB12 3CD'
+      },
+      scheme: {
+        name: 'Test Scheme',
+        shortName: 'TS',
+        year: '2023',
+        frequency: 'Annual'
+      }
+    }
 
     await saveRequest(requestWithoutFrn, reference, EMAIL, { reason })
 
@@ -118,7 +228,31 @@ describe('Performance logging', () => {
   })
 
   test('should log performance metrics', async () => {
-    await saveRequest(reference, EMAIL)
+    // Create a complete valid request object with scheme information
+    const mockRequest = {
+      frn: '1234567890',
+      email: 'test@example.com',
+      businessName: 'Test Business',
+      sbi: '123456789',
+      filename: 'test-file.pdf',
+      documentReference: '123',
+      address: {
+        line1: 'Address Line 1',
+        line2: 'Address Line 2',
+        line3: 'Address Line 3',
+        line4: 'Address Line 4',
+        line5: 'Address Line 5',
+        postcode: 'AB12 3CD'
+      },
+      scheme: {
+        name: 'Test Scheme',
+        shortName: 'TS',
+        year: '2023',
+        frequency: 'Annual'
+      }
+    }
+
+    await saveRequest(mockRequest, reference, EMAIL)
 
     expect(console.log).toHaveBeenCalledWith(
       expect.stringMatching(/Request saved successfully in \d+ms. StatementId: \d+/)
@@ -128,10 +262,12 @@ describe('Performance logging', () => {
 
 describe('Save statement and delivery and send to CRM and save failure if so', () => {
   beforeEach(async () => {
+    jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
-
     reference = REFERENCE
     method = EMAIL
+
+    await db.sequelize.truncate({ cascade: true })
   })
 
   afterEach(async () => {
