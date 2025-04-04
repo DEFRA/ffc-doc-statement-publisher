@@ -9,15 +9,20 @@ const processPublishMessage = async (message, receiver) => {
   try {
     const request = message.body
     console.log('Statement publishing request received:', util.inspect(request, false, null, true))
+
     validateRequest(request)
     const emailTemplate = getRequestEmailTemplateByType(message.applicationProperties.type, documentTypes)
     request.emailTemplate = emailTemplate
+
     await publishStatement(request)
     await receiver.completeMessage(message)
   } catch (err) {
     console.error('Unable to publish statement:', err)
+
     if (err.category === VALIDATION) {
       await receiver.deadLetterMessage(message)
+    } else {
+      await receiver.abandonMessage(message)
     }
   }
 }
