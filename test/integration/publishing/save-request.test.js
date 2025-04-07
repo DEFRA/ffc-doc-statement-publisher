@@ -95,40 +95,40 @@ describe('When CRM message sending fails', () => {
     mockMessageSender.mockReturnValue(mockSender)
   })
 
-//   test('should save data but handle CRM error gracefully', async () => {
-//     const mockRequest = {
-//       frn: '1234567890',
-//       email: 'test@example.com',
-//       businessName: 'Test Business',
-//       sbi: '123456789',
-//       filename: 'test-file.pdf',
-//       documentReference: '123',
-//       address: {
-//         line1: 'Address Line 1',
-//         line2: 'Address Line 2',
-//         line3: 'Address Line 3',
-//         line4: 'Address Line 4',
-//         line5: 'Address Line 5',
-//         postcode: 'AB12 3CD'
-//       },
-//       scheme: {
-//         name: 'Test Scheme',
-//         shortName: 'TS',
-//         year: '2023',
-//         frequency: 'Annual'
-//       }
-//     }
+  //   test('should save data but handle CRM error gracefully', async () => {
+  //     const mockRequest = {
+  //       frn: '1234567890',
+  //       email: 'test@example.com',
+  //       businessName: 'Test Business',
+  //       sbi: '123456789',
+  //       filename: 'test-file.pdf',
+  //       documentReference: '123',
+  //       address: {
+  //         line1: 'Address Line 1',
+  //         line2: 'Address Line 2',
+  //         line3: 'Address Line 3',
+  //         line4: 'Address Line 4',
+  //         line5: 'Address Line 5',
+  //         postcode: 'AB12 3CD'
+  //       },
+  //       scheme: {
+  //         name: 'Test Scheme',
+  //         shortName: 'TS',
+  //         year: '2023',
+  //         frequency: 'Annual'
+  //       }
+  //     }
 
-//     await expect(saveRequest(mockRequest, reference, EMAIL, { reason })).resolves.not.toThrow()
+  //     await expect(saveRequest(mockRequest, reference, EMAIL, { reason })).resolves.not.toThrow()
 
-//     const statement = await db.statement.findAll()
-//     expect(statement.length).toBe(1)
+  //     const statement = await db.statement.findAll()
+  //     expect(statement.length).toBe(1)
 
-//     const delivery = await db.delivery.findAll()
-//     expect(delivery.length).toBe(1)
+  //     const delivery = await db.delivery.findAll()
+  //     expect(delivery.length).toBe(1)
 
-//     const failure = await db.failure.findAll()
-//     expect(failure.length).toBe(1)
+  //     const failure = await db.failure.findAll()
+  //     expect(failure.length).toBe(1)
 
 //     // Fix: Use the mockSender variable directly instead of mockMessageSender()
 //     expect(mockSender.sendMessage).toHaveBeenCalledTimes(1)
