@@ -95,10 +95,6 @@ describe('When CRM message sending fails', () => {
     mockMessageSender.mockReturnValue(mockSender)
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
-
   test('should save data but handle CRM error gracefully', async () => {
     const mockRequest = {
       frn: '1234567890',
@@ -135,6 +131,8 @@ describe('When CRM message sending fails', () => {
     expect(failure.length).toBe(1)
 
     expect(mockMessageSender().sendMessage).toHaveBeenCalled()
+    // Close connection will not be called, as send message resloves to a CRM error.
+    expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
   })
 })
 
