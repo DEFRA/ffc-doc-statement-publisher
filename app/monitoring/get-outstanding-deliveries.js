@@ -30,33 +30,39 @@ const getOutstandingDeliveries = async (options = {}) => {
   return db.delivery.findAll(queryOptions)
 }
 
-const processAllOutstandingDeliveries = async (processFn, batchSize = 100) => {
+const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSize = 100) => {
+  const fetchDeliveries = fetchFunction || getOutstandingDeliveries
+
   let offset = 0
-  let deliveries
   let totalProcessed = 0
   let batchCount = 0
 
-  do {
-    deliveries = await getOutstandingDeliveries({
-      limit: batchSize,
-      offset
-    })
+  // First fetch
+  let deliveries = await fetchDeliveries({
+    limit: batchSize,
+    offset
+  })
 
-    if (deliveries.length > 0) {
-      batchCount++
-      // Pass the entire batch to the processFn, instead of mapping over individual deliveries
-      const results = await processFn(deliveries)
-      // Count successful operations if results contain success information
-      if (Array.isArray(results)) {
-        const successCount = results.filter(result => result.success === true).length
-        totalProcessed += successCount
-      } else {
-        totalProcessed += deliveries.length
-      }
+  while (deliveries.length > 0) {
+    batchCount++
+
+    const results = await processFn(deliveries)
+
+    if (Array.isArray(results)) {
+      const successCount = results.filter(result => result.success === true).length
+      totalProcessed += successCount
+    } else {
+      totalProcessed += deliveries.length
     }
 
     offset += batchSize
-  } while (deliveries.length === batchSize)
+
+    //  CRITICAL: This will always be called once more after the last batch
+    deliveries = await fetchDeliveries({
+      limit: batchSize,
+      offset
+    })
+  }
 
   return { totalProcessed, batchCount }
 }
