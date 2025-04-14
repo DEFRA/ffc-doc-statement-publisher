@@ -792,29 +792,29 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         reason = 'Not known failure reason'
       })
 
-      test('should not save statement', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+      test('should still save statement', async () => {
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
 
         const statement = await db.statement.findAll()
-        expect(statement.length).toBe(0)
+        expect(statement.length).toBe(1)
       })
 
-      test('should not save delivery', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+      test('should still save delivery', async () => {
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
 
         const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(0)
+        expect(delivery.length).toBe(1)
       })
 
-      test('should not save failure', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+      test('should still save failure', async () => {
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
 
         const failure = await db.failure.findAll()
-        expect(failure.length).toBe(0)
+        expect(failure.length).toBe(1)
       })
 
       test('should not send message to CRM', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch {}
+        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
 
         expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
