@@ -33,7 +33,8 @@ const getOutstandingDeliveries = async (options = {}) => {
 const processAllOutstandingDeliveries = async (processFn, batchSize = 100) => {
   let offset = 0
   let deliveries
-  let processedCount = 0
+  let totalProcessed = 0
+  let batchCount = 0
 
   do {
     deliveries = await getOutstandingDeliveries({
@@ -42,14 +43,22 @@ const processAllOutstandingDeliveries = async (processFn, batchSize = 100) => {
     })
 
     if (deliveries.length > 0) {
-      await Promise.all(deliveries.map(processFn))
-      processedCount += deliveries.length
+      batchCount++
+      // Pass the entire batch to the processFn, instead of mapping over individual deliveries
+      const results = await processFn(deliveries)
+      // Count successful operations if results contain success information
+      if (Array.isArray(results)) {
+        const successCount = results.filter(result => result.success === true).length
+        totalProcessed += successCount
+      } else {
+        totalProcessed += deliveries.length
+      }
     }
 
     offset += batchSize
   } while (deliveries.length === batchSize)
 
-  return processedCount
+  return { totalProcessed, batchCount }
 }
 
 module.exports = {
