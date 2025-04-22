@@ -20,7 +20,9 @@ const updateDeliveries = async () => {
       })
 
       return Promise.all(promises)
-    }, batchSize)
+    },
+    null,
+    batchSize)
 
     const duration = (Date.now() - startTime) / 1000
     console.log(`Completed delivery status update: processed ${totalProcessed} deliveries in ${batchCount} batches (${duration.toFixed(2)}s)`)

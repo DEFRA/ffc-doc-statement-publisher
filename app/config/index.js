@@ -5,7 +5,7 @@ const storageConfig = require('./storage')
 const reportConfig = require('./report')
 const deliveryCheck = 43200000
 const reportCheck = 86400000
-const retainPeriodInWeeks = 156
+const retainPeriodInWeeks = 78
 
 const schema = Joi.object({
   env: Joi.string().valid('development', 'test', 'production').default('development'),

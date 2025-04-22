@@ -14,18 +14,6 @@ jest.mock('notifications-node-client', () => ({
   NotifyClient: jest.fn(() => mockNotifyClient)
 }))
 
-let intervalCallback
-jest.mock('timers', () => {
-  const original = jest.requireActual('timers')
-  return {
-    ...original,
-    setInterval: (fn) => {
-      intervalCallback = fn
-      return 12345
-    }
-  }
-})
-
 const deliveryStatusModule = require('../../../app/monitoring/check-delivery-status')
 const { checkDeliveryStatus, checkDeliveryStatuses, _testing } = deliveryStatusModule
 
@@ -157,31 +145,24 @@ describe('check delivery status', () => {
       expect(mockGetNotificationById).toHaveBeenCalledTimes(2)
     })
 
-    test('cleans up expired cache entries', async () => {
+    test('cleans up expired cache entries using Jest timers', async () => {
+      jest.useFakeTimers()
+
+      _testing.initialize()
+
       const cache = _testing.getCache()
       cache.set('status:test1', { data: 'data1', timestamp: Date.now() })
       cache.set('status:test2', { data: 'data2', timestamp: Date.now() - CACHE_TTL - 1000 })
 
       expect(cache.size).toBe(2)
 
-      const cleanupFunc = () => {
-        const now = Date.now()
-        for (const [key, value] of cache.entries()) {
-          if (now - value.timestamp > CACHE_TTL) {
-            cache.delete(key)
-          }
-        }
-      }
-
-      if (intervalCallback) {
-        intervalCallback()
-      } else {
-        cleanupFunc()
-      }
+      jest.runOnlyPendingTimers()
 
       expect(cache.size).toBe(1)
       expect(cache.has('status:test1')).toBe(true)
       expect(cache.has('status:test2')).toBe(false)
+
+      jest.useRealTimers()
     })
 
     test('initialize sets up a cache', () => {
