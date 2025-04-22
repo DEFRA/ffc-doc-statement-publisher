@@ -1,4 +1,4 @@
-const { EMPTY, INVALID, UNSUCCESFUL } = require('../../../app/constants/failure-reasons')
+const { EMPTY, INVALID, UNSUCCESSFUL } = require('../../../app/constants/failure-reasons')
 
 const handlePublishReasoning = require('../../../app/publishing/handle-publish-reasoning')
 
@@ -27,14 +27,14 @@ describe('Handle error message from attempting to publish a statement', () => {
     })
   })
 
-  describe('When error is an unrecognised isssue', () => {
+  describe('When error is an unrecognised issue', () => {
     beforeEach(() => {
       error = { message: 'Unknown issue' }
     })
 
-    test('returns UNSUCCESFUL', () => {
+    test('returns UNSUCCESSFUL', () => {
       const result = handlePublishReasoning(error)
-      expect(result).toBe(UNSUCCESFUL)
+      expect(result).toBe(UNSUCCESSFUL)
     })
   })
 
@@ -43,9 +43,85 @@ describe('Handle error message from attempting to publish a statement', () => {
       error = {}
     })
 
-    test('returns UNSUCCESFUL', () => {
+    test('returns UNSUCCESSFUL', () => {
       const result = handlePublishReasoning(error)
-      expect(result).toBe(UNSUCCESFUL)
+      expect(result).toBe(UNSUCCESSFUL)
+    })
+  })
+
+  describe('When error contains API response data', () => {
+    beforeEach(() => {
+      console.log = jest.fn()
+    })
+
+    test('handles 403 status code and logs API key issue', () => {
+      error = {
+        response: {
+          data: {
+            status_code: 403
+          }
+        }
+      }
+
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('handles authorization error in errors array and logs API key issue', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['Invalid authorization token']
+          }
+        }
+      }
+
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('handles API key error in errors array and logs API key issue', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['Invalid api key provided']
+          }
+        }
+      }
+
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('returns UNSUCCESSFUL with apiError.message', () => {
+      error = {
+        response: {
+          data: {
+            message: 'API error occurred'
+          }
+        }
+      }
+
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('API Error reason: API error occurred')
+    })
+
+    test('returns UNSUCCESSFUL with apiError.errors[0]', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['First error message']
+          }
+        }
+      }
+
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('API Error reason: First error message')
     })
   })
 })
