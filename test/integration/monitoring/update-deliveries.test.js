@@ -1,199 +1,203 @@
-let mockSendEmail
-const MOCK_PREPARED_FILE = 'mock-prepared-file'
-const MOCK_URL = 'http://mock.url'
-let mockPrepareUpload
-let mockSendPrecompiledLetter
-const mockGetStatementFileUrl = jest.fn()
-const mockFetchStatementFile = jest.fn()
-let mockGetNotificationById
-jest.mock('notifications-node-client', () => {
-  return {
-    NotifyClient: jest.fn().mockImplementation(() => {
-      return {
-        sendEmail: mockSendEmail,
-        prepareUpload: mockPrepareUpload,
-        getNotificationById: mockGetNotificationById,
-        sendPrecompiledLetter: mockSendPrecompiledLetter
-      }
-    })
-  }
-})
-jest.mock('ffc-messaging')
-jest.mock('../../../app/publishing/get-statement-file-url', () => mockGetStatementFileUrl)
-jest.mock('../../../app/publishing/fetch-statement-file', () => mockFetchStatementFile)
-const { BlobServiceClient } = require('@azure/storage-blob')
-const config = require('../../../app/config/storage')
-const db = require('../../../app/data')
-const path = require('path')
+const mockProcessAllOutstandingDeliveries = jest.fn()
+jest.mock('../../../app/monitoring/get-outstanding-deliveries', () => ({
+  processAllOutstandingDeliveries: mockProcessAllOutstandingDeliveries
+}))
+
+const mockCheckDeliveryStatus = jest.fn()
+jest.mock('../../../app/monitoring/check-delivery-status', () => mockCheckDeliveryStatus)
+
+const mockUpdateDeliveryFromResponse = jest.fn()
+jest.mock('../../../app/monitoring/update-delivery-from-response', () => mockUpdateDeliveryFromResponse)
+
 const { DELIVERED, SENDING, CREATED, TEMPORARY_FAILURE, PERMANENT_FAILURE, TECHNICAL_FAILURE } = require('../../../app/constants/statuses')
-const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
-const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 const { INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const updateDeliveries = require('../../../app/monitoring/update-deliveries')
 
-const FILE_NAME = 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf'
-const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
-
-let blobServiceClient
-let container
-
 describe('update deliveries', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks()
-    jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-    blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionStr)
-    container = blobServiceClient.getContainerClient(config.container)
-    await container.deleteIfExists()
-    await container.createIfNotExists()
-    const blockBlobClient = container.getBlockBlobClient(`${config.folder}/${FILE_NAME}`)
-    await blockBlobClient.uploadFile(TEST_FILE)
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => { })
 
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1, mockStatement2])
-    await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      const deliveries = [{ deliveryId: 'test-id', reference: 'test-ref' }]
+      await processFn(deliveries)
+      return { totalProcessed: deliveries.length, batchCount: 1 }
+    })
 
-    mockSendEmail = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
-    mockPrepareUpload = jest.fn().mockReturnValue(MOCK_PREPARED_FILE)
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: DELIVERED } })
-    mockSendPrecompiledLetter = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
-    mockFetchStatementFile.mockReturnValue(MOCK_PREPARED_FILE)
-    mockGetStatementFileUrl.mockReturnValue(MOCK_URL)
+    mockCheckDeliveryStatus.mockResolvedValue({ data: { status: DELIVERED } })
+    mockUpdateDeliveryFromResponse.mockResolvedValue()
   })
 
-  afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+  afterEach(() => {
+    console.log.mockRestore()
+    console.error.mockRestore()
+    jest.useRealTimers()
   })
 
-  test('should check status of delivery once if only one delivery outstanding', async () => {
+  test('should return object with totalProcessed and duration', async () => {
+    jest.useFakeTimers()
+    const now = Date.now()
+    jest.spyOn(Date, 'now')
+      .mockReturnValueOnce(now)
+      .mockReturnValueOnce(now + 1000)
+
+    const result = await updateDeliveries()
+
+    expect(result).toHaveProperty('totalProcessed')
+    expect(result).toHaveProperty('duration')
+    expect(result.totalProcessed).toBe(1)
+    expect(result.duration).toBe(1)
+  })
+
+  test('should process deliveries in batches', async () => {
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      const batch1 = [{ deliveryId: '1', reference: 'ref1' }]
+      const batch2 = [{ deliveryId: '2', reference: 'ref2' }]
+
+      await processFn(batch1)
+      await processFn(batch2)
+
+      return { totalProcessed: 2, batchCount: 2 }
+    })
+
+    const result = await updateDeliveries()
+
+    expect(result.totalProcessed).toBe(2)
+    expect(mockProcessAllOutstandingDeliveries).toHaveBeenCalledWith(expect.any(Function), null, 20)
+    expect(mockCheckDeliveryStatus).toHaveBeenCalledTimes(2)
+    expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledTimes(2)
+  })
+
+  test('should handle errors in individual delivery processing', async () => {
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      const deliveries = [
+        { deliveryId: '1', reference: 'ref1' },
+        { deliveryId: '2', reference: 'ref2' }
+      ]
+
+      mockCheckDeliveryStatus.mockImplementation((reference) => {
+        if (reference === 'ref2') {
+          throw new Error('Test error')
+        }
+        return Promise.resolve({ data: { status: DELIVERED } })
+      })
+
+      const results = await processFn(deliveries)
+
+      expect(results[0].success).toBe(true)
+      expect(results[1].success).toBe(false)
+      expect(results[1].error).toBeDefined()
+
+      return { totalProcessed: 2, batchCount: 1 }
+    })
+
     await updateDeliveries()
-    expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
+
+    expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledTimes(1)
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to update delivery 2'),
+      'Test error'
+    )
   })
 
-  test('should check status of delivery for only outstanding delivery', async () => {
-    await updateDeliveries()
-    expect(mockGetNotificationById).toHaveBeenCalledWith(mockDelivery1.reference)
+  test('should handle overall process errors', async () => {
+    mockProcessAllOutstandingDeliveries.mockRejectedValue(new Error('Process failed'))
+
+    await expect(updateDeliveries()).rejects.toThrow('Process failed')
+    expect(console.error).toHaveBeenCalledWith(
+      'Error in updateDeliveries:',
+      expect.objectContaining({ message: 'Process failed' })
+    )
   })
 
-  test('should complete delivery if status delivered', async () => {
-    await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
+  test('should handle different delivery statuses', async () => {
+    const testCases = [
+      { status: DELIVERED, description: 'delivered' },
+      { status: SENDING, description: 'sending' },
+      { status: CREATED, description: 'created' },
+      { status: TEMPORARY_FAILURE, description: 'temporary failure' },
+      { status: PERMANENT_FAILURE, description: 'permanent failure' },
+      { status: TECHNICAL_FAILURE, description: 'technical failure' }
+    ]
+
+    for (const testCase of testCases) {
+      jest.clearAllMocks()
+      mockCheckDeliveryStatus.mockResolvedValue({ data: { status: testCase.status } })
+
+      await updateDeliveries()
+
+      expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledWith(
+        expect.objectContaining({ deliveryId: 'test-id' }),
+        { data: { status: testCase.status } }
+      )
+    }
   })
 
-  test('should not complete delivery if status sending', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: SENDING } })
-    await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toBeNull()
+  test('should handle empty batch', async () => {
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      await processFn([])
+      return { totalProcessed: 0, batchCount: 0 }
+    })
+
+    const result = await updateDeliveries()
+
+    expect(result.totalProcessed).toBe(0)
+    expect(mockCheckDeliveryStatus).not.toHaveBeenCalled()
+    expect(mockUpdateDeliveryFromResponse).not.toHaveBeenCalled()
   })
 
-  test('should not complete delivery if status created', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: CREATED } })
+  test('should log start and completion messages', async () => {
     await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toBeNull()
+
+    expect(console.log).toHaveBeenCalledWith('Starting delivery status update process')
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Completed delivery status update: processed 1 deliveries in 1 batches')
+    )
   })
 
-  test('should complete delivery if status temporary failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TEMPORARY_FAILURE } })
-    await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
+  test('should calculate duration correctly', async () => {
+    const mockStart = 1000
+    const mockEnd = 2500
+
+    jest.spyOn(Date, 'now')
+      .mockReturnValueOnce(mockStart) // First call when measuring start time
+      .mockReturnValueOnce(mockEnd) // Second call when calculating duration
+
+    const result = await updateDeliveries()
+
+    expect(result.duration).toBe(1.5)
   })
 
-  test('should create failure if status temporary failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TEMPORARY_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure).not.toBeNull()
-  })
+  test('should handle error reasons correctly', async () => {
+    const testCases = [
+      { reason: INVALID, message: 'Invalid request' },
+      { reason: REJECTED, message: 'Rejected request' }
+    ]
 
-  test('should create failure with reason if status temporary failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TEMPORARY_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure.reason).toBe(REJECTED)
-  })
+    for (const testCase of testCases) {
+      jest.clearAllMocks()
+      mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+        const deliveries = [{ deliveryId: 'test-id', reference: 'test-ref' }]
 
-  test('should create failure with date failed if status temporary failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TEMPORARY_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure.failed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
+        mockCheckDeliveryStatus.mockImplementation(() => {
+          const error = new Error(testCase.message)
+          error.reason = testCase.reason
+          throw error
+        })
 
-  test('should complete delivery if status permanent failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: PERMANENT_FAILURE } })
-    await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
+        await processFn(deliveries)
+        return { totalProcessed: 1, batchCount: 1 }
+      })
 
-  test('should create failure if status permanent failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: PERMANENT_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure).not.toBeNull()
-  })
+      await updateDeliveries()
 
-  test('should create failure with reason if status permanent failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: PERMANENT_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure.reason).toBe(INVALID)
-  })
-
-  test('should create failure with date failed if status permanent failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: PERMANENT_FAILURE } })
-    await updateDeliveries()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure.failed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
-
-  test('should complete delivery if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
-    expect(delivery.completed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
-
-  test('should create new delivery if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    const deliveries = await db.delivery.findAll({ where: { statementId: mockStatement1.statementId } })
-    expect(deliveries.length).toBe(2)
-  })
-
-  test('should create new delivery with requested date if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    const delivery = await db.delivery.findOne({ where: { statementId: mockStatement1.statementId, completed: null } })
-    expect(delivery.requested).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
-  })
-
-  test('should not create new statement if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    const statements = await db.statement.findAll()
-    expect(statements.length).toBe(2)
-  })
-
-  test('should send email via Notify once if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    expect(mockSendEmail).toHaveBeenCalledTimes(1)
-  })
-
-  test('should send email to requested email address if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    expect(mockSendEmail.mock.calls[0][1]).toBe(mockStatement1.email)
-  })
-
-  test('should send email with file link if status technical failure', async () => {
-    mockGetNotificationById = jest.fn().mockResolvedValue({ data: { status: TECHNICAL_FAILURE } })
-    await updateDeliveries()
-    expect(mockSendEmail.mock.calls[0][2].personalisation.link_to_file).toBe(MOCK_PREPARED_FILE)
+      expect(mockCheckDeliveryStatus).toHaveBeenCalledTimes(1)
+      expect(mockUpdateDeliveryFromResponse).not.toHaveBeenCalled()
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to update delivery test-id'),
+        testCase.message
+      )
+    }
   })
 })

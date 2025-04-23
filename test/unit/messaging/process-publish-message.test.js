@@ -10,6 +10,7 @@ const getRequestEmailTemplateByType = require('../../../app/messaging/get-reques
 const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 
 const { VALIDATION } = require('../../../app/constants/errors')
+const documentTypes = require('../../../app/constants/document-types')
 
 const processPublishMessage = require('../../../app/messaging/process-publish-message')
 
@@ -20,12 +21,19 @@ let receiver
 describe('Process publish message', () => {
   beforeEach(() => {
     receiver = mockMessageReceiver()
+    receiver.abandonMessage = jest.fn()
+
     publishStatement.mockResolvedValue(undefined)
-    getRequestEmailTemplateByType.mockResolvedValue(EMAIL_TEMPLATE)
+    getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => { })
   })
 
   afterEach(() => {
     jest.clearAllMocks()
+    console.log.mockRestore()
+    console.error.mockRestore()
   })
 
   describe.each([
@@ -52,6 +60,24 @@ describe('Process publish message', () => {
         expect(validateRequest).toHaveBeenCalledWith(message.body)
       })
 
+      test('should call getRequestEmailTemplateByType', async () => {
+        await processPublishMessage(message, receiver)
+        expect(getRequestEmailTemplateByType).toHaveBeenCalled()
+      })
+
+      test('should call getRequestEmailTemplateByType with correct parameters', async () => {
+        await processPublishMessage(message, receiver)
+        expect(getRequestEmailTemplateByType).toHaveBeenCalledWith(message.applicationProperties.type, documentTypes)
+      })
+
+      test('should add emailTemplate to request', async () => {
+        await processPublishMessage(message, receiver)
+        expect(publishStatement).toHaveBeenCalledWith({
+          ...message.body,
+          emailTemplate: EMAIL_TEMPLATE
+        })
+      })
+
       test('should call publishStatement', async () => {
         await processPublishMessage(message, receiver)
         expect(publishStatement).toHaveBeenCalled()
@@ -62,9 +88,13 @@ describe('Process publish message', () => {
         expect(publishStatement).toHaveBeenCalledTimes(1)
       })
 
-      test('should call publishStatement with message.body', async () => {
+      test('should call publishStatement with modified message.body', async () => {
         await processPublishMessage(message, receiver)
-        expect(publishStatement).toHaveBeenCalledWith(message.body)
+        const expectedBody = {
+          ...message.body,
+          emailTemplate: EMAIL_TEMPLATE
+        }
+        expect(publishStatement).toHaveBeenCalledWith(expectedBody)
       })
 
       test('should call completeMessage', async () => {
@@ -85,6 +115,11 @@ describe('Process publish message', () => {
       test('should not call deadLetterMessage', async () => {
         await processPublishMessage(message, receiver)
         expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+      })
+
+      test('should not call abandonMessage', async () => {
+        await processPublishMessage(message, receiver)
+        expect(receiver.abandonMessage).not.toHaveBeenCalled()
       })
     })
 
@@ -108,6 +143,11 @@ describe('Process publish message', () => {
         expect(validateRequest).toHaveBeenCalledWith(message.body)
       })
 
+      test('should call getRequestEmailTemplateByType', async () => {
+        await processPublishMessage(message, receiver)
+        expect(getRequestEmailTemplateByType).toHaveBeenCalled()
+      })
+
       test('should call publishStatement', async () => {
         await processPublishMessage(message, receiver)
         expect(publishStatement).toHaveBeenCalled()
@@ -118,9 +158,13 @@ describe('Process publish message', () => {
         expect(publishStatement).toHaveBeenCalledTimes(1)
       })
 
-      test('should call publishStatement with message.body', async () => {
+      test('should call publishStatement with modified message.body', async () => {
         await processPublishMessage(message, receiver)
-        expect(publishStatement).toHaveBeenCalledWith(message.body)
+        const expectedBody = {
+          ...message.body,
+          emailTemplate: EMAIL_TEMPLATE
+        }
+        expect(publishStatement).toHaveBeenCalledWith(expectedBody)
       })
 
       test('should not call completeMessage', async () => {
@@ -131,6 +175,21 @@ describe('Process publish message', () => {
       test('should not call deadLetterMessage', async () => {
         await processPublishMessage(message, receiver)
         expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+      })
+
+      test('should call abandonMessage', async () => {
+        await processPublishMessage(message, receiver)
+        expect(receiver.abandonMessage).toHaveBeenCalled()
+      })
+
+      test('should call abandonMessage once', async () => {
+        await processPublishMessage(message, receiver)
+        expect(receiver.abandonMessage).toHaveBeenCalledTimes(1)
+      })
+
+      test('should call abandonMessage with message', async () => {
+        await processPublishMessage(message, receiver)
+        expect(receiver.abandonMessage).toHaveBeenCalledWith(message)
       })
     })
 
@@ -156,6 +215,11 @@ describe('Process publish message', () => {
         expect(validateRequest).toHaveBeenCalledWith(message.body)
       })
 
+      test('should not call getRequestEmailTemplateByType', async () => {
+        await processPublishMessage(message, receiver)
+        expect(getRequestEmailTemplateByType).not.toHaveBeenCalled()
+      })
+
       test('should not call publishStatement', async () => {
         await processPublishMessage(message, receiver)
         expect(publishStatement).not.toHaveBeenCalled()
@@ -179,6 +243,11 @@ describe('Process publish message', () => {
       test('should not call completeMessage', async () => {
         await processPublishMessage(message, receiver)
         expect(receiver.completeMessage).not.toHaveBeenCalled()
+      })
+
+      test('should not call abandonMessage', async () => {
+        await processPublishMessage(message, receiver)
+        expect(receiver.abandonMessage).not.toHaveBeenCalled()
       })
     })
   })
