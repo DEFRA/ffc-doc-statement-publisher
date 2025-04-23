@@ -4,7 +4,9 @@ jest.mock('../../../app/monitoring/get-outstanding-deliveries', () => ({
 }))
 
 const mockCheckDeliveryStatus = jest.fn()
-jest.mock('../../../app/monitoring/check-delivery-status', () => mockCheckDeliveryStatus)
+jest.mock('../../../app/monitoring/check-delivery-status', () => ({
+  checkDeliveryStatus: mockCheckDeliveryStatus
+}))
 
 const mockUpdateDeliveryFromResponse = jest.fn()
 jest.mock('../../../app/monitoring/update-delivery-from-response', () => mockUpdateDeliveryFromResponse)

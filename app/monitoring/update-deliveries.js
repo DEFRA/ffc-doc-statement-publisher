@@ -1,4 +1,4 @@
-const checkDeliveryStatus = require('./check-delivery-status')
+const { checkDeliveryStatus } = require('./check-delivery-status')
 const { processAllOutstandingDeliveries } = require('./get-outstanding-deliveries')
 const updateDeliveryFromResponse = require('./update-delivery-from-response')
 const batchSize = 20
