@@ -18,15 +18,14 @@ containerSecret:
   type: Opaque
 
 deployment:
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 3
   cpuThreshold: 80
   memoryThreshold: 80
-  minReadySeconds: 0
 
 container:
-  requestMemory: 250Mi
-  requestCpu: 240m
+  requestMemory: 120Mi
+  requestCpu: 80m
   limitMemory: 250Mi
   limitCpu: 240m
   messageQueueHost: namespace.servicebus.windows.net
