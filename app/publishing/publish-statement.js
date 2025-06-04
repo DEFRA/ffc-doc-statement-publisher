@@ -7,6 +7,8 @@ const handlePublishReasoning = require('./handle-publish-reasoning')
 const saveRequest = require('./save-request')
 const isDpScheme = require('./is-dp-scheme')
 const standardErrorObject = require('./standard-error-object')
+const getSchemeTemplateId = require('./get-scheme-template-id')
+
 const publishStatement = async (request) => {
   const startTime = Date.now()
   let reason, response, errorObject
@@ -45,8 +47,15 @@ const publishStatement = async (request) => {
         )
       }
 
+      const schemeBasedTemplate = getSchemeTemplateId(request.scheme)
+      const templateToUse = schemeBasedTemplate || request.emailTemplate
+
+      if (!templateToUse) {
+        console.warn(`No template found for scheme ${request.scheme?.shortName}`)
+      }
+
       response = await publish(
-        request.emailTemplate,
+        templateToUse,
         request.email,
         request.filename,
         personalisation,
