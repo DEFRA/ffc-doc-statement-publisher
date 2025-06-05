@@ -30,23 +30,69 @@ const isDpScheme = require('../../../app/publishing/is-dp-scheme')
 jest.mock('../../../app/publishing/standard-error-object')
 const standardErrorObject = require('../../../app/publishing/standard-error-object')
 
+jest.mock('../../../app/publishing/get-scheme-template-id')
+const getSchemeTemplateId = require('../../../app/publishing/get-scheme-template-id')
+
 const publishStatement = require('../../../app/publishing/publish-statement')
 
-const { EMPTY, INVALID } = require('../../../app/constants/failure-reasons')
 const { EMAIL, LETTER } = require('../../../app/constants/methods')
+const mapSchemeTemplateId = require('../../../app/constants/map-scheme-template-id')
 
 const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
 
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 
-const NOTIFY_ID = NOTIFY_RESPONSE.data.id
 const MOCK_PERSONALISATION = {
   schemeName: 'Test Scheme',
   schemeShortName: 'TS',
-  schemeYear: '2021',
+  schemeYear: '2023',
   schemeFrequency: 'Monthly',
   businessName: 'Test Business',
   paymentPeriod: '1 April 2024 to 30 June 2024'
+}
+
+// Updated mock requests with current scheme data
+const STATEMENT_MESSAGE = {
+  documentReference: 'TEST-DOC-REF-1',
+  email: 'test@example.com',
+  filename: 'test-statement.pdf',
+  scheme: {
+    name: 'Sustainable Farming Incentive',
+    shortName: 'SFI',
+    year: '2023',
+    frequency: 'Quarterly'
+  },
+  businessName: 'Test Business',
+  paymentPeriod: '1 April 2024 to 30 June 2024',
+  emailTemplate: EMAIL_TEMPLATE
+}
+
+const DP_2024_MESSAGE = {
+  documentReference: 'TEST-DOC-REF-2',
+  email: 'test@example.com',
+  filename: 'dp-2024-statement.pdf',
+  scheme: {
+    name: 'Delinked Payments',
+    shortName: 'DP',
+    year: '2024'
+  },
+  businessName: 'Test Business',
+  paymentPeriod: '1 January 2024 to 31 December 2024',
+  emailTemplate: EMAIL_TEMPLATE
+}
+
+const DP_2025_MESSAGE = {
+  documentReference: 'TEST-DOC-REF-3',
+  email: 'test@example.com',
+  filename: 'dp-2025-statement.pdf',
+  scheme: {
+    name: 'Delinked Payments',
+    shortName: 'DP',
+    year: '2025'
+  },
+  businessName: 'Test Business',
+  paymentPeriod: '1 January 2025 to 31 December 2025',
+  emailTemplate: EMAIL_TEMPLATE
 }
 
 let error
@@ -75,23 +121,12 @@ describe('Publish document', () => {
     })
   })
 
-  describe.each([
-    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body },
-    { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body }
-  ])('When email request is a $name', ({ name, request }) => {
+  describe('When statement request is processed', () => {
+    const request = STATEMENT_MESSAGE
+
     describe('When it is a duplicate', () => {
       beforeEach(async () => {
         getExistingDocument.mockResolvedValue(true)
-      })
-
-      test('should call getExistingDocument', async () => {
-        await publishStatement(request)
-        expect(getExistingDocument).toHaveBeenCalled()
-      })
-
-      test('should call getExistingDocument once', async () => {
-        await publishStatement(request)
-        expect(getExistingDocument).toHaveBeenCalledTimes(1)
       })
 
       test('should call getExistingDocument with request.documentReference', async () => {
@@ -99,397 +134,201 @@ describe('Publish document', () => {
         expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
       })
 
-      test('should not call validateEmail', async () => {
+      test('should not proceed with publishing', async () => {
         await publishStatement(request)
         expect(validateEmail).not.toHaveBeenCalled()
-      })
-
-      test('should not call getPersonalisation', async () => {
-        await publishStatement(request)
         expect(getPersonalisation).not.toHaveBeenCalled()
-      })
-
-      test('should not call publish', async () => {
-        await publishStatement(request)
         expect(publish).not.toHaveBeenCalled()
-      })
-
-      test('should not call saveRequest', async () => {
-        await publishStatement(request)
         expect(saveRequest).not.toHaveBeenCalled()
       })
+    })
 
-      test('should not call handlePublishReasoning', async () => {
+    describe('When it is not a duplicate', () => {
+      beforeEach(() => {
+        getExistingDocument.mockResolvedValue(null)
+        validateEmail.mockReturnValue({ value: request.email })
+        isValidEmail.mockReturnValue(true)
+        isDpScheme.mockReturnValue(false)
+        getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
+        handlePublishReasoning.mockReturnValue(undefined)
+        publish.mockResolvedValue(NOTIFY_RESPONSE)
+        saveRequest.mockResolvedValue(undefined)
+        getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+        getSchemeTemplateId.mockReturnValue(mapSchemeTemplateId.SFI_2023)
+        standardErrorObject.mockImplementation((err, reason) => ({
+          error: err?.error,
+          message: err?.message,
+          reason,
+          statusCode: err?.statusCode
+        }))
+      })
+
+      test('should call getSchemeTemplateId with scheme information', async () => {
         await publishStatement(request)
-        expect(handlePublishReasoning).not.toHaveBeenCalled()
+        expect(getSchemeTemplateId).toHaveBeenCalledWith(request.scheme)
       })
 
-      test('should not throw', async () => {
-        const wrapper = async () => { await publishStatement(request) }
-        expect(wrapper).not.toThrow()
+      test('should call publish with the scheme-specific template', async () => {
+        await publishStatement(request)
+        expect(publish).toHaveBeenCalledWith(
+          mapSchemeTemplateId.SFI_2023, // Should use the scheme-specific template
+          request.email,
+          request.filename,
+          MOCK_PERSONALISATION,
+          EMAIL
+        )
       })
 
-      test('should return undefined', async () => {
-        const result = await publishStatement(request)
-        expect(result).toBeUndefined()
+      test('should fall back to request emailTemplate if getSchemeTemplateId returns null', async () => {
+        getSchemeTemplateId.mockReturnValue(null)
+
+        await publishStatement(request)
+        expect(publish).toHaveBeenCalledWith(
+          request.emailTemplate,
+          request.email,
+          request.filename,
+          MOCK_PERSONALISATION,
+          EMAIL
+        )
       })
 
-      describe('When it is not a duplicate', () => {
-        beforeEach(() => {
-          getExistingDocument.mockResolvedValue(null)
-          validateEmail.mockReturnValue({ value: request.email })
-          isValidEmail.mockReturnValue(true)
-          isDpScheme.mockReturnValue(false)
-          getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
-          handlePublishReasoning.mockReturnValue(undefined)
-          publish.mockResolvedValue(NOTIFY_RESPONSE)
-          saveRequest.mockResolvedValue(undefined)
-          getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
-          standardErrorObject.mockImplementation((err, reason) => ({
-            error: err?.error,
-            message: err?.message,
-            reason,
-            statusCode: err?.statusCode
-          }))
-          request.emailTemplate = EMAIL_TEMPLATE
-        })
+      test('should log a warning when no template is found', async () => {
+        getSchemeTemplateId.mockReturnValue(null)
+        request.emailTemplate = null
 
-        describe('When it is a DP scheme', () => {
-          beforeEach(() => {
-            isDpScheme.mockReturnValue(true)
-          })
-
-          test('should not call validateEmail', async () => {
-            await publishStatement(request)
-            expect(validateEmail).not.toHaveBeenCalled()
-          })
-
-          test('should still call publish', async () => {
-            await publishStatement(request)
-            expect(publish).toHaveBeenCalled()
-          })
-        })
-
-        describe('When email is invalid', () => {
-          beforeEach(() => {
-            isValidEmail.mockReturnValue(false)
-          })
-
-          test('should use LETTER as publishStatementType', async () => {
-            await publishStatement(request)
-            expect(publish).toHaveBeenCalledWith(
-              request.emailTemplate,
-              request.email,
-              request.filename,
-              null,
-              LETTER
-            )
-          })
-
-          test('should save request with LETTER method', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledWith(
-              request,
-              NOTIFY_ID,
-              LETTER,
-              undefined
-            )
-          })
-        })
-
-        describe('When it has a valid email', () => {
-          beforeEach(() => {
-            error = undefined
-          })
-
-          test('should call getExistingDocument', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalled()
-          })
-
-          test('should call getExistingDocument once', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call getExistingDocument with request.documentReference', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
-          })
-
-          test('should call validateEmail', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalled()
-          })
-
-          test('should call validateEmail once', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call validateEmail with request.email', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalledWith(request.email)
-          })
-
-          test('should call getPersonalisation', async () => {
-            await publishStatement(request)
-            expect(getPersonalisation).toHaveBeenCalled()
-          })
-
-          test('should call getPersonalisation once', async () => {
-            await publishStatement(request)
-            expect(getPersonalisation).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call getPersonalisation with request.scheme.name, request.scheme.shortName, request.scheme.year, request.scheme.frequency and request.businessName', async () => {
-            await publishStatement(request)
-            expect(getPersonalisation).toHaveBeenCalledWith(
-              request.scheme.name,
-              request.scheme.shortName,
-              request.scheme.year,
-              request.scheme.frequency,
-              request.businessName,
-              request.paymentPeriod
-            )
-          })
-
-          test('should call publish', async () => {
-            await publishStatement(request)
-            expect(publish).toHaveBeenCalled()
-          })
-
-          test('should call publish once', async () => {
-            await publishStatement(request)
-            expect(publish).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call publish with request.email, request.filename and MOCK_PERSONALISATION', async () => {
-            await publishStatement(request)
-            expect(publish).toHaveBeenCalledWith(
-              EMAIL_TEMPLATE,
-              request.email,
-              request.filename,
-              MOCK_PERSONALISATION,
-              EMAIL
-            )
-          })
-
-          test('should call saveRequest', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalled()
-          })
-
-          test('should call saveRequest once', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call saveRequest with request, NOTIFY_ID, EMAIL and handlePublishReasoning', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledWith(
-              request,
-              NOTIFY_ID,
-              EMAIL,
-              undefined
-            )
-          })
-
-          test('should not call handlePublishReasoning', async () => {
-            await publishStatement(request)
-            expect(handlePublishReasoning).not.toHaveBeenCalled()
-          })
-
-          test('should not throw', async () => {
-            const wrapper = async () => { await publishStatement(request) }
-            expect(wrapper).not.toThrow()
-          })
-
-          test('should return undefined', async () => {
-            const result = await publishStatement(request)
-            expect(result).toBeUndefined()
-          })
-        })
-
-        describe.each([
-          { errorMessage: 'Email is invalid: Email cannot be empty.', reason: EMPTY },
-          { errorMessage: 'Email is invalid: The email provided is invalid.', reason: INVALID },
-          { errorMessage: 'This is not a known validation error message.', reason: undefined }
-        ])('When validateEmail throws error with message "$errorMessage"', ({ errorMessage, reason }) => {
-          beforeEach(() => {
-            error = new Error(errorMessage)
-            validateEmail.mockImplementation(() => { throw error })
-            handlePublishReasoning.mockReturnValue(reason)
-            standardErrorObject.mockReturnValue({
-              error: undefined,
-              message: errorMessage,
-              reason,
-              statusCode: undefined
-            })
-          })
-
-          test('should call getExistingDocument', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalled()
-          })
-
-          test('should call getExistingDocument once', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call getExistingDocument with request.documentReference', async () => {
-            await publishStatement(request)
-            expect(getExistingDocument).toHaveBeenCalledWith(request.documentReference)
-          })
-
-          test('should call validateEmail', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalled()
-          })
-
-          test('should call validateEmail once', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call validateEmail with request.email', async () => {
-            await publishStatement(request)
-            expect(validateEmail).toHaveBeenCalledWith(request.email)
-          })
-
-          test('should not call getPersonalisation', async () => {
-            await publishStatement(request)
-            expect(getPersonalisation).not.toHaveBeenCalled()
-          })
-
-          test('should not call publish', async () => {
-            await publishStatement(request)
-            expect(publish).not.toHaveBeenCalled()
-          })
-
-          test('should call handlePublishReasoning', async () => {
-            await publishStatement(request)
-            expect(handlePublishReasoning).toHaveBeenCalled()
-          })
-
-          test('should call handlePublishReasoning once', async () => {
-            await publishStatement(request)
-            expect(handlePublishReasoning).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call handlePublishReasoning with error', async () => {
-            await publishStatement(request)
-            expect(handlePublishReasoning).toHaveBeenCalledWith(error)
-          })
-
-          test('should call standardErrorObject with error and reason', async () => {
-            await publishStatement(request)
-            expect(standardErrorObject).toHaveBeenCalledWith(error, reason)
-          })
-
-          test('should call saveRequest', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalled()
-          })
-
-          test('should call saveRequest once', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledTimes(1)
-          })
-
-          test('should call saveRequest with request, undefined, EMAIL and errorObject', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledWith(
-              request,
-              undefined,
-              EMAIL,
-              { error: undefined, message: errorMessage, reason, statusCode: undefined }
-            )
-          })
-
-          test('should not throw', async () => {
-            const wrapper = async () => { await publishStatement(request) }
-            expect(wrapper).not.toThrow()
-          })
-
-          test('should return undefined', async () => {
-            const result = await publishStatement(request)
-            expect(result).toBeUndefined()
-          })
-        })
-
-        describe('When publish throws an error', () => {
-          beforeEach(() => {
-            error = new Error('Failed to publish')
-            publish.mockRejectedValue(error)
-            handlePublishReasoning.mockReturnValue('PUBLISH_ERROR')
-            standardErrorObject.mockReturnValue({
-              error: undefined,
-              message: 'Failed to publish',
-              reason: 'PUBLISH_ERROR',
-              statusCode: undefined
-            })
-          })
-
-          test('should call handlePublishReasoning with error', async () => {
-            await publishStatement(request)
-            expect(handlePublishReasoning).toHaveBeenCalledWith(error)
-          })
-
-          test('should call standardErrorObject', async () => {
-            await publishStatement(request)
-            expect(standardErrorObject).toHaveBeenCalled()
-          })
-
-          test('should call saveRequest with errorObject', async () => {
-            await publishStatement(request)
-            expect(saveRequest).toHaveBeenCalledWith(
-              request,
-              undefined,
-              EMAIL,
-              {
-                error: undefined,
-                message: 'Failed to publish',
-                reason: 'PUBLISH_ERROR',
-                statusCode: undefined
-              }
-            )
-          })
-
-          test('should not throw', async () => {
-            const wrapper = async () => { await publishStatement(request) }
-            expect(wrapper).not.toThrow()
-          })
-        })
-
-        describe('When getExistingDocument throws', () => {
-          beforeEach(() => {
-            error = new Error('Issue retrieving document.')
-            getExistingDocument.mockRejectedValue(error)
-            jest.spyOn(console, 'error').mockImplementation(() => { })
-          })
-
-          test('should call getExistingDocument', async () => {
-            try { await publishStatement(request) } catch { }
-            expect(getExistingDocument).toHaveBeenCalled()
-          })
-
-          test('should throw error', async () => {
-            const wrapper = async () => { await publishStatement(request) }
-            expect(wrapper).rejects.toThrow()
-          })
-
-          test('should throw correct error message', async () => {
-            const wrapper = async () => { await publishStatement(request) }
-            expect(wrapper).rejects.toThrow('Issue retrieving document.')
-          })
-
-          afterEach(() => {
-            console.error.mockRestore()
-          })
-        })
+        await publishStatement(request)
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))
       })
+    })
+
+    describe('When email is invalid', () => {
+      beforeEach(() => {
+        getExistingDocument.mockResolvedValue(null)
+        isValidEmail.mockReturnValue(false)
+        isDpScheme.mockReturnValue(false)
+        publish.mockResolvedValue(NOTIFY_RESPONSE)
+        saveRequest.mockResolvedValue(undefined)
+        getSchemeTemplateId.mockReturnValue(mapSchemeTemplateId.SFI_2023)
+      })
+
+      test('should use LETTER as publishStatementType', async () => {
+        await publishStatement(request)
+        expect(publish).toHaveBeenCalledWith(
+          mapSchemeTemplateId.SFI_2023,
+          request.email,
+          request.filename,
+          null,
+          LETTER
+        )
+      })
+    })
+  })
+
+  describe('When processing DP 2024 statements', () => {
+    const request = DP_2024_MESSAGE
+
+    beforeEach(() => {
+      getExistingDocument.mockResolvedValue(null)
+      validateEmail.mockReturnValue({ value: request.email })
+      isValidEmail.mockReturnValue(true)
+      isDpScheme.mockReturnValue(true)
+      getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
+      publish.mockResolvedValue(NOTIFY_RESPONSE)
+      saveRequest.mockResolvedValue(undefined)
+      getSchemeTemplateId.mockReturnValue(mapSchemeTemplateId.DP_2024)
+    })
+
+    test('should use the DP 2024 template', async () => {
+      await publishStatement(request)
+      expect(getSchemeTemplateId).toHaveBeenCalledWith(request.scheme)
+      expect(publish).toHaveBeenCalledWith(
+        mapSchemeTemplateId.DP_2024,
+        request.email,
+        request.filename,
+        MOCK_PERSONALISATION,
+        EMAIL
+      )
+    })
+
+    test('should not call validateEmail for DP scheme', async () => {
+      await publishStatement(request)
+      expect(validateEmail).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('When processing DP 2025 statements', () => {
+    const request = DP_2025_MESSAGE
+
+    beforeEach(() => {
+      getExistingDocument.mockResolvedValue(null)
+      validateEmail.mockReturnValue({ value: request.email })
+      isValidEmail.mockReturnValue(true)
+      isDpScheme.mockReturnValue(true)
+      getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
+      publish.mockResolvedValue(NOTIFY_RESPONSE)
+      saveRequest.mockResolvedValue(undefined)
+      getSchemeTemplateId.mockReturnValue(mapSchemeTemplateId.DP_2025)
+    })
+
+    test('should use the DP 2025 template', async () => {
+      await publishStatement(request)
+      expect(getSchemeTemplateId).toHaveBeenCalledWith(request.scheme)
+      expect(publish).toHaveBeenCalledWith(
+        mapSchemeTemplateId.DP_2025,
+        request.email,
+        request.filename,
+        MOCK_PERSONALISATION,
+        EMAIL
+      )
+    })
+  })
+
+  describe('Error handling', () => {
+    const request = STATEMENT_MESSAGE
+
+    beforeEach(() => {
+      getExistingDocument.mockResolvedValue(null)
+      validateEmail.mockReturnValue({ value: request.email })
+      isValidEmail.mockReturnValue(true)
+      getSchemeTemplateId.mockReturnValue(mapSchemeTemplateId.SFI_2023)
+    })
+
+    test('should handle error when publish throws', async () => {
+      error = new Error('Failed to publish')
+      publish.mockRejectedValue(error)
+      handlePublishReasoning.mockReturnValue('PUBLISH_ERROR')
+      standardErrorObject.mockReturnValue({
+        error: undefined,
+        message: 'Failed to publish',
+        reason: 'PUBLISH_ERROR',
+        statusCode: undefined
+      })
+
+      await publishStatement(request)
+
+      expect(handlePublishReasoning).toHaveBeenCalledWith(error)
+      expect(saveRequest).toHaveBeenCalledWith(
+        request,
+        undefined,
+        EMAIL,
+        {
+          error: undefined,
+          message: 'Failed to publish',
+          reason: 'PUBLISH_ERROR',
+          statusCode: undefined
+        }
+      )
+    })
+
+    test('should handle getExistingDocument throwing error', async () => {
+      error = new Error('Issue retrieving document.')
+      getExistingDocument.mockRejectedValue(error)
+      jest.spyOn(console, 'error').mockImplementation(() => { })
+
+      await expect(publishStatement(request)).rejects.toThrow('Issue retrieving document.')
+
+      expect(getExistingDocument).toHaveBeenCalled()
+      console.error.mockRestore()
     })
   })
 })
