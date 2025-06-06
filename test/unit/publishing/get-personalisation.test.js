@@ -49,9 +49,9 @@ describe('get personalisation', () => {
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName)
     expect(result.schemeFrequency).toBe('one-off')
   })
-  test('returns schemeFrequency="Bi-Annual" when scheme.shortName="DP" ', () => {
+  test('returns schemeFrequency="Annual" when scheme.shortName="DP" ', () => {
     scheme.shortName = 'DP'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName)
-    expect(result.schemeFrequency).toBe('Bi-Annual')
+    expect(result.schemeFrequency).toBe('Annual')
   })
 })

@@ -179,6 +179,21 @@ describe('Publish document', () => {
         )
       })
 
+      test('should update request.emailTemplate with the scheme-specific template', async () => {
+        const requestCopy = { ...request }
+        await publishStatement(requestCopy)
+
+        expect(requestCopy.emailTemplate).toBe(mapSchemeTemplateId.SFI_2023)
+        expect(saveRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            emailTemplate: mapSchemeTemplateId.SFI_2023
+          }),
+          NOTIFY_RESPONSE.data.id,
+          EMAIL,
+          undefined
+        )
+      })
+
       test('should fall back to request emailTemplate if getSchemeTemplateId returns null', async () => {
         getSchemeTemplateId.mockReturnValue(null)
 
@@ -192,12 +207,57 @@ describe('Publish document', () => {
         )
       })
 
+      test('should not update request.emailTemplate when getSchemeTemplateId returns null', async () => {
+        getSchemeTemplateId.mockReturnValue(null)
+        const originalTemplate = request.emailTemplate
+        const requestCopy = { ...request }
+
+        await publishStatement(requestCopy)
+
+        expect(requestCopy.emailTemplate).toBe(originalTemplate)
+        expect(saveRequest).toHaveBeenCalledWith(
+          expect.objectContaining({
+            emailTemplate: originalTemplate
+          }),
+          NOTIFY_RESPONSE.data.id,
+          EMAIL,
+          undefined
+        )
+      })
+
       test('should log a warning when no template is found', async () => {
         getSchemeTemplateId.mockReturnValue(null)
-        request.emailTemplate = null
+        const requestCopy = { ...request, emailTemplate: null }
 
-        await publishStatement(request)
+        await publishStatement(requestCopy)
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))
+      })
+
+      test('should handle case when both getSchemeTemplateId and request.emailTemplate are null', async () => {
+        getSchemeTemplateId.mockReturnValue(null)
+        const requestCopy = { ...request, emailTemplate: null }
+
+        await publishStatement(requestCopy)
+
+        expect(requestCopy.emailTemplate).toBeNull()
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))
+        expect(publish).toHaveBeenCalledWith(
+          null,
+          request.email,
+          request.filename,
+          MOCK_PERSONALISATION,
+          EMAIL
+        )
+      })
+
+      test('should preserve original template when scheme-based template is undefined', async () => {
+        getSchemeTemplateId.mockReturnValue(undefined)
+        const originalTemplate = request.emailTemplate
+        const requestCopy = { ...request }
+
+        await publishStatement(requestCopy)
+
+        expect(requestCopy.emailTemplate).toBe(originalTemplate)
       })
     })
 
@@ -250,6 +310,21 @@ describe('Publish document', () => {
       )
     })
 
+    test('should update request.emailTemplate with DP 2024 template', async () => {
+      const requestCopy = { ...request }
+      await publishStatement(requestCopy)
+
+      expect(requestCopy.emailTemplate).toBe(mapSchemeTemplateId.DP_2024)
+      expect(saveRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailTemplate: mapSchemeTemplateId.DP_2024
+        }),
+        NOTIFY_RESPONSE.data.id,
+        EMAIL,
+        undefined
+      )
+    })
+
     test('should not call validateEmail for DP scheme', async () => {
       await publishStatement(request)
       expect(validateEmail).not.toHaveBeenCalled()
@@ -278,6 +353,78 @@ describe('Publish document', () => {
         request.email,
         request.filename,
         MOCK_PERSONALISATION,
+        EMAIL
+      )
+    })
+
+    test('should update request.emailTemplate with DP 2025 template', async () => {
+      const requestCopy = { ...request }
+      await publishStatement(requestCopy)
+
+      expect(requestCopy.emailTemplate).toBe(mapSchemeTemplateId.DP_2025)
+      expect(saveRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailTemplate: mapSchemeTemplateId.DP_2025
+        }),
+        NOTIFY_RESPONSE.data.id,
+        EMAIL,
+        undefined
+      )
+    })
+  })
+
+  describe('Template fallback scenarios', () => {
+    beforeEach(() => {
+      getExistingDocument.mockResolvedValue(null)
+      validateEmail.mockReturnValue({ value: 'test@example.com' })
+      isValidEmail.mockReturnValue(true)
+      isDpScheme.mockReturnValue(false)
+      getPersonalisation.mockReturnValue(MOCK_PERSONALISATION)
+      publish.mockResolvedValue(NOTIFY_RESPONSE)
+      saveRequest.mockResolvedValue(undefined)
+    })
+
+    test('should use scheme template over request template when both exist', async () => {
+      const schemeTemplate = 'scheme-specific-template-id'
+      const requestTemplate = 'original-request-template-id'
+
+      getSchemeTemplateId.mockReturnValue(schemeTemplate)
+
+      const requestCopy = {
+        ...STATEMENT_MESSAGE,
+        emailTemplate: requestTemplate
+      }
+
+      await publishStatement(requestCopy)
+
+      expect(requestCopy.emailTemplate).toBe(schemeTemplate)
+      expect(publish).toHaveBeenCalledWith(
+        schemeTemplate,
+        expect.any(String),
+        expect.any(String),
+        expect.any(Object),
+        EMAIL
+      )
+    })
+
+    test('should preserve request template when scheme template is falsy', async () => {
+      const requestTemplate = 'original-request-template-id'
+
+      getSchemeTemplateId.mockReturnValue(null)
+
+      const requestCopy = {
+        ...STATEMENT_MESSAGE,
+        emailTemplate: requestTemplate
+      }
+
+      await publishStatement(requestCopy)
+
+      expect(requestCopy.emailTemplate).toBe(requestTemplate)
+      expect(publish).toHaveBeenCalledWith(
+        requestTemplate,
+        expect.any(String),
+        expect.any(String),
+        expect.any(Object),
         EMAIL
       )
     })
