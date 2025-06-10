@@ -1,6 +1,8 @@
 const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName, transactionDate, paymentPeriod) => {
   const formatTransactionDate = (dateString) => {
-    if (!dateString) return dateString
+    if (!dateString) {
+      return dateString
+    }
     const date = new Date(dateString)
     const day = date.getDate()
     const monthNames = [
