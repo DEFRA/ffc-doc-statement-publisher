@@ -40,18 +40,20 @@ describe('get personalisation', () => {
     expect(result.businessName).toBe(businessName)
   })
 
-  test('converts ISO date format to DD-MM-YYYY format for DP scheme', () => {
+  test('converts ISO date format to human-readable format for DP scheme', () => {
     scheme.shortName = 'DP'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
-    expect(result.transactionDate).toBe('01-08-2024')
+    expect(result.transactionDate).toBe('1 August 2024')
   })
 
   test('handles different ISO date formats for DP scheme', () => {
     scheme.shortName = 'DP'
     const testCases = [
-      { input: '2024-12-25T00:00:00.000Z', expected: '25-12-2024' },
-      { input: '2023-01-01T12:30:45.123Z', expected: '01-01-2023' },
-      { input: '2025-06-15T23:59:59.999Z', expected: '15-06-2025' }
+      { input: '2024-12-25T00:00:00.000Z', expected: '25 December 2024' },
+      { input: '2023-01-01T12:30:45.123Z', expected: '1 January 2023' },
+      { input: '2025-06-15T23:59:59.999Z', expected: '15 June 2025' },
+      { input: '2024-02-29T00:00:00.000Z', expected: '29 February 2024' },
+      { input: '2024-09-03T00:00:00.000Z', expected: '3 September 2024' }
     ]
 
     testCases.forEach(({ input, expected }) => {
