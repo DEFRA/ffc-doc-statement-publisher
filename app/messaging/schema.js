@@ -99,5 +99,17 @@ module.exports = Joi.object({
   }).required().messages({
     'object.base': 'scheme must be an object',
     'any.required': 'scheme object is missing but it is required'
+  }),
+  transactionDate: Joi.when('scheme.shortName', {
+    is: 'DP',
+    then: Joi.date().iso().required().messages({
+      'date.base': 'Transaction date must be a valid date',
+      'date.format': 'Transaction date must be in ISO format (YYYY-MM-DD)',
+      'any.required': 'Transaction date is required for DP scheme'
+    }),
+    otherwise: Joi.date().iso().optional().allow(null).messages({
+      'date.base': 'Transaction date must be a valid date',
+      'date.format': 'Transaction date must be in ISO format (YYYY-MM-DD)'
+    })
   })
 })

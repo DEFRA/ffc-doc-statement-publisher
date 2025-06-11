@@ -43,6 +43,7 @@ const publishStatement = async (request) => {
           request.scheme?.year,
           request.scheme?.frequency,
           request.businessName,
+          request.transactionDate,
           request.paymentPeriod
         )
       }
@@ -52,6 +53,10 @@ const publishStatement = async (request) => {
 
       if (!templateToUse) {
         console.warn(`No template found for scheme ${request.scheme?.shortName}`)
+      }
+
+      if (templateToUse) {
+        request.emailTemplate = templateToUse
       }
 
       response = await publish(
