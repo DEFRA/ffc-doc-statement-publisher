@@ -5,7 +5,7 @@ const isAPIRelated = (string) => {
   return string.includes('authorization') || string.includes('api key')
 }
 
-cont logAPIIssue = (apiError) => { 
+const logAPIIssue = (apiError) => { 
   if (
     apiError.status_code === forbidden ||
     (Array.isArray(apiError.errors) && apiError.errors.some(
