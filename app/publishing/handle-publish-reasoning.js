@@ -12,7 +12,14 @@ const handlePublishReasoning = (error) => {
         const apiError = error.response.data
         console.log('GOV.UK Notify API Error:', JSON.stringify(apiError, null, 2))
 
-        if (apiError.status_code === forbidden || apiError.errors?.some(e => e.includes('authorization') || e.includes('api key'))) {
+        if (
+          apiError.status_code === forbidden ||
+          (Array.isArray(apiError.errors) && apiError.errors.some(
+            e =>
+              (typeof e === 'string' && (e.includes('authorization') || e.includes('api key'))) ||
+              (typeof e === 'object' && typeof e.message === 'string' && (e.message.includes('authorization') || e.message.includes('api key')))
+          ))
+        ) {
           console.log('Possible API key issue detected')
         }
 
