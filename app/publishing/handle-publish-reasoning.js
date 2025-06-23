@@ -1,6 +1,10 @@
 const { EMPTY, INVALID, UNSUCCESSFUL } = require('../constants/failure-reasons')
 const forbidden = 403
 
+const isAPIRelated = (string) => {
+  return string.includes('authorization') || string.includes('api key')
+}
+
 const handlePublishReasoning = (error) => {
   switch (error?.message) {
     case ('Email is invalid: Email cannot be empty.'):
@@ -16,8 +20,8 @@ const handlePublishReasoning = (error) => {
           apiError.status_code === forbidden ||
           (Array.isArray(apiError.errors) && apiError.errors.some(
             e =>
-              (typeof e === 'string' && (e.includes('authorization') || e.includes('api key'))) ||
-              (typeof e === 'object' && typeof e.message === 'string' && (e.message.includes('authorization') || e.message.includes('api key')))
+              (typeof e === 'string' && isAPIRelated(e)) ||
+              (typeof e === 'object' && typeof e.message === 'string' && isAPIRelated(e.message))
           ))
         ) {
           console.log('Possible API key issue detected')
