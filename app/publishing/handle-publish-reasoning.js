@@ -5,6 +5,19 @@ const isAPIRelated = (string) => {
   return string.includes('authorization') || string.includes('api key')
 }
 
+cont logAPIIssue = (apiError) => { 
+  if (
+    apiError.status_code === forbidden ||
+    (Array.isArray(apiError.errors) && apiError.errors.some(
+      e =>
+        (typeof e === 'string' && isAPIRelated(e)) ||
+        (typeof e === 'object' && typeof e.message === 'string' && isAPIRelated(e.message))
+    ))
+  ) {
+    console.log('Possible API key issue detected')
+  }
+}
+
 const handlePublishReasoning = (error) => {
   switch (error?.message) {
     case ('Email is invalid: Email cannot be empty.'):
@@ -16,16 +29,7 @@ const handlePublishReasoning = (error) => {
         const apiError = error.response.data
         console.log('GOV.UK Notify API Error:', JSON.stringify(apiError, null, 2))
 
-        if (
-          apiError.status_code === forbidden ||
-          (Array.isArray(apiError.errors) && apiError.errors.some(
-            e =>
-              (typeof e === 'string' && isAPIRelated(e)) ||
-              (typeof e === 'object' && typeof e.message === 'string' && isAPIRelated(e.message))
-          ))
-        ) {
-          console.log('Possible API key issue detected')
-        }
+        logAPIIssue(apiError)
 
         if (apiError.message || (apiError.errors && apiError.errors.length > 0)) {
           const reason = apiError.message || apiError.errors[0]
