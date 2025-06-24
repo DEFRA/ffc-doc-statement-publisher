@@ -124,4 +124,75 @@ describe('Handle error message from attempting to publish a statement', () => {
       expect(console.log).toHaveBeenCalledWith('API Error reason: First error message')
     })
   })
+
+  describe('When apiError.errors contains various types for .some', () => {
+    beforeEach(() => {
+      console.log = jest.fn()
+    })
+
+    test('handles errors array with string containing "authorization"', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['authorization failed']
+          }
+        }
+      }
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('handles errors array with string containing "api key"', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['bad api key']
+          }
+        }
+      }
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('handles errors array with object containing message with "authorization"', () => {
+      error = {
+        response: {
+          data: {
+            errors: [{ message: 'authorization denied' }]
+          }
+        }
+      }
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('handles errors array with object containing message with "api key"', () => {
+      error = {
+        response: {
+          data: {
+            errors: [{ message: 'invalid api key' }]
+          }
+        }
+      }
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).toHaveBeenCalledWith('Possible API key issue detected')
+    })
+
+    test('does not log API key issue if errors array does not match', () => {
+      error = {
+        response: {
+          data: {
+            errors: ['some other error', { message: 'another error' }]
+          }
+        }
+      }
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.log).not.toHaveBeenCalledWith('Possible API key issue detected')
+    })
+  })
 })
