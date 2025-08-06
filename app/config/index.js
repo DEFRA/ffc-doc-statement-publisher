@@ -3,7 +3,7 @@ const mqConfig = require('./message')
 const dbConfig = require('./database')
 const storageConfig = require('./storage')
 const reportConfig = require('./report')
-const deliveryCheck = 43200000
+const deliveryCheck = 3600000
 const reportCheck = 86400000
 const retainPeriodInWeeks = 78
 

@@ -66,7 +66,6 @@ const publishStatement = async (request) => {
         personalisation,
         publishStatementType
       )
-      console.log(`Received response from Notify: ${response}`)
       console.log(`Statement published: ${request.filename} (${Date.now() - startTime}ms)`)
     } catch (err) {
       reason = handlePublishReasoning(err)
