@@ -14,6 +14,7 @@ const publishByLetter = async (reference, pdfFile, postage = SECOND) => {
   const letterRequest = setupLetterRequest(reference, pdfFile, postage, notifyClient)
   return retry(letterRequest, 3, 100, true)
     .then(result => {
+      console.log(result)
       return result
     })
     .catch((err) => {
