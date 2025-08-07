@@ -28,16 +28,14 @@ describe('getOutstandingDeliveries', () => {
         completed: null
       },
       limit: 100,
-      offset: 0,
       order: [['requested', 'ASC']]
     })
   })
 
-  test('should call findAll with custom limit and offset', async () => {
-    await getOutstandingDeliveries({ limit: 50, offset: 10 })
+  test('should call findAll with custom limit', async () => {
+    await getOutstandingDeliveries({ limit: 50 })
     expect(db.delivery.findAll).toHaveBeenCalledWith(expect.objectContaining({
-      limit: 50,
-      offset: 10
+      limit: 50
     }))
   })
 
@@ -67,8 +65,8 @@ describe('processAllOutstandingDeliveries', () => {
     const result = await processAllOutstandingDeliveries(processFn, mockGetDeliveries, 10)
 
     expect(mockGetDeliveries).toHaveBeenCalledTimes(2)
-    expect(mockGetDeliveries).toHaveBeenNthCalledWith(1, { limit: 10, offset: 0 })
-    expect(mockGetDeliveries).toHaveBeenNthCalledWith(2, { limit: 10, offset: 10 })
+    expect(mockGetDeliveries).toHaveBeenNthCalledWith(1, { limit: 10 })
+    expect(mockGetDeliveries).toHaveBeenNthCalledWith(2, { limit: 10 })
     expect(processFn).toHaveBeenCalledTimes(1)
     expect(result).toEqual({ totalProcessed: 2, batchCount: 1 })
   })
@@ -83,9 +81,9 @@ describe('processAllOutstandingDeliveries', () => {
     const result = await processAllOutstandingDeliveries(processFn, mockGetDeliveries, 2)
 
     expect(mockGetDeliveries).toHaveBeenCalledTimes(3)
-    expect(mockGetDeliveries).toHaveBeenNthCalledWith(1, { limit: 2, offset: 0 })
-    expect(mockGetDeliveries).toHaveBeenNthCalledWith(2, { limit: 2, offset: 2 })
-    expect(mockGetDeliveries).toHaveBeenNthCalledWith(3, { limit: 2, offset: 4 })
+    expect(mockGetDeliveries).toHaveBeenNthCalledWith(1, { limit: 2 })
+    expect(mockGetDeliveries).toHaveBeenNthCalledWith(2, { limit: 2 })
+    expect(mockGetDeliveries).toHaveBeenNthCalledWith(3, { limit: 2 })
     expect(processFn).toHaveBeenCalledTimes(2)
     expect(result).toEqual({ totalProcessed: 4, batchCount: 2 })
   })
