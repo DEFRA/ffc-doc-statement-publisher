@@ -1,7 +1,7 @@
 const { checkDeliveryStatus } = require('./check-delivery-status')
 const { processAllOutstandingDeliveries } = require('./get-outstanding-deliveries')
 const updateDeliveryFromResponse = require('./update-delivery-from-response')
-const batchSize = 20
+const batchSize = 10
 const updateDeliveries = async () => {
   try {
     console.log('Starting delivery status update process')

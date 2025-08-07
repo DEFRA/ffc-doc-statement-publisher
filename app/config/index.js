@@ -16,7 +16,8 @@ const schema = Joi.object({
   notifyEmailTemplateKey: Joi.string().required(),
   retentionPeriodInWeeks: Joi.number().default(retainPeriodInWeeks),
   statementReceiverApiVersion: Joi.string().required(),
-  statementReceiverEndpoint: Joi.string().required()
+  statementReceiverEndpoint: Joi.string().required(),
+  sendCrmFailureMessageEnabled: Joi.boolean().optional().default(false)
 })
 
 const config = {
@@ -28,7 +29,8 @@ const config = {
   notifyEmailTemplateKey: process.env.NOTIFY_EMAIL_TEMPLATE_KEY,
   retentionPeriodInWeeks: process.env.RETENTION_PERIOD_IN_WEEKS ? parseInt(process.env.RETENTION_PERIOD_IN_WEEKS) : undefined,
   statementReceiverApiVersion: process.env.STATEMENT_RECEIVER_API_VERSION,
-  statementReceiverEndpoint: process.env.STATEMENT_RECEIVER_ENDPOINT
+  statementReceiverEndpoint: process.env.STATEMENT_RECEIVER_ENDPOINT,
+  sendCrmFailureMessageEnabled: process.env.SEND_CRM_FAILURE_MESSAGE_ENABLED
 }
 
 const result = schema.validate(config, {

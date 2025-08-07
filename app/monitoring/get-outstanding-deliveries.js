@@ -3,16 +3,18 @@ const db = require('../data')
 const getOutstandingDeliveries = async (options = {}) => {
   const {
     limit = 100,
+    lastProcessedId = 0,
     includeStatement = false
   } = options
 
   const queryOptions = {
     where: {
+      deliveryId: { [db.Sequelize.Op.gt]: lastProcessedId },
       reference: { [db.Sequelize.Op.not]: null },
       completed: null
     },
     limit,
-    order: [['requested', 'ASC']]
+    order: [['deliveryId', 'ASC']]
   }
 
   if (includeStatement) {
@@ -24,7 +26,6 @@ const getOutstandingDeliveries = async (options = {}) => {
       }
     ]
   }
-
   return db.delivery.findAll(queryOptions)
 }
 
@@ -33,13 +34,18 @@ const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSi
 
   let totalProcessed = 0
   let batchCount = 0
+  let lastProcessedId = 0
 
-  // First fetch
-  let deliveries = await fetchDeliveries({
-    limit: batchSize
-  })
+  while (true) {
+    const deliveries = await fetchDeliveries({
+      limit: batchSize,
+      lastProcessedId
+    })
 
-  while (deliveries.length > 0) {
+    if (deliveries.length === 0) {
+      break
+    }
+
     batchCount++
 
     const results = await processFn(deliveries)
@@ -51,10 +57,7 @@ const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSi
       totalProcessed += deliveries.length
     }
 
-    //  CRITICAL: This will always be called once more after the last batch
-    deliveries = await fetchDeliveries({
-      limit: batchSize
-    })
+    lastProcessedId = deliveries[deliveries.length - 1].deliveryId
   }
 
   return { totalProcessed, batchCount }

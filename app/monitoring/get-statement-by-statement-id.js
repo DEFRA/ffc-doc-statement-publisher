@@ -1,7 +1,7 @@
 const db = require('../data')
 
-const getStatementByStatementId = async (statementId) => {
-  return db.statement.findOne({ where: { statementId } })
+const getStatementByStatementId = async (statementId, transaction) => {
+  return db.statement.findOne({ where: { statementId }, transaction })
 }
 
 module.exports = getStatementByStatementId

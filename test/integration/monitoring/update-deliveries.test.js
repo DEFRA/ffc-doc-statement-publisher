@@ -66,7 +66,7 @@ describe('update deliveries', () => {
     const result = await updateDeliveries()
 
     expect(result.totalProcessed).toBe(2)
-    expect(mockProcessAllOutstandingDeliveries).toHaveBeenCalledWith(expect.any(Function), null, 20)
+    expect(mockProcessAllOutstandingDeliveries).toHaveBeenCalledWith(expect.any(Function), null, 10)
     expect(mockCheckDeliveryStatus).toHaveBeenCalledTimes(2)
     expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledTimes(2)
   })
