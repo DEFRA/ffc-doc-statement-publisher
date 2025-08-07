@@ -46,4 +46,5 @@ data:
   {{ else }}
   STATEMENT_RECEIVER_ENDPOINT: {{ .Values.container.statementReceiverEndpoint }}.{{ .Values.ingress.server }}
   {{- end }}
+  SEND_CRM_FAILURE_MESSAGE_ENABLED: {{ quote .Values.container.sendCrmFailureMessageEnabled }}
 {{- end -}}

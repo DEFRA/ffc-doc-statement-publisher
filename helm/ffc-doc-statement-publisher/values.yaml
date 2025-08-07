@@ -58,6 +58,7 @@ container:
   deliveryCheckInterval: 30000
   reportingCheckInterval: 30000
   retentionPeriodInWeeks: 78
+  sendCrmFailureMessageEnabled: false
 
 ingress:
   server: example.com

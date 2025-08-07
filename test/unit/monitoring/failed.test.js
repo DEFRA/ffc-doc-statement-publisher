@@ -23,7 +23,6 @@ let reason
 describe('Notify failed to deliver', () => {
   beforeEach(() => {
     reason = INVALID
-
     getStatementByStatementId.mockResolvedValue(statement)
     sendCrmMessage.mockResolvedValue(undefined)
     completeDelivery.mockResolvedValue(undefined)
@@ -52,22 +51,6 @@ describe('Notify failed to deliver', () => {
     test('should call getStatementByStatementId with delivery.statementId', async () => {
       await failed(delivery, { reason })
       expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
-    })
-
-    test('should call sendCrmMessage', async () => {
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalled()
-    })
-
-    test('should call sendCrmMessage once', async () => {
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call sendCrmMessage with statement.email, statement.frn and reason', async () => {
-      const statement = await getStatementByStatementId()
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalledWith(statement.email, statement.frn, reason)
     })
 
     test('should call completeDelivery', async () => {
@@ -146,22 +129,6 @@ describe('Notify failed to deliver', () => {
       expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
     })
 
-    test('should call sendCrmMessage', async () => {
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalled()
-    })
-
-    test('should call sendCrmMessage once', async () => {
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call sendCrmMessage with statement.email, statement.frn and reason', async () => {
-      const statement = await getStatementByStatementId()
-      await failed(delivery, { reason })
-      expect(sendCrmMessage).toHaveBeenCalledWith(statement.email, statement.frn, reason)
-    })
-
     test('should call completeDelivery', async () => {
       await failed(delivery, { reason })
       expect(completeDelivery).toHaveBeenCalled()
@@ -224,12 +191,12 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call mockTransaction().rollback', async () => {
-      try { await failed(delivery, { reason }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalled()
     })
 
     test('should call mockTransaction().rollback once', async () => {
-      try { await failed(delivery, { reason }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalledTimes(1)
     })
 
@@ -249,83 +216,22 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should not call sendCrmMessage', async () => {
-      try { await failed(delivery, { reason }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(sendCrmMessage).not.toHaveBeenCalled()
     })
 
     test('should not call completeDelivery', async () => {
-      try { await failed(delivery, { reason }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(completeDelivery).not.toHaveBeenCalled()
     })
 
     test('should not call createFailure', async () => {
-      try { await failed(delivery, { reason }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(createFailure).not.toHaveBeenCalled()
     })
 
     test('should not call mockTransaction().commit', async () => {
-      try { await failed(delivery, { reason }) } catch {}
-      expect(mockTransaction().commit).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('When sendCrmMessage throws', () => {
-    beforeEach(() => {
-      sendCrmMessage.mockRejectedValue(new Error('Issue sending Service Bus message'))
-    })
-
-    test('should call mockTransaction().rollback', async () => {
-      try { await failed(delivery, { reason }) } catch {}
-      expect(mockTransaction().rollback).toHaveBeenCalled()
-    })
-
-    test('should call mockTransaction().rollback once', async () => {
-      try { await failed(delivery, { reason }) } catch {}
-      expect(mockTransaction().rollback).toHaveBeenCalledTimes(1)
-    })
-
-    test('should throw', async () => {
-      const wrapper = async () => { await failed(delivery, { reason }) }
-      expect(wrapper).rejects.toThrow()
-    })
-
-    test('should throw Error', async () => {
-      const wrapper = async () => { await failed(delivery, { reason }) }
-      expect(wrapper).rejects.toThrow(Error)
-    })
-
-    test('should throw error "Issue sending Service Bus message"', async () => {
-      const wrapper = async () => { await failed(delivery, { reason }) }
-      expect(wrapper).rejects.toThrow(/^Issue sending Service Bus message$/)
-    })
-
-    test('should call getStatementByStatementId', async () => {
-      try { await failed(delivery, { reason }) } catch {}
-      expect(getStatementByStatementId).toHaveBeenCalled()
-    })
-
-    test('should call getStatementByStatementId once', async () => {
-      try { await failed(delivery, { reason }) } catch {}
-      expect(getStatementByStatementId).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call getStatementByStatementId with delivery.statementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
-    })
-
-    test('should not call completeDelivery', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(completeDelivery).not.toHaveBeenCalled()
-    })
-
-    test('should not call createFailure', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(createFailure).not.toHaveBeenCalled()
-    })
-
-    test('should not call mockTransaction().commit', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason }) } catch { }
       expect(mockTransaction().commit).not.toHaveBeenCalled()
     })
   })
@@ -336,12 +242,12 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call mockTransaction().rollback', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalled()
     })
 
     test('should call mockTransaction().rollback once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalledTimes(1)
     })
 
@@ -361,42 +267,27 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call getStatementByStatementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalled()
     })
 
     test('should call getStatementByStatementId once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledTimes(1)
     })
 
     test('should call getStatementByStatementId with delivery.statementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
     })
 
-    test('should call sendCrmMessage', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalled()
-    })
-
-    test('should call sendCrmMessage once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call sendCrmMessage with statement.email, statement.frn and reason', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledWith(statement.email, statement.frn, reason)
-    })
-
     test('should not call createFailure', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(createFailure).not.toHaveBeenCalled()
     })
 
     test('should not call mockTransaction().commit', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().commit).not.toHaveBeenCalled()
     })
   })
@@ -407,12 +298,12 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call mockTransaction().rollback', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalled()
     })
 
     test('should call mockTransaction().rollback once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalledTimes(1)
     })
 
@@ -432,52 +323,37 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call getStatementByStatementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalled()
     })
 
     test('should call getStatementByStatementId once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledTimes(1)
     })
 
     test('should call getStatementByStatementId with delivery.statementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
     })
 
-    test('should call sendCrmMessage', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalled()
-    })
-
-    test('should call sendCrmMessage once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call sendCrmMessage with statement.email, statement.frn and reason', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledWith(statement.email, statement.frn, reason)
-    })
-
     test('should call completeDelivery', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalled()
     })
 
     test('should call completeDelivery once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalledTimes(1)
     })
 
     test('should call completeDelivery with delivery.deliveryId and mockTransaction', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalledWith(delivery.deliveryId, mockTransaction())
     })
 
     test('should not call mockTransaction().commit', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().commit).not.toHaveBeenCalled()
     })
   })
@@ -488,12 +364,12 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call mockTransaction().rollback', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalled()
     })
 
     test('should call mockTransaction().rollback once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(mockTransaction().rollback).toHaveBeenCalledTimes(1)
     })
 
@@ -513,62 +389,47 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should call getStatementByStatementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalled()
     })
 
     test('should call getStatementByStatementId once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledTimes(1)
     })
 
     test('should call getStatementByStatementId with delivery.statementId', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(getStatementByStatementId).toHaveBeenCalledWith(delivery.statementId)
     })
 
-    test('should call sendCrmMessage', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalled()
-    })
-
-    test('should call sendCrmMessage once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledTimes(1)
-    })
-
-    test('should call sendCrmMessage with statement.email, statement.frn and reason', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
-      expect(sendCrmMessage).toHaveBeenCalledWith(statement.email, statement.frn, reason)// expect.any(Number)
-    })
-
     test('should call completeDelivery', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalled()
     })
 
     test('should call completeDelivery once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalledTimes(1)
     })
 
     test('should call completeDelivery with delivery.deliveryId and mockTransaction', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(completeDelivery).toHaveBeenCalledWith(delivery.deliveryId, mockTransaction())
     })
 
     test('should call createFailure', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(createFailure).toHaveBeenCalled()
     })
 
     test('should call createFailure once', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(createFailure).toHaveBeenCalledTimes(1)
     })
 
     test('should call createFailure with delivery.deliveryId, INVALID and mockTransaction', async () => {
-      try { await failed(delivery, { reason: INVALID }) } catch {}
+      try { await failed(delivery, { reason: INVALID }) } catch { }
       expect(createFailure).toHaveBeenCalledWith(delivery.deliveryId, { reason: INVALID }, expect.any(Number), mockTransaction())
     })
   })
@@ -595,22 +456,22 @@ describe('Notify failed to deliver', () => {
     })
 
     test('should not call sendCrmMessage', async () => {
-      try { await failed(delivery, INVALID) } catch {}
+      try { await failed(delivery, INVALID) } catch { }
       expect(sendCrmMessage).not.toHaveBeenCalled()
     })
 
     test('should not call completeDelivery', async () => {
-      try { await failed(delivery, INVALID) } catch {}
+      try { await failed(delivery, INVALID) } catch { }
       expect(completeDelivery).not.toHaveBeenCalled()
     })
 
     test('should not call createFailure', async () => {
-      try { await failed(delivery, INVALID) } catch {}
+      try { await failed(delivery, INVALID) } catch { }
       expect(createFailure).not.toHaveBeenCalled()
     })
 
     test('should not call mockTransaction().commit', async () => {
-      try { await failed(delivery, INVALID) } catch {}
+      try { await failed(delivery, INVALID) } catch { }
       expect(mockTransaction().commit).not.toHaveBeenCalled()
     })
   })

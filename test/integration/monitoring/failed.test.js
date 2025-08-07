@@ -41,25 +41,11 @@ describe('Notify failed to deliver', () => {
       mockMessage = EMPTY_MESSAGE
     })
 
-    test('should send message to CRM', async () => {
+    test('should not send message to CRM', async () => {
       await failed(delivery, { reason })
 
-      expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send 1 message to CRM', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send message to CRM with mockMessage', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledWith(mockMessage)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
     })
 
     test('should update delivery completed date', async () => {
@@ -100,25 +86,11 @@ describe('Notify failed to deliver', () => {
       mockMessage = INVALID_MESSAGE
     })
 
-    test('should send message to CRM', async () => {
+    test('should not send message to CRM', async () => {
       await failed(delivery, { reason })
 
-      expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send 1 message to CRM', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send message to CRM with mockMessage', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledWith(mockMessage)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
     })
 
     test('should update delivery completed date', async () => {
@@ -159,25 +131,11 @@ describe('Notify failed to deliver', () => {
       mockMessage = INVALID_MESSAGE
     })
 
-    test('should send message to CRM', async () => {
+    test('should not send message to CRM', async () => {
       await failed(delivery, { reason })
 
-      expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send 1 message to CRM', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-    })
-
-    test('should send message to CRM with mockMessage', async () => {
-      await failed(delivery, { reason })
-
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledWith(mockMessage)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
+      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
     })
 
     test('should update delivery completed date', async () => {
