@@ -3,6 +3,7 @@ const db = require('../data')
 const getOutstandingDeliveries = async (options = {}) => {
   const {
     limit = 100,
+    offset = 0,
     includeStatement = false
   } = options
 
@@ -12,6 +13,7 @@ const getOutstandingDeliveries = async (options = {}) => {
       completed: null
     },
     limit,
+    offset,
     order: [['requested', 'ASC']]
   }
 
@@ -24,7 +26,6 @@ const getOutstandingDeliveries = async (options = {}) => {
       }
     ]
   }
-
   return db.delivery.findAll(queryOptions)
 }
 
@@ -33,10 +34,12 @@ const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSi
 
   let totalProcessed = 0
   let batchCount = 0
+  let offset = 0
 
   // First fetch
   let deliveries = await fetchDeliveries({
-    limit: batchSize
+    limit: batchSize,
+    offset
   })
 
   while (deliveries.length > 0) {
@@ -51,9 +54,11 @@ const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSi
       totalProcessed += deliveries.length
     }
 
+    offset += batchSize
     //  CRITICAL: This will always be called once more after the last batch
     deliveries = await fetchDeliveries({
-      limit: batchSize
+      limit: batchSize,
+      offset
     })
   }
 

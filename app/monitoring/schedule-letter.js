@@ -8,7 +8,6 @@ const scheduleLetter = async (delivery) => {
   try {
     const timestamp = new Date()
     const statement = await db.statement.findOne({ where: { statementId: delivery.statementId }, transaction })
-
     if (isDpScheme(statement?.schemeShortName)) {
       const response = await publish(statement.emailTemplate, statement.email, statement?.filename, null, LETTER)
       await db.delivery.create({ statementId: delivery.statementId, method: delivery.method, reference: response.data.id, requested: timestamp }, { transaction })
