@@ -42,7 +42,9 @@ const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSi
       lastProcessedId
     })
 
-    if (deliveries.length === 0) break
+    if (deliveries.length === 0) {
+      break
+    }
 
     batchCount++
 
