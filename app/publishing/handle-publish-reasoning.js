@@ -23,6 +23,7 @@ const handlePublishReasoning = (error) => {
     case ('Email is invalid: Email cannot be empty.'):
       return EMPTY
     case ('Email is invalid: The email provided is invalid.'):
+    case ('email_address Not a valid email address'):
       return INVALID
     default:
       if (error.response?.data) {
