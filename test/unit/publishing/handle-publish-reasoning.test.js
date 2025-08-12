@@ -27,6 +27,17 @@ describe('Handle error message from attempting to publish a statement', () => {
     })
   })
 
+  describe('When error is alternative invalid email', () => {
+    beforeEach(() => {
+      error = { message: 'email_address Not a valid email address' }
+    })
+
+    test('returns INVALID', () => {
+      const result = handlePublishReasoning(error)
+      expect(result).toBe(INVALID)
+    })
+  })
+
   describe('When error is an unrecognised issue', () => {
     beforeEach(() => {
       error = { message: 'Unknown issue' }
