@@ -19,9 +19,17 @@ const getTodaysReport = async (schemeName) => {
           }
         },
         {
-          sent: {
-            [db.Op.eq]: null
-          }
+          [db.Op.and]: [
+            {
+              sent: {
+                [db.Op.eq]: null
+              }
+            }, {
+              requested: {
+                [db.Op.between]: [startOfDay, endOfDay]
+              }
+            }
+          ]
         }
       ]
     }
