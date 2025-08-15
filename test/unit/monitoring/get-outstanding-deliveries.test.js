@@ -1,3 +1,4 @@
+const { EMAIL } = require('../../../app/constants/methods')
 const db = require('../../../app/data')
 const { getOutstandingDeliveries, processAllOutstandingDeliveries } = require('../../../app/monitoring/get-outstanding-deliveries')
 
@@ -27,6 +28,7 @@ describe('getOutstandingDeliveries', () => {
       where: {
         deliveryId: { [db.Sequelize.Op.gt]: 0 },
         reference: { [db.Sequelize.Op.not]: null },
+        method: EMAIL,
         completed: null
       },
       limit: 100,

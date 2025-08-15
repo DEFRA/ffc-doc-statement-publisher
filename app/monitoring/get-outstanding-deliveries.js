@@ -1,3 +1,4 @@
+const { EMAIL } = require('../constants/methods')
 const db = require('../data')
 
 const getOutstandingDeliveries = async (options = {}) => {
@@ -11,6 +12,7 @@ const getOutstandingDeliveries = async (options = {}) => {
     where: {
       deliveryId: { [db.Sequelize.Op.gt]: lastProcessedId },
       reference: { [db.Sequelize.Op.not]: null },
+      method: EMAIL,
       completed: null
     },
     limit,
