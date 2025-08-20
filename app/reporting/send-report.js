@@ -6,6 +6,7 @@ const completeReport = require('./complete-report')
 const { format } = require('@fast-csv/format')
 const { FAILED, PENDING, SUCCESS } = require('../constants/report')
 const headers = require('../constants/report-headers')
+const removeFailedReport = require('./remove-failed-report')
 
 const getReportFilename = (schemeName, date) => {
   const formattedDateTime = date.toISOString()
@@ -121,16 +122,19 @@ const sendReport = async (schemeName, startDate, endDate) => {
           } else {
             console.log('There was no data for this report')
             await transaction.rollback()
+            await removeFailedReport(report.reportId)
             resolve()
           }
         } catch (error) {
           await transaction.rollback()
+          await removeFailedReport(report.reportId)
           reject(error)
         }
       })
     })
   } catch (error) {
     await transaction.rollback()
+    await removeFailedReport(report?.reportId)
     throw error
   }
 }
