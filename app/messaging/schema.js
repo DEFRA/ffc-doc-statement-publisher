@@ -2,19 +2,23 @@ const Joi = require('joi')
 const documentReference = require('../schemas/components/document-reference')
 const matchPattern = require('./filename-regex-validation')
 
-const maxBusinessNameLength = 100
+const maxBusinessNameLength = 160
 const minSbi = 105000000
 const maxSbi = 999999999
 const minFrn = 1000000000
 const maxFrn = 9999999999
 const maxSchemeShortNameLength = 10
-const maxYearLength = 4
+const yearLength = 4
 const maxSchemeNameLength = 100
 const maxFrequencyLength = 10
+const maxEmail = 260
+const maxAddressLineLength = 240
+const maxPostcodeLength = 8
 
 module.exports = Joi.object({
-  email: Joi.string().optional().allow('', null).messages({
-    'string.base': 'Email must be a string'
+  email: Joi.string().optional().allow('', null).max(maxEmail).messages({
+    'string.base': 'Email must be a string',
+    'string.max': `Email must be at most ${maxEmail} characters`
   }),
   documentReference,
   filename: Joi.string()
@@ -50,23 +54,29 @@ module.exports = Joi.object({
     'any.required': 'SBI is required'
   }),
   address: Joi.object({
-    line1: Joi.string().optional().allow('', null).messages({
-      'string.base': 'line1 from address object must be a string'
+    line1: Joi.string().optional().allow('', null).max(maxAddressLineLength).messages({
+      'string.base': 'line1 from address object must be a string',
+      'string.max': `line1 from address object must be at most ${maxAddressLineLength} characters`
     }),
-    line2: Joi.string().optional().allow('', null).messages({
-      'string.base': 'line2 from address object must be a string'
+    line2: Joi.string().optional().allow('', null).max(maxAddressLineLength).messages({
+      'string.base': 'line2 from address object must be a string',
+      'string.max': `line2 from address object must be at most ${maxAddressLineLength} characters`
     }),
-    line3: Joi.string().optional().allow('', null).messages({
-      'string.base': 'line3 from address object must be a string'
+    line3: Joi.string().optional().allow('', null).max(maxAddressLineLength).messages({
+      'string.base': 'line3 from address object must be a string',
+      'string.max': `line3 from address object must be at most ${maxAddressLineLength} characters`
     }),
-    line4: Joi.string().optional().allow('', null).messages({
-      'string.base': 'line4 from address object must be a string'
+    line4: Joi.string().optional().allow('', null).max(maxAddressLineLength).messages({
+      'string.base': 'line4 from address object must be a string',
+      'string.max': `line4 from address object must be at most ${maxAddressLineLength} characters`
     }),
-    line5: Joi.string().optional().allow('', null).messages({
-      'string.base': 'line5 from address object must be a string'
+    line5: Joi.string().optional().allow('', null).max(maxAddressLineLength).messages({
+      'string.base': 'line5 from address object must be a string',
+      'string.max': `line5 from address object must be at most ${maxAddressLineLength} characters`
     }),
-    postcode: Joi.string().optional().allow('', null).messages({
-      'string.base': 'postcode from address object must be a string'
+    postcode: Joi.string().optional().allow('', null).max(maxPostcodeLength).messages({
+      'string.base': 'postcode from address object must be a string',
+      'string.max': `postcode from address object must be at most ${maxPostcodeLength} characters`
     })
   }).required().messages({
     'object.base': 'address must be an object',
@@ -83,9 +93,10 @@ module.exports = Joi.object({
       'string.max': `Scheme short name must be at most ${maxSchemeShortNameLength} characters`,
       'any.required': 'Scheme short name is required'
     }),
-    year: Joi.string().max(maxYearLength).required().messages({
+    year: Joi.string().min(yearLength).max(yearLength).required().messages({
       'string.base': 'Year must be a string',
-      'string.max': `Year must be at most ${maxYearLength} characters`,
+      'string.max': `Year must be exactly ${yearLength} characters`,
+      'string.min': `Year must be exactly ${yearLength} characters`,
       'any.required': 'Year is required'
     }),
     frequency: Joi.string().max(maxFrequencyLength).optional().allow('', null).messages({
