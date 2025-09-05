@@ -14,6 +14,33 @@ const maxFrequencyLength = 10
 const maxEmail = 260
 const maxAddressLineLength = 240
 const maxPostcodeLength = 8
+const decimalPlaces = 2
+
+const createMonetarySchema = (name) => Joi.when('scheme.shortName', {
+  is: 'DP',
+  then: Joi.number().required().precision(decimalPlaces).messages({
+    'number.base': `${name} must be a number`,
+    'number.precision': `${name} must have at most ${decimalPlaces} decimal places`,
+    'any.required': `${name} is required`
+  })
+})
+
+const paymentBand1 = createMonetarySchema('paymentBand1')
+const paymentBand2 = createMonetarySchema('paymentBand2')
+const paymentBand3 = createMonetarySchema('paymentBand3')
+const paymentBand4 = createMonetarySchema('paymentBand4')
+const percentageReduction1 = createMonetarySchema('percentageReduction1')
+const percentageReduction2 = createMonetarySchema('percentageReduction2')
+const percentageReduction3 = createMonetarySchema('percentageReduction3')
+const percentageReduction4 = createMonetarySchema('percentageReduction4')
+const progressiveReductions1 = createMonetarySchema('progressiveReductions1')
+const progressiveReductions2 = createMonetarySchema('progressiveReductions2')
+const progressiveReductions3 = createMonetarySchema('progressiveReductions3')
+const progressiveReductions4 = createMonetarySchema('progressiveReductions4')
+const referenceAmount = createMonetarySchema('referenceAmount')
+const totalProgressiveReduction = createMonetarySchema('totalProgressiveReduction')
+const totalDelinkedPayment = createMonetarySchema('totalDelinkedPayment')
+const paymentAmountCalculated = createMonetarySchema('paymentAmountCalculated')
 
 module.exports = Joi.object({
   email: Joi.string().optional().allow('', null).max(maxEmail).messages({
@@ -111,6 +138,22 @@ module.exports = Joi.object({
     'object.base': 'scheme must be an object',
     'any.required': 'scheme object is missing but it is required'
   }),
+  paymentBand1,
+  paymentBand2,
+  paymentBand3,
+  paymentBand4,
+  percentageReduction1,
+  percentageReduction2,
+  percentageReduction3,
+  percentageReduction4,
+  progressiveReductions1,
+  progressiveReductions2,
+  progressiveReductions3,
+  progressiveReductions4,
+  referenceAmount,
+  totalProgressiveReduction,
+  totalDelinkedPayment,
+  paymentAmountCalculated,
   transactionDate: Joi.when('scheme.shortName', {
     is: 'DP',
     then: Joi.date().iso().required().messages({
@@ -123,4 +166,7 @@ module.exports = Joi.object({
       'date.format': 'Transaction date must be in ISO format (YYYY-MM-DD)'
     })
   })
+}).required().messages({
+  'object.base': 'Payload must be an object',
+  'any.required': 'Payload is required'
 })
