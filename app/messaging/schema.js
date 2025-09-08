@@ -14,37 +14,50 @@ const maxFrequencyLength = 10
 const maxEmail = 260
 const maxAddressLineLength = 240
 const maxPostcodeLength = 8
-const decimalPlaces = 2
+const maxChars = 4000
+const maxPaymentPeriod = 200
 
-const createMonetarySchema = (name) => Joi.when('scheme.shortName', {
+const percentagePattern = /^\d{1,3}\.\d{2}$/
+const monetaryPattern = /^\d+\.\d{2}$/
+
+const createPayBandSchema = (name) => Joi.when('scheme.shortName', {
   is: 'DP',
-  then: Joi.number().required().precision(decimalPlaces).strict().messages({
-    'number.base': `${name} must be a number`,
-    'number.precision': `${name} must have ${decimalPlaces} decimal places`,
-    'any.required': `${name} is required`
+  then: Joi.string().max(maxChars).required().messages({
+    'string.base': `${name} should be a type of string`,
+    'string.max': `${name} should have a maximum length of ${maxChars} characters`,
+    'any.required': `The field ${name} is not present but it is required`
   }),
-  otherwise: Joi.number().optional().precision(decimalPlaces).strict().allow(null, '').messages({
-    'number.base': `${name} must be a number`,
-    'number.precision': `${name} must have ${decimalPlaces} decimal places`
+  otherwise: Joi.string().max(maxChars).optional().allow(null, '').messages({
+    'string.base': `${name} should be a type of string`,
+    'string.max': `${name} should have a maximum length of ${maxChars} characters`
   })
 })
 
-const paymentBand1 = createMonetarySchema('paymentBand1')
-const paymentBand2 = createMonetarySchema('paymentBand2')
-const paymentBand3 = createMonetarySchema('paymentBand3')
-const paymentBand4 = createMonetarySchema('paymentBand4')
-const percentageReduction1 = createMonetarySchema('percentageReduction1')
-const percentageReduction2 = createMonetarySchema('percentageReduction2')
-const percentageReduction3 = createMonetarySchema('percentageReduction3')
-const percentageReduction4 = createMonetarySchema('percentageReduction4')
-const progressiveReductions1 = createMonetarySchema('progressiveReductions1')
-const progressiveReductions2 = createMonetarySchema('progressiveReductions2')
-const progressiveReductions3 = createMonetarySchema('progressiveReductions3')
-const progressiveReductions4 = createMonetarySchema('progressiveReductions4')
-const referenceAmount = createMonetarySchema('referenceAmount')
-const totalProgressiveReduction = createMonetarySchema('totalProgressiveReduction')
-const totalDelinkedPayment = createMonetarySchema('totalDelinkedPayment')
-const paymentAmountCalculated = createMonetarySchema('paymentAmountCalculated')
+const createPercentageSchema = (name) => Joi.when('scheme.shortName', {
+  is: 'DP',
+  then: Joi.string().pattern(percentagePattern).required().messages({
+    'string.base': `${name} should be a type of string`,
+    'string.pattern.base': `${name} should adhere to the pattern: ###.## (up to 3 digits before decimal, exactly 2 after)`,
+    'any.required': `The field ${name} is not present but it is required`
+  }),
+  otherwise: Joi.string().pattern(percentagePattern).optional().allow(null, '').messages({
+    'string.base': `${name} should be a type of string`,
+    'string.pattern.base': `${name} should adhere to the pattern: ###.## (up to 3 digits before decimal, exactly 2 after)`
+  })
+})
+
+const createMonetarySchema = (name) => Joi.when('scheme.shortName', {
+  is: 'DP',
+  then: Joi.string().pattern(monetaryPattern).required().messages({
+    'string.base': `${name} should be a type of string`,
+    'string.pattern.base': `${name} should match the format: #.## (any number of digits before decimal, exactly 2 after)`,
+    'any.required': `The field ${name} is not present but it is required`
+  }),
+  otherwise: Joi.string().pattern(monetaryPattern).optional().allow(null, '').messages({
+    'string.base': `${name} should be a type of string`,
+    'string.pattern.base': `${name} should match the format: #.## (any number of digits before decimal, exactly 2 after)`
+  })
+})
 
 module.exports = Joi.object({
   email: Joi.string().optional().allow('', null).max(maxEmail).messages({
@@ -142,22 +155,35 @@ module.exports = Joi.object({
     'object.base': 'scheme must be an object',
     'any.required': 'scheme object is missing but it is required'
   }),
-  paymentBand1,
-  paymentBand2,
-  paymentBand3,
-  paymentBand4,
-  percentageReduction1,
-  percentageReduction2,
-  percentageReduction3,
-  percentageReduction4,
-  progressiveReductions1,
-  progressiveReductions2,
-  progressiveReductions3,
-  progressiveReductions4,
-  referenceAmount,
-  totalProgressiveReduction,
-  totalDelinkedPayment,
-  paymentAmountCalculated,
+  paymentBand1: createPayBandSchema('paymentBand1'),
+  paymentBand2: createPayBandSchema('paymentBand2'),
+  paymentBand3: createPayBandSchema('paymentBand3'),
+  paymentBand4: createPayBandSchema('paymentBand4'),
+  percentageReduction1: createPercentageSchema('percentageReduction1'),
+  percentageReduction2: createPercentageSchema('percentageReduction2'),
+  percentageReduction3: createPercentageSchema('percentageReduction3'),
+  percentageReduction4: createPercentageSchema('percentageReduction4'),
+  progressiveReductions1: createMonetarySchema('progressiveReductions1'),
+  progressiveReductions2: createMonetarySchema('progressiveReductions2'),
+  progressiveReductions3: createMonetarySchema('progressiveReductions3'),
+  progressiveReductions4: createMonetarySchema('progressiveReductions4'),
+  referenceAmount: createMonetarySchema('referenceAmount'),
+  totalProgressiveReduction: createMonetarySchema('totalProgressiveReduction'),
+  totalDelinkedPayment: createMonetarySchema('totalDelinkedPayment'),
+  paymentAmountCalculated: createMonetarySchema('paymentAmountCalculated'),
+  paymentPeriod: Joi.when('scheme.shortName', {
+    is: 'DP',
+    then: Joi.string().max(maxPaymentPeriod).required().messages({
+      'string.base': 'Payment period must be a string',
+      'string.max': `Payment period must be at most ${maxPaymentPeriod} characters`,
+      'any.required': 'Payment period is required'
+    }),
+    otherwise: Joi.string().max(maxPaymentPeriod).optional().allow(null, '').messages({
+      'string.base': 'Payment period must be a string',
+      'string.max': `Payment period must be at most ${maxPaymentPeriod} characters`,
+      'any.required': 'Payment period is required'
+    })
+  }),
   transactionDate: Joi.when('scheme.shortName', {
     is: 'DP',
     then: Joi.date().iso().required().messages({
