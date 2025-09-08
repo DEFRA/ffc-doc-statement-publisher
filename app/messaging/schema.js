@@ -18,10 +18,14 @@ const decimalPlaces = 2
 
 const createMonetarySchema = (name) => Joi.when('scheme.shortName', {
   is: 'DP',
-  then: Joi.number().required().precision(decimalPlaces).messages({
+  then: Joi.number().required().precision(decimalPlaces).strict().messages({
     'number.base': `${name} must be a number`,
-    'number.precision': `${name} must have at most ${decimalPlaces} decimal places`,
+    'number.precision': `${name} must have ${decimalPlaces} decimal places`,
     'any.required': `${name} is required`
+  }),
+  otherwise: Joi.number().optional().precision(decimalPlaces).strict().allow(null, '').messages({
+    'number.base': `${name} must be a number`,
+    'number.precision': `${name} must have ${decimalPlaces} decimal places`
   })
 })
 
