@@ -1,6 +1,7 @@
 const Joi = require('joi')
 const documentReference = require('../schemas/components/document-reference')
 const matchPattern = require('./filename-regex-validation')
+const scheme = require('../schemas/components/scheme')
 
 const maxBusinessNameLength = 160
 const minSbi = 105000000
@@ -19,8 +20,9 @@ const maxPaymentPeriod = 200
 
 const percentagePattern = /^\d{1,3}\.\d{2}$/
 const monetaryPattern = /^\d+\.\d{2}$/
+const schemeShortName = 'scheme.shortName'
 
-const createPayBandSchema = (name) => Joi.when('scheme.shortName', {
+const createPayBandSchema = (name) => Joi.when(schemeShortName, {
   is: 'DP',
   then: Joi.string().max(maxChars).required().messages({
     'string.base': `${name} should be a type of string`,
@@ -33,7 +35,7 @@ const createPayBandSchema = (name) => Joi.when('scheme.shortName', {
   })
 })
 
-const createPercentageSchema = (name) => Joi.when('scheme.shortName', {
+const createPercentageSchema = (name) => Joi.when(schemeShortName, {
   is: 'DP',
   then: Joi.string().pattern(percentagePattern).required().messages({
     'string.base': `${name} should be a type of string`,
@@ -46,7 +48,7 @@ const createPercentageSchema = (name) => Joi.when('scheme.shortName', {
   })
 })
 
-const createMonetarySchema = (name) => Joi.when('scheme.shortName', {
+const createMonetarySchema = (name) => Joi.when(schemeShortName, {
   is: 'DP',
   then: Joi.string().pattern(monetaryPattern).required().messages({
     'string.base': `${name} should be a type of string`,
@@ -171,7 +173,7 @@ module.exports = Joi.object({
   totalProgressiveReduction: createMonetarySchema('totalProgressiveReduction'),
   totalDelinkedPayment: createMonetarySchema('totalDelinkedPayment'),
   paymentAmountCalculated: createMonetarySchema('paymentAmountCalculated'),
-  paymentPeriod: Joi.when('scheme.shortName', {
+  paymentPeriod: Joi.when(schemeShortName, {
     is: 'DP',
     then: Joi.string().max(maxPaymentPeriod).required().messages({
       'string.base': 'Payment period must be a string',
@@ -184,7 +186,7 @@ module.exports = Joi.object({
       'any.required': 'Payment period is required'
     })
   }),
-  transactionDate: Joi.when('scheme.shortName', {
+  transactionDate: Joi.when(schemeShortName, {
     is: 'DP',
     then: Joi.date().iso().required().messages({
       'date.base': 'Transaction date must be a valid date',
