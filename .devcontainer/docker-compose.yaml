@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  ffc-doc-statement-publisher:
+    build:
+      context: .
+      target: development
+    image: ffc-doc-statement-publisher-development
+    container_name: ffc-doc-statement-publisher-development
+    ports:
+      - "9287:9229"
+    volumes:
+      - ../.gitignore:/workspaces:cached/.gitignore
+      - ..:/workspaces:cached
+    environment:
+      AZURE_STORAGE_CONNECTION_STRING: >
+        DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;
+        AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq
+        /K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://ffc-doc-statement-azurite:10000/devstoreaccount1;
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk
+
+  ffc-doc-statement-publisher-postgres:
+    image: postgres:11.4-alpine
+    container_name: ffc-doc-statement-publisher-postgres
+    ports:
+      - "5487:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ffc_doc_statement_publisher
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  ffc-doc-statement-azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.32.0
+    container_name: ffc-doc-statement-azurite
+    command: >
+      azurite-blob --loose --blobHost 0.0.0.0
+    ports:
+      - "10083:10000"
+    volumes:
+      - azurite_data:/data
+
+volumes:
+  postgres_data:
+  azurite_data:
