@@ -1,7 +1,6 @@
 const Joi = require('joi')
 const documentReference = require('../schemas/components/document-reference')
 const matchPattern = require('./filename-regex-validation')
-const scheme = require('../schemas/components/scheme')
 
 const maxBusinessNameLength = 160
 const minSbi = 105000000
