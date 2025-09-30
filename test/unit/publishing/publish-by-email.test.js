@@ -8,7 +8,6 @@ const EMAIL = require('../../mocks/components/email')
 const FILE_BUFFER = require('../../mocks/components/file_buffer')
 const PERSONALISATION = require('../../mocks/objects/notify-personalisation')
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
-const { string } = require('joi')
 
 describe('Publish by email', () => {
   afterEach(() => {
