@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('node:path')
 const config = require('../config')
 const dbConfig = config.dbConfig[config.env]
 const modelPath = path.join(__dirname, 'models')
