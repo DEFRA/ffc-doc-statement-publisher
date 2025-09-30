@@ -1,3 +1,4 @@
+const config = require('../../../app/config')
 const getPersonalisation = require('../../../app/publishing/get-personalisation')
 let businessName
 let scheme
@@ -99,7 +100,8 @@ describe('get personalisation', () => {
     scheme.shortName = 'DP'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
     const currentDate = new Date()
-    const expectedDate = new Date(currentDate.setMonth(currentDate.getMonth() + 18))
+    const daysToAdd = config.retentionPeriodInWeeks * 7
+    const expectedDate = new Date(currentDate.setDate(currentDate.getDate() + daysToAdd))
     const expectedFormattedDate = `${expectedDate.getDate()} ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][expectedDate.getMonth()]} ${expectedDate.getFullYear()}`
     expect(result.latestDownloadDate).toBe(expectedFormattedDate)
   })

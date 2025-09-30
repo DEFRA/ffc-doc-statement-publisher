@@ -5,13 +5,11 @@ const { retry } = require('../retry')
 const { RETRIES, RETRY_INTERVAL } = require('../constants/publish')
 
 function setupEmailRequest (template, email, linkToFile, personalisation, notifyClient) {
-  const latestDownloadDate = moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
   return () => {
     return notifyClient.sendEmail(template, email, {
       personalisation: {
         link_to_file: linkToFile,
-        ...personalisation,
-        latestDownloadDate
+        ...personalisation
       }
     })
   }

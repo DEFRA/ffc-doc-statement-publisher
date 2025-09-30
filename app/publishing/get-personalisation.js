@@ -1,4 +1,6 @@
-const delinkedRetentionMonths = 18
+const config = require('../config')
+
+const daysInWeek = 7
 
 const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName, transactionDate, paymentPeriod) => {
   const formatTransactionDate = (dateString) => {
@@ -19,13 +21,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
   const calculateLatestDownloadDate = () => {
     const currentTimestamp = Date.now()
     const latestDownloadDate = new Date(currentTimestamp)
-    latestDownloadDate.setMonth(latestDownloadDate.getMonth() + delinkedRetentionMonths)
-
-    // If the day of the month is less than the original day, adjust it to the last day of the month
-    if (latestDownloadDate.getDate() < new Date(currentTimestamp).getDate()) {
-      latestDownloadDate.setDate(0)
-    }
-
+    const daysToAdd = config.retentionPeriodInWeeks * daysInWeek
+    latestDownloadDate.setDate(latestDownloadDate.getDate() + daysToAdd)
     return formatTransactionDate(latestDownloadDate)
   }
 
@@ -35,7 +32,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
       schemeShortName: 'advanced',
       schemeYear,
       schemeFrequency: 'one-off',
-      businessName
+      businessName,
+      latestDownloadDate: calculateLatestDownloadDate()
     }
   }
   if (schemeShortName === 'DP') {
@@ -55,7 +53,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     schemeYear,
     schemeFrequency: schemeFrequency.toLowerCase(),
     businessName,
-    paymentPeriod
+    paymentPeriod,
+    latestDownloadDate: calculateLatestDownloadDate()
   }
 }
 

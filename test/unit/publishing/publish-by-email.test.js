@@ -1,4 +1,3 @@
-const moment = require('moment')
 const config = require('../../../app/config')
 
 const { mockNotifyClient } = require('../../mocks/modules/notifications-node-client')
@@ -9,6 +8,7 @@ const EMAIL = require('../../mocks/components/email')
 const FILE_BUFFER = require('../../mocks/components/file_buffer')
 const PERSONALISATION = require('../../mocks/objects/notify-personalisation')
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
+const { string } = require('joi')
 
 describe('Publish by email', () => {
   afterEach(() => {
@@ -66,8 +66,7 @@ describe('Publish by email', () => {
     expect(mockNotifyClient().sendEmail).toHaveBeenCalledWith(EMAIL_TEMPLATE, EMAIL, {
       personalisation: {
         link_to_file: mockNotifyClient().prepareUpload(),
-        ...PERSONALISATION,
-        latestDownloadDate: moment(new Date()).add(config.retentionPeriodInWeeks, 'weeks').format('LL')
+        ...PERSONALISATION
       }
     })
   })
