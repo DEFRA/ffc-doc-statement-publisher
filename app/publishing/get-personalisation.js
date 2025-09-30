@@ -1,3 +1,7 @@
+const config = require('../config')
+
+const daysInWeek = 7
+
 const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName, transactionDate, paymentPeriod) => {
   const formatTransactionDate = (dateString) => {
     if (!dateString) {
@@ -14,13 +18,22 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     return `${day} ${month} ${year}`
   }
 
+  const calculateLatestDownloadDate = () => {
+    const currentTimestamp = Date.now()
+    const latestDownloadDate = new Date(currentTimestamp)
+    const daysToAdd = config.retentionPeriodInWeeks * daysInWeek
+    latestDownloadDate.setDate(latestDownloadDate.getDate() + daysToAdd)
+    return formatTransactionDate(latestDownloadDate)
+  }
+
   if (schemeShortName === 'SFIA') {
     return {
       schemeName,
       schemeShortName: 'advanced',
       schemeYear,
       schemeFrequency: 'one-off',
-      businessName
+      businessName,
+      latestDownloadDate: calculateLatestDownloadDate()
     }
   }
   if (schemeShortName === 'DP') {
@@ -30,7 +43,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
       schemeYear,
       schemeFrequency: 'Annual',
       businessName,
-      transactionDate: formatTransactionDate(transactionDate)
+      transactionDate: formatTransactionDate(transactionDate),
+      latestDownloadDate: calculateLatestDownloadDate()
     }
   }
   return {
@@ -39,7 +53,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     schemeYear,
     schemeFrequency: schemeFrequency.toLowerCase(),
     businessName,
-    paymentPeriod
+    paymentPeriod,
+    latestDownloadDate: calculateLatestDownloadDate()
   }
 }
 
