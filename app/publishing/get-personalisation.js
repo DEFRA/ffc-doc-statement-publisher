@@ -1,3 +1,5 @@
+const delinkedRetentionMonths = 18
+
 const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequency, businessName, transactionDate, paymentPeriod) => {
   const formatTransactionDate = (dateString) => {
     if (!dateString) {
@@ -12,6 +14,19 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     const month = monthNames[date.getMonth()]
     const year = date.getFullYear()
     return `${day} ${month} ${year}`
+  }
+
+  const calculateLatestDownloadDate = () => {
+    const currentTimestamp = Date.now()
+    const latestDownloadDate = new Date(currentTimestamp)
+    latestDownloadDate.setMonth(latestDownloadDate.getMonth() + delinkedRetentionMonths)
+
+    // If the day of the month is less than the original day, adjust it to the last day of the month
+    if (latestDownloadDate.getDate() < new Date(currentTimestamp).getDate()) {
+      latestDownloadDate.setDate(0)
+    }
+
+    return formatTransactionDate(latestDownloadDate)
   }
 
   if (schemeShortName === 'SFIA') {
@@ -30,7 +45,8 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
       schemeYear,
       schemeFrequency: 'Annual',
       businessName,
-      transactionDate: formatTransactionDate(transactionDate)
+      transactionDate: formatTransactionDate(transactionDate),
+      latestDownloadDate: calculateLatestDownloadDate()
     }
   }
   return {

@@ -77,21 +77,30 @@ describe('get personalisation', () => {
     expect(resultUndefined.transactionDate).toBeUndefined()
   })
 
-  test('returns schemeShortName="advanced" when scheme.shortName="SFIA" ', () => {
+  test('returns schemeShortName="advanced" when scheme.shortName="SFIA"', () => {
     scheme.shortName = 'SFIA'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
     expect(result.schemeShortName).toBe('advanced')
   })
 
-  test('returns schemeFrequency="one-off" when scheme.shortName="SFIA" ', () => {
+  test('returns schemeFrequency="one-off" when scheme.shortName="SFIA"', () => {
     scheme.shortName = 'SFIA'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
     expect(result.schemeFrequency).toBe('one-off')
   })
 
-  test('returns schemeFrequency="Annual" when scheme.shortName="DP" ', () => {
+  test('returns schemeFrequency="Annual" when scheme.shortName="DP"', () => {
     scheme.shortName = 'DP'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
     expect(result.schemeFrequency).toBe('Annual')
+  })
+
+  test('returns latestDownloadDate for DP scheme', () => {
+    scheme.shortName = 'DP'
+    const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
+    const currentDate = new Date()
+    const expectedDate = new Date(currentDate.setMonth(currentDate.getMonth() + 18))
+    const expectedFormattedDate = `${expectedDate.getDate()} ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][expectedDate.getMonth()]} ${expectedDate.getFullYear()}`
+    expect(result.latestDownloadDate).toBe(expectedFormattedDate)
   })
 })
