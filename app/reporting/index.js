@@ -1,6 +1,7 @@
 const config = require('../config')
 const getTodaysReport = require('./get-todays-report')
 const { sendReport } = require('./send-report')
+const { sendAlert } = require('../alert')
 const moment = require('moment')
 
 const startSchemeReport = async (schemeName, startDate, endDate) => {
@@ -58,6 +59,7 @@ const start = async () => {
     }
   } catch (err) {
     console.error(err)
+    sendAlert('Reporting', err, `Reporting service error: ${err.message}`)
   } finally {
     setTimeout(start, config.reportingCheckInterval)
   }

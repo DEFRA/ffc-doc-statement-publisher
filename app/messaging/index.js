@@ -1,6 +1,7 @@
 const config = require('../config')
 const processPublishMessage = require('./process-publish-message')
 const { MessageReceiver } = require('ffc-messaging')
+const { sendAlert } = require('../alert')
 let receivers = []
 const CONNECTION_COUNT = 3
 const MAX_CONCURRENT_MESSAGES = 10
@@ -35,6 +36,7 @@ const start = async () => {
     console.info(`Ready to publish payment statements (max throughput: ${CONNECTION_COUNT * MAX_CONCURRENT_MESSAGES} concurrent messages)`)
   } catch (error) {
     console.error('Failed to start messaging service:', error)
+    sendAlert('messaging', error, `Messaging service failed to start: ${error.message}`)
     throw error
   }
 }
