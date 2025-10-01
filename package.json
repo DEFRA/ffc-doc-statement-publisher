@@ -31,6 +31,7 @@
     "@fast-csv/format": "5.0.2",
     "applicationinsights": "3.6.0",
     "axios": "1.12.2",
+    "ffc-alerting-utils": "^1.0.6",
     "ffc-messaging": "2.9.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
