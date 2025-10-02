@@ -8,6 +8,7 @@ const mqSchema = Joi.object({
     useCredentialChain: Joi.bool().default(false),
     appInsights: Joi.object(),
     managedIdentityClientId: Joi.string().optional()
+
   },
   publishSubscription: {
     address: Joi.string(),
@@ -15,6 +16,9 @@ const mqSchema = Joi.object({
     type: Joi.string().default('subscription')
   },
   crmTopic: {
+    address: Joi.string()
+  },
+  alertTopic: {
     address: Joi.string()
   }
 })
@@ -35,6 +39,9 @@ const mqConfig = {
   },
   crmTopic: {
     address: process.env.CRM_TOPIC_ADDRESS
+  },
+  alertTopic: {
+    address: process.env.ALERT_TOPIC_ADDRESS
   }
 }
 
@@ -48,8 +55,10 @@ if (mqResult.error) {
 
 const publishSubscription = { ...mqResult.value.messageQueue, ...mqResult.value.publishSubscription }
 const crmTopic = { ...mqResult.value.messageQueue, ...mqResult.value.crmTopic }
+const alertTopic = { ...mqResult.value.messageQueue, ...mqResult.value.alertTopic }
 
 module.exports = {
   publishSubscription,
-  crmTopic
+  crmTopic,
+  alertTopic
 }
