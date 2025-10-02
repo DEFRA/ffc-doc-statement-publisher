@@ -17,7 +17,7 @@ try {
       EventPublisherClass: EventPublisher
     })
   } else {
-    process.env.ALERT_TOPIC = messageConfig.alertTopic
+    process.env.ALERT_TOPIC = JSON.stringify(messageConfig.alertTopic)
     process.env.ALERT_SOURCE = SOURCE
     process.env.ALERT_TYPE = DATA_PUBLISHING_ERROR
   }
