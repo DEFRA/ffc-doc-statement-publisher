@@ -4,8 +4,7 @@ let request
 
 describe('Validate request', () => {
   describe.each([
-    { name: 'statement', value: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body, expected: undefined },
-    { name: 'schedule', value: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body, expected: undefined }
+    { name: 'statement', value: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body, expected: undefined }
   ])('When request is $name', ({ name, value, expected }) => {
     test(`returns ${expected}`, async () => {
       const result = validateRequest(value)

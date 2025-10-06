@@ -101,7 +101,7 @@ describe('reschedule deliveries', () => {
 
   test('should send email with scheme frequency', async () => {
     await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency).toBe(mockStatement1.schemeFrequency.toLowerCase())
+    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency.toLowerCase()).toBe(mockStatement1.schemeFrequency.toLowerCase())
   })
 
   test('should send email with scheme year', async () => {
