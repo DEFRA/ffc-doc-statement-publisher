@@ -78,18 +78,6 @@ describe('get personalisation', () => {
     expect(resultUndefined.transactionDate).toBeUndefined()
   })
 
-  test('returns schemeShortName="advanced" when scheme.shortName="SFIA"', () => {
-    scheme.shortName = 'SFIA'
-    const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
-    expect(result.schemeShortName).toBe('advanced')
-  })
-
-  test('returns schemeFrequency="one-off" when scheme.shortName="SFIA"', () => {
-    scheme.shortName = 'SFIA'
-    const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)
-    expect(result.schemeFrequency).toBe('one-off')
-  })
-
   test('returns schemeFrequency="Annual" when scheme.shortName="DP"', () => {
     scheme.shortName = 'DP'
     const result = getPersonalisation(scheme.name, scheme.shortName, scheme.year, scheme.frequency, businessName, transactionDate)

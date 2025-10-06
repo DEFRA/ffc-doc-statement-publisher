@@ -50,11 +50,6 @@ container:
   DelinkedDayOfMonth: 15
   DelinkedDurationNumber: 1
   DelinkedDurationType: months
-  SfiIntervalNumber: 1
-  SfiIntervalType: months
-  SfiDayOfMonth: 15
-  SfiDurationNumber: 1
-  SfiDurationType: months
   deliveryCheckInterval: 30000
   reportingCheckInterval: 30000
   retentionPeriodInWeeks: 78

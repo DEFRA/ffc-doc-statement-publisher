@@ -1,6 +1,7 @@
 const Joi = require('joi')
 const documentReference = require('../schemas/components/document-reference')
 const matchPattern = require('./filename-regex-validation')
+const { SHORT_NAMES } = require('../constants/scheme-names')
 
 const maxBusinessNameLength = 160
 const minSbi = 105000000
@@ -173,7 +174,7 @@ module.exports = Joi.object({
   totalDelinkedPayment: createMonetarySchema('totalDelinkedPayment'),
   paymentAmountCalculated: createMonetarySchema('paymentAmountCalculated'),
   paymentPeriod: Joi.when(schemeShortName, {
-    is: 'DP',
+    is: SHORT_NAMES.DP,
     then: Joi.string().max(maxPaymentPeriod).required().messages({
       'string.base': 'Payment period must be a string',
       'string.max': `Payment period must be at most ${maxPaymentPeriod} characters`,
@@ -186,7 +187,7 @@ module.exports = Joi.object({
     })
   }),
   transactionDate: Joi.when(schemeShortName, {
-    is: 'DP',
+    is: SHORT_NAMES.DP,
     then: Joi.date().iso().required().messages({
       'date.base': 'Transaction date must be a valid date',
       'date.format': 'Transaction date must be in ISO format (YYYY-MM-DD)',

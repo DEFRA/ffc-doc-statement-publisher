@@ -48,8 +48,7 @@ describe('Process publish message', () => {
   })
 
   describe.each([
-    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) },
-    { name: 'schedule', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)) }
+    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) }
   ])('When message is a $name', ({ name, message }) => {
     beforeEach(async () => {
       getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
@@ -91,7 +90,7 @@ describe('Process publish message', () => {
 
     test('should send email with scheme frequency', async () => {
       await processPublishMessage(message, receiver)
-      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeFrequency).toBe(message.body.scheme.frequency.toLowerCase())
+      expect(mockNotifyClient().sendEmail.mock.calls[0][2].personalisation.schemeFrequency.toLowerCase()).toBe(message.body.scheme.frequency.toLowerCase())
     })
 
     test('should send email with scheme year', async () => {

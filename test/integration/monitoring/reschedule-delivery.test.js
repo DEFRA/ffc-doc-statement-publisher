@@ -20,7 +20,7 @@ const path = require('path')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 
-const FILE_NAME = 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf'
+const FILE_NAME = 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'
 const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
 
 let blobServiceClient

@@ -1,107 +1,14 @@
 const { SHORT_NAMES } = require('../../../app/constants/scheme-names')
-const { LNR, LUMP_SUMS, SFI, SFI_PILOT, VET_VISITS } = SHORT_NAMES
+const { DP, VET_VISITS } = SHORT_NAMES
 
 const schema = require('../../../app/schemas/components/scheme')
 
 let scheme
 
 describe('Scheme schema', () => {
-  describe('When scheme is LNR', () => {
+  describe('When scheme is DP', () => {
     beforeEach(() => {
-      scheme = LNR
-    })
-
-    test('should return an object', async () => {
-      const result = schema.validate(scheme)
-      expect(result).toBeInstanceOf(Object)
-    })
-
-    test('should return an object with 1 key', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toHaveLength(1)
-    })
-
-    test('should return an object with keys: value', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toStrictEqual(['value'])
-    })
-
-    test('should return scheme as value for key: value', () => {
-      const result = schema.validate(scheme)
-      expect(result.value).toStrictEqual(scheme)
-    })
-
-    test('should not return an object with key: error', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).not.toContain('error')
-    })
-  })
-
-  describe('When scheme is LUMP_SUMS', () => {
-    beforeEach(() => {
-      scheme = LUMP_SUMS
-    })
-
-    test('should return an object', async () => {
-      const result = schema.validate(scheme)
-      expect(result).toBeInstanceOf(Object)
-    })
-
-    test('should return an object with 1 key', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toHaveLength(1)
-    })
-
-    test('should return an object with keys: value', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toStrictEqual(['value'])
-    })
-
-    test('should return scheme as value for key: value', () => {
-      const result = schema.validate(scheme)
-      expect(result.value).toStrictEqual(scheme)
-    })
-
-    test('should not return an object with key: error', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).not.toContain('error')
-    })
-  })
-
-  describe('When scheme is SFI', () => {
-    beforeEach(() => {
-      scheme = SFI
-    })
-
-    test('should return an object', async () => {
-      const result = schema.validate(scheme)
-      expect(result).toBeInstanceOf(Object)
-    })
-
-    test('should return an object with 1 key', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toHaveLength(1)
-    })
-
-    test('should return an object with keys: value', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).toStrictEqual(['value'])
-    })
-
-    test('should return scheme as value for key: value', () => {
-      const result = schema.validate(scheme)
-      expect(result.value).toStrictEqual(scheme)
-    })
-
-    test('should not return an object with key: error', () => {
-      const result = schema.validate(scheme)
-      expect(Object.keys(result)).not.toContain('error')
-    })
-  })
-
-  describe('When scheme is SFI_PILOT', () => {
-    beforeEach(() => {
-      scheme = SFI_PILOT
+      scheme = DP
     })
 
     test('should return an object', async () => {

@@ -36,7 +36,6 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
 
   describe.each([
     { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body },
-    { name: 'schedule', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)).body }
   ])('When request is $name', ({ name, request }) => {
     describe('When successful', () => {
       beforeEach(async () => {
