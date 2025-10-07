@@ -7,8 +7,7 @@ const moment = require('moment')
 const startSchemeReport = async (schemeName, startDate, endDate) => {
   console.log('[REPORTING] Starting report for scheme: ', schemeName)
   const existingReport = await getTodaysReport(schemeName)
-  console.log('existing', existingReport)
-  if (!existingReport?.length) {
+  if (existingReport?.length === 0) {
     await sendReport(schemeName, startDate, endDate)
   } else {
     console.log('[REPORTING] A report is already running or has already run today for scheme: ', schemeName)
