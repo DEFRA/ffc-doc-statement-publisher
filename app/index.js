@@ -40,9 +40,11 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-module.exports = (async () => {
+const startup = (async () => {
   await initialiseContainers()
   await messaging.start()
   await monitoring.start()
   await reporting.start()
 })()
+
+module.exports = startup
