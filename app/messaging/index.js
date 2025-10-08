@@ -16,6 +16,7 @@ const start = async () => {
           await processPublishMessage(message, receivers[i])
         } catch (error) {
           console.error(`Error processing message: ${error.message}`)
+          sendAlert('messaging', message, `Error processing message: ${error.message}`)
         }
       }
 

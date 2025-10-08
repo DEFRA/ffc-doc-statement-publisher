@@ -54,6 +54,7 @@ const start = async () => {
         await processScheme(scheme)
       } catch (error) {
         console.error('Error processing scheme:', scheme.schemeName, error)
+        sendAlert('Reporting', err,`Error processing scheme: ${scheme}`)
       }
     }
   } catch (err) {
