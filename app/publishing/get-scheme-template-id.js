@@ -8,7 +8,8 @@ const getDocTypeIdForScheme = (scheme) => {
   }
 
   const schemeToDocTypeMap = {
-    DP: 'delinked-statement'
+    DP: 'delinked-statement',
+    SFI: 'sfi-23-quarterly-statement'
   }
 
   return schemeToDocTypeMap[scheme.shortName]

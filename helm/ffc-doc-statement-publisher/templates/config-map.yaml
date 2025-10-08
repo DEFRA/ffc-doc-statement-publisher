@@ -33,6 +33,11 @@ data:
   DELINKED_DAY_OF_MONTH: {{ quote .Values.container.DelinkedDayOfMonth }}
   DELINKED_DURATION_NUMBER: {{ quote .Values.container.DelinkedDurationNumber }}
   DELINKED_DURATION_TYPE: {{ quote .Values.container.DelinkedDurationType }}
+  SFI_INTERVAL_NUMBER: {{ quote .Values.container.SfiIntervalNumber }}
+  SFI_INTERVAL_TYPE: {{ quote .Values.container.SfiIntervalType }}
+  SFI_DAY_OF_MONTH: {{ quote .Values.container.SfiDayOfMonth }}
+  SFI_DURATION_NUMBER: {{ quote .Values.container.SfiDurationNumber }}
+  SFI_DURATION_TYPE: {{ quote .Values.container.SfiDurationType }}
   DELIVERY_CHECK_INTERVAL: {{ quote .Values.container.deliveryCheckInterval }}
   REPORTING_CHECK_INTERVAL: {{ quote .Values.container.reportingCheckInterval }}
   RETENTION_PERIOD_IN_WEEKS: {{ quote .Values.container.retentionPeriodInWeeks }}

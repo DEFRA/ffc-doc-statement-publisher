@@ -1,5 +1,5 @@
 const Joi = require('joi')
-const { DELINKED: DELINKED_SCHEME_NAME } = require('../constants/scheme-names').LONG_NAMES
+const { DELINKED: DELINKED_SCHEME_NAME, SFI } = require('../constants/scheme-names').LONG_NAMES
 
 const schema = Joi.object({
   schemes: Joi.array().items(
@@ -35,6 +35,18 @@ const config = {
       dateRange: {
         durationNumber: parseInt(process.env.DELINKED_DURATION_NUMBER) || 1,
         durationType: process.env.DELINKED_DURATION_TYPE || 'months'
+      }
+    },
+    {
+      schemeName: process.env.SFI_SCHEME_NAME || SFI,
+      schedule: {
+        intervalNumber: parseInt(process.env.SFI_INTERVAL_NUMBER) || 1,
+        intervalType: process.env.SFI_INTERVAL_TYPE || 'months',
+        dayOfMonth: parseInt(process.env.SFI_DAY_OF_MONTH) || 1
+      },
+      dateRange: {
+        durationNumber: parseInt(process.env.SFI_DURATION_NUMBER) || 1,
+        durationType: process.env.SFI_DURATION_TYPE || 'months'
       }
     }
   ]

@@ -15,7 +15,9 @@ describe('getSchemeTemplateId', () => {
     // Mock for mapSchemeTemplateId
     mapSchemeTemplateId.DP_2024 = '925c5cee-8721-4786-80ab-a9bef4f22161'
     mapSchemeTemplateId.DP_2025 = '838adf3d-15bd-4db5-b080-a318d54da1fc'
+    mapSchemeTemplateId.SFI_2023 = 'af20f680-43ef-4702-a5e0-832fe967f3a6'
     mapSchemeTemplateId.DP = '925c5cee-8721-4786-80ab-a9bef4f22161'
+    mapSchemeTemplateId.SFI = 'af20f680-43ef-4702-a5e0-832fe967f3a6'
   })
 
   afterEach(() => {
@@ -30,11 +32,10 @@ describe('getSchemeTemplateId', () => {
   test('returns null when scheme has no shortName', () => {
     const result = getSchemeTemplateId({})
     expect(result).toBeNull()
-    expect(consoleLogSpy).not.toHaveBeenCalled() // No log in getSchemeTemplateId for this case
+    expect(consoleLogSpy).not.toHaveBeenCalled()
   })
 
   test('returns null and logs message when getDocTypeIdForScheme is called with no shortName', () => {
-    // Create a scheme that will go through all checks and fail at the end
     const scheme = { shortName: 'UNKNOWN' }
 
     const result = getSchemeTemplateId(scheme)
@@ -54,10 +55,30 @@ describe('getSchemeTemplateId', () => {
     expect(result).toBe(mapSchemeTemplateId.DP_2025)
   })
 
+  test('returns template ID for SFI 2023', () => {
+    const scheme = { shortName: 'SFI', year: '2023' }
+    const result = getSchemeTemplateId(scheme)
+    expect(result).toBe(mapSchemeTemplateId.SFI_2023)
+  })
+
   test('returns general template ID when year-specific template not found', () => {
-    const scheme = { shortName: 'DP', year: '2023' } // No specific template for DP_2023
+    const scheme = { shortName: 'DP', year: '2023' }
     const result = getSchemeTemplateId(scheme)
     expect(result).toBe(mapSchemeTemplateId.DP)
+  })
+
+  test('falls back to document types when no direct mapping exists', () => {
+    const scheme = { shortName: 'SFI', year: '2023' }
+    const mockTemplate = 'mock-template-id'
+    const mockDocType = { template: mockTemplate }
+
+    mapSchemeTemplateId.SFI_2023 = undefined
+    mapSchemeTemplateId.SFI = undefined
+
+    documentTypes.find = jest.fn().mockReturnValue(mockDocType)
+    const result = getSchemeTemplateId(scheme)
+    expect(documentTypes.find).toHaveBeenCalled()
+    expect(result).toBe(mockTemplate)
   })
 
   test('returns null when no matching template is found anywhere', () => {
