@@ -1,4 +1,4 @@
-const util = require('util')
+const util = require('node:util')
 const { VALIDATION } = require('../constants/errors')
 const { publishStatement } = require('../publishing')
 const validateRequest = require('./validate-request')
