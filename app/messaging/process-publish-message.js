@@ -4,6 +4,7 @@ const { publishStatement } = require('../publishing')
 const validateRequest = require('./validate-request')
 const getRequestEmailTemplateByType = require('./get-request-email-template-by-type')
 const documentTypes = require('../constants/document-types')
+const { sendAlert } = require('../alert')
 
 const processPublishMessage = async (message, receiver) => {
   try {
@@ -18,6 +19,17 @@ const processPublishMessage = async (message, receiver) => {
     await receiver.completeMessage(message)
   } catch (err) {
     console.error('Unable to publish statement:', err)
+
+    const alertPayload = {
+      type: message?.applicationProperties.type || 'unknown',
+      frn: message?.body?.frn,
+      sbi: message?.body?.sbi,
+      scheme: message?.scheme?.name,
+      filename: message?.body?.filename,
+      businessName: message?.body?.businessName,
+      request: { body: message?.body }
+    }
+    sendAlert('statement publish message', alertPayload, `Unable to publish statement: ${err.message}`)
 
     if (err.category === VALIDATION) {
       await receiver.deadLetterMessage(message)
