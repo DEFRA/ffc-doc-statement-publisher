@@ -7,9 +7,11 @@ data:
   {{- if and (.Values.environmentCode) (not .Values.pr) }}
   PUBLISH_TOPIC_ADDRESS: {{ .Values.container.publishTopicAddress }}-{{ .Values.environmentCode }}
   CRM_TOPIC_ADDRESS: {{ .Values.container.crmTopicAddress }}-{{ .Values.environmentCode }}
+  ALERT_TOPIC_ADDRESS: {{ .Values.container.alertTopicAddress }}-{{ .Values.environmentCode }}
   {{ else }}
   PUBLISH_TOPIC_ADDRESS: {{ .Values.container.publishTopicAddress }}
   CRM_TOPIC_ADDRESS: {{ .Values.container.crmTopicAddress }}
+  ALERT_TOPIC_ADDRESS: {{ .Values.container.alertTopicAddress }}
   {{- end }}
   PUBLISH_SUBSCRIPTION_ADDRESS: {{ quote .Values.container.publishSubscriptionAddress }}
   POSTGRES_DB: {{ quote .Values.postgresService.postgresDb }}

@@ -1,5 +1,6 @@
 const config = require('../config')
 const updateDeliveries = require('./update-deliveries')
+const { sendAlert } = require('../alert')
 
 let monitoringTimeout
 let isRunning = false
@@ -31,6 +32,7 @@ const runUpdateCycle = async () => {
   } catch (err) {
     consecutiveErrors++
     console.error(`Error in monitoring cycle (attempt #${consecutiveErrors}):`, err)
+    sendAlert('monitoring', err, `Delivery monitoring error: ${err.message}`)
   } finally {
     isRunning = false
 
