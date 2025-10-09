@@ -21,7 +21,7 @@ const processPublishMessage = async (message, receiver) => {
     console.error('Unable to publish statement:', err)
 
     const alertPayload = {
-      type: message?.applicationProperties.type || 'unknown',
+      type: message?.applicationProperties.type || 'Unknown',
       frn: message?.body?.frn,
       sbi: message?.body?.sbi,
       scheme: message?.scheme?.name,

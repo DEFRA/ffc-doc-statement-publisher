@@ -8,7 +8,6 @@ const mqSchema = Joi.object({
     useCredentialChain: Joi.bool().default(false),
     appInsights: Joi.object(),
     managedIdentityClientId: Joi.string().optional()
-
   },
   publishSubscription: {
     address: Joi.string(),
