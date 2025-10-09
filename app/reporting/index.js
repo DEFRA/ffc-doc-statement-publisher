@@ -1,13 +1,13 @@
 const config = require('../config')
 const getTodaysReport = require('./get-todays-report')
 const { sendReport } = require('./send-report')
+const { sendAlert } = require('../alert')
 const moment = require('moment')
 
 const startSchemeReport = async (schemeName, startDate, endDate) => {
   console.log('[REPORTING] Starting report for scheme: ', schemeName)
   const existingReport = await getTodaysReport(schemeName)
-  console.log('existing', existingReport)
-  if (!existingReport?.length) {
+  if (existingReport?.length === 0) {
     await sendReport(schemeName, startDate, endDate)
   } else {
     console.log('[REPORTING] A report is already running or has already run today for scheme: ', schemeName)
@@ -54,10 +54,12 @@ const start = async () => {
         await processScheme(scheme)
       } catch (error) {
         console.error('Error processing scheme:', scheme.schemeName, error)
+        sendAlert('Reporting', error, `Error processing scheme: ${scheme}`)
       }
     }
   } catch (err) {
     console.error(err)
+    sendAlert('Reporting', err, `Reporting service error: ${err.message}`)
   } finally {
     setTimeout(start, config.reportingCheckInterval)
   }
