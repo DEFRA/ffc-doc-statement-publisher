@@ -59,6 +59,7 @@ container:
   reportingCheckInterval: 30000
   retentionPeriodInWeeks: 78
   sendCrmFailureMessageEnabled: false
+  alertTopicAddress: ffc-doc-alerting
 
 ingress:
   server: example.com
