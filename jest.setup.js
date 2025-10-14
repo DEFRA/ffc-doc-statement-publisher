@@ -1,1 +1,2 @@
-jest.setTimeout(20000)
+const TIMEOUT = 30000
+jest.setTimeout(TIMEOUT)

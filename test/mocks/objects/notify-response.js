@@ -31,7 +31,7 @@ const NOTIFY_RESPONSE = {
     scheduled_for: null,
     sent_at: '2023-02-15T10:05:50.869835Z',
     status: null,
-    subject: 'Sustainable Farming Incentive Payment Statement',
+    subject: 'Delinked Payment Statement',
     template: {
       id: TEMPLATE_ID,
       uri: `https://api.notifications.service.gov.uk/v2/template/${TEMPLATE_ID}/version/7`,

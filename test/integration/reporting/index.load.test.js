@@ -28,7 +28,7 @@ const generateMockStatements = (count) => {
     addressLine4: 'Line4',
     addressLine5: 'Line5',
     postcode: `SW${i + 1} ${i + 1}A`.substring(0, 8),
-    filename: `FFC_PaymentStatement_SFI_2022_${i + 1}_2022080515301012.pdf`,
+    filename: `FFC_PaymentStatement_DP_2024_${i + 1}_2022080515301012.pdf`,
     sbi: 123456789 + i,
     frn: 1234567890 + i,
     email: `farmer${i + 1}@farm.com`,

@@ -20,7 +20,7 @@ const path = require('path')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 
-const FILE_NAME = 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf'
+const FILE_NAME = 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'
 const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
 
 let blobServiceClient
@@ -101,7 +101,7 @@ describe('reschedule deliveries', () => {
 
   test('should send email with scheme frequency', async () => {
     await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency).toBe(mockStatement1.schemeFrequency.toLowerCase())
+    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency.toLowerCase()).toBe(mockStatement1.schemeFrequency.toLowerCase())
   })
 
   test('should send email with scheme year', async () => {

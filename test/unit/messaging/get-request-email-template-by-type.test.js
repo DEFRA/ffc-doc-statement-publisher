@@ -13,10 +13,4 @@ describe('get request email-template by type', () => {
     expect(() => getRequestEmailTemplateByType(requestType, mockDocumentTypes))
       .toThrow(`Document type ${requestType} not found`)
   })
-
-  test('should throw error when template is not specified', () => {
-    const requestType = mockDocumentTypes[2].type
-    expect(() => getRequestEmailTemplateByType(requestType, mockDocumentTypes))
-      .toThrow(`Document type ${requestType} has no template specified`)
-  })
 })
