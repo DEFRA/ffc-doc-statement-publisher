@@ -37,8 +37,7 @@ describe('Process publish message', () => {
   })
 
   describe.each([
-    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) },
-    { name: 'schedule', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').SCHEDULE_MESSAGE)) }
+    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) }
   ])('When message is a $name', ({ name, message }) => {
     describe('When successful', () => {
       beforeEach(async () => {

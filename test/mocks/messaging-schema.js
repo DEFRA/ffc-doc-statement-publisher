@@ -1,7 +1,7 @@
 module.exports = {
   email: 'test@example.com',
   documentReference: 12345,
-  filename: 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf',
+  filename: 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf',
   frn: 1234567890,
   sbi: 123456789,
   businessName: 'FFC Ltd',
@@ -14,7 +14,7 @@ module.exports = {
     postcode: 'TE1 1ST'
   },
   scheme: {
-    agreementNumber: 'SFI1234567',
+    agreementNumber: 'Z1234567',
     name: 'TestSchem',
     shortName: 'TS',
     year: '2022',

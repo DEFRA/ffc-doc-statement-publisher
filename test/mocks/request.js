@@ -4,7 +4,7 @@ module.exports = {
   frn: 1234567890,
   email: 'farmer@farms.com',
   documentReference: 1,
-  filename: 'FFC_PaymentStatement_SFI_2022_1234567890_2022080515301012.pdf',
+  filename: 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf',
   address: {
     line1: 'A Farm',
     line2: '',
@@ -14,9 +14,9 @@ module.exports = {
     postcode: 'NE1 1AA'
   },
   scheme: {
-    name: 'Sustainable Farming Incentive',
-    shortName: 'SFI',
-    year: '2022',
+    name: 'Delinked Payment Statement',
+    shortName: 'DP',
+    year: '2024',
     frequency: 'Quarterly'
   }
 }

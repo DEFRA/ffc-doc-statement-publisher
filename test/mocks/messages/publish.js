@@ -10,7 +10,7 @@ const {
   POSTCODE
 } = require('../components/address')
 const EMAIL = require('../components/email')
-const { STATEMENT: STATEMENT_FILENAME, SCHEDULE: SCHEDULE_FILENAME } = require('../components/filename')
+const { STATEMENT: STATEMENT_FILENAME } = require('../components/filename')
 const { SHORT_NAMES, LONG_NAMES } = require('../../../app/constants/scheme-names')
 const MARKETING_YEAR = require('../components/marketing-year')
 const { QUARTERLY: QUARTERLY_FREQUENCY } = require('../../../app/constants/frequencies')
@@ -41,51 +41,37 @@ const STATEMENT_MESSAGE = {
     email: EMAIL,
     emailTemplate: TEMPLATE,
     filename: STATEMENT_FILENAME,
+    paymentBand1: '10',
+    paymentBand2: '20',
+    paymentBand3: '30',
+    paymentBand4: '100',
+    percentageReduction1: '10.00',
+    percentageReduction2: '20.00',
+    percentageReduction3: '50.00',
+    percentageReduction4: '100.00',
+    progressiveReductions1: '1.00',
+    progressiveReductions2: '4.00',
+    progressiveReductions3: '15.00',
+    progressiveReductions4: '100.00',
+    referenceAmount: '200.00',
+    totalProgressiveReduction: '120.00',
+    totalDelinkedPayment: '80.00',
+    paymentAmountCalculated: '80.00',
+    paymentPeriod: 'Q3-2025',
+    transactionDate: '2025-10-06 00:00:00.000',
     scheme: {
-      agreementNumber: 'SFI1234567',
-      name: LONG_NAMES.SFI,
-      shortName: SHORT_NAMES.SFI,
+      agreementNumber: 'Z1234567',
+      name: LONG_NAMES.DELINKED,
+      shortName: SHORT_NAMES.DP,
       year: String(MARKETING_YEAR),
-      frequency: QUARTERLY_FREQUENCY
+      frequency: 'annual'
     },
     documentReference: DOCUMENT_REFERENCE
   },
   applicationProperties: {
-    type: 'uk.gov.doc.statement.publish'
+    type: 'uk.gov.doc.delinked-statement.publish'
   },
-  type: 'uk.gov.doc.statement.publish'
-}
-
-const SCHEDULE_MESSAGE = {
-  ...BASE_MESSAGE,
-  body: {
-    businessName: BUSINESS_NAME,
-    sbi: Number(SBI),
-    frn: Number(FRN),
-    address: {
-      line1: LINE_1,
-      line2: LINE_2,
-      line3: LINE_3,
-      line4: LINE_4,
-      line5: LINE_5,
-      postcode: POSTCODE
-    },
-    emailTemplate: TEMPLATE,
-    email: EMAIL,
-    filename: SCHEDULE_FILENAME,
-    scheme: {
-      agreementNumber: 'SFI1234567',
-      name: LONG_NAMES.SFI,
-      shortName: SHORT_NAMES.SFI,
-      year: String(MARKETING_YEAR),
-      frequency: QUARTERLY_FREQUENCY
-    },
-    documentReference: DOCUMENT_REFERENCE
-  },
-  applicationProperties: {
-    type: 'uk.gov.doc.schedule.publish'
-  },
-  type: 'uk.gov.doc.schedule.publish'
+  type: 'uk.gov.doc.delinked-statement.publish'
 }
 
 const LETTER_STATEMENT_MESSAGE = {
@@ -106,9 +92,9 @@ const LETTER_STATEMENT_MESSAGE = {
     filename: STATEMENT_FILENAME,
     statementFileUrl: STATEMENT_FILENAME,
     scheme: {
-      agreementNumber: 'SFI1234567',
-      name: LONG_NAMES.SFI,
-      shortName: SHORT_NAMES.SFI,
+      agreementNumber: 'Z1234567',
+      name: LONG_NAMES.DELINKED,
+      shortName: SHORT_NAMES.DP,
       year: String(MARKETING_YEAR),
       frequency: QUARTERLY_FREQUENCY
     },
@@ -120,41 +106,7 @@ const LETTER_STATEMENT_MESSAGE = {
   type: 'uk.gov.doc.statement.publish'
 }
 
-const LETTER_SCHEDULE_MESSAGE = {
-  ...BASE_MESSAGE,
-  body: {
-    businessName: BUSINESS_NAME,
-    sbi: Number(SBI),
-    frn: Number(FRN),
-    address: {
-      line1: LINE_1,
-      line2: LINE_2,
-      line3: LINE_3,
-      line4: LINE_4,
-      line5: LINE_5,
-      postcode: POSTCODE
-    },
-    email: EMAIL,
-    filename: SCHEDULE_FILENAME,
-    statementFileUrl: SCHEDULE_FILENAME,
-    scheme: {
-      agreementNumber: 'SFI1234567',
-      name: LONG_NAMES.SFI,
-      shortName: SHORT_NAMES.SFI,
-      year: String(MARKETING_YEAR),
-      frequency: QUARTERLY_FREQUENCY
-    },
-    documentReference: DOCUMENT_REFERENCE
-  },
-  applicationProperties: {
-    type: 'uk.gov.doc.schedule.publish'
-  },
-  type: 'uk.gov.doc.schedule.publish'
-}
-
 module.exports = {
   STATEMENT_MESSAGE,
-  SCHEDULE_MESSAGE,
-  LETTER_STATEMENT_MESSAGE,
-  LETTER_SCHEDULE_MESSAGE
+  LETTER_STATEMENT_MESSAGE
 }

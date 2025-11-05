@@ -1,4 +1,5 @@
 const config = require('../config')
+const { SHORT_NAMES } = require('../constants/scheme-names')
 
 const daysInWeek = 7
 
@@ -26,17 +27,7 @@ const getPersonalisation = (schemeName, schemeShortName, schemeYear, schemeFrequ
     return formatTransactionDate(latestDownloadDate)
   }
 
-  if (schemeShortName === 'SFIA') {
-    return {
-      schemeName,
-      schemeShortName: 'advanced',
-      schemeYear,
-      schemeFrequency: 'one-off',
-      businessName,
-      latestDownloadDate: calculateLatestDownloadDate()
-    }
-  }
-  if (schemeShortName === 'DP') {
+  if (schemeShortName === SHORT_NAMES.DP) {
     return {
       schemeName,
       schemeShortName,

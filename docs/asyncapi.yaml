@@ -151,7 +151,7 @@ components:
     AgreementNumber:
       type: string
       description: The agreement number
-      example: SFI1234567
+      example: Z1234567
     BusinessName:
       type: string
       description: The business name
@@ -199,7 +199,7 @@ components:
         characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase
         characters, Scheme Year using 4 digits, FRN using 10 digits, date and
         time using 16 digits and then .pdf. All separated by underscore.
-      example: FFC_PaymentStatement_SFI_2022_1234567890_2022080515301212.pdf
+      example: FFC_PaymentStatement_DP_2024_1234567890_2022080515301212.pdf
       pattern: >-
         ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
     SBI:
@@ -255,7 +255,7 @@ components:
     SchemeShortName:
       type: string
       description: The short name of the scheme
-      example: SFI
+      example: DP
     SchemeYearDelinked:
       type: string
       description: The marketing year
