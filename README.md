@@ -35,7 +35,6 @@ in any environment before the Docker container is started or tests are run.
 | Name | Description |
 | ---| --- |
 | NOTIFY_API_KEY | API key for GOV.UK Notify account |
-| NOTIFY_EMAIL_TEMPLATE_KEY | Existing GOV.UK email template key |
 | RETENTION_PERIOD_IN_WEEKS | No of weeks that document would be retained |
 
 ## Message schemas
