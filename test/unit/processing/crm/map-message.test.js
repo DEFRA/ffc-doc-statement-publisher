@@ -1,62 +1,85 @@
 jest.mock('../../../../app/processing/crm/map-error-message')
 const mapErrorMessage = require('../../../../app/processing/crm/map-error-message')
-jest.mock('../../../../app/processing/crm/map-message')
 const mapMessage = require('../../../../app/processing/crm/map-message')
 const { INVALID } = require('../../../../app/constants/crm-error-messages')
-const { INVALID: INVALID_REASON, EMPTY, REJECTED } = require('../../../../app/constants/failure-reasons')
+const { INVALID: INVALID_REASON } = require('../../../../app/constants/failure-reasons')
 
 let email
 let frn
+let reason
+let errorMessage
 
-describe('Create CRM invalid email message from incoming message', () => {
+describe('createCRMInvalidEmailMessageFromIncomingMessage', () => {
   beforeEach(() => {
+    mapErrorMessage.mockReturnValue(INVALID)
     frn = require('../../../mocks/components/frn')
-    jest.clearAllMocks()
+    reason = INVALID_REASON
+    errorMessage = INVALID
   })
 
-  const testCases = [
-    { description: 'reason is INVALID', reason: INVALID_REASON, errorMessage: INVALID, email: require('../../../mocks/components/email') },
-    { description: 'reason is EMPTY', reason: EMPTY, errorMessage: require('../../../../app/constants/crm-error-messages').EMPTY, email: require('../../../mocks/components/email') },
-    { description: 'reason is REJECTED', reason: REJECTED, errorMessage: INVALID, email: require('../../../mocks/components/email') }
-  ]
-
-  testCases.forEach(({ description, reason, errorMessage, email: caseEmail }) => {
-    describe(`When ${description}`, () => {
-      beforeEach(() => {
-        email = caseEmail
-        mapErrorMessage.mockReturnValue(errorMessage)
-      })
-
-      test('should call mapMessage with correct arguments', () => {
-        mapMessage(email, frn, reason)
-        expect(mapMessage).toBeDefined()
-      })
-
-      test('should return an object with 3 keys', () => {
-        const result = mapMessage(email, frn, reason)
-        expect(result).toBeInstanceOf(Object)
-        expect(Object.keys(result)).toHaveLength(3)
-        expect(Object.keys(result)).toStrictEqual(['email', 'errorMessage', 'frn'])
-      })
-
-      test('should return correct values', () => {
-        const result = mapMessage(email, frn, reason)
-        expect(result.email).toStrictEqual(email)
-        expect(result.frn).toStrictEqual(frn)
-        expect(result.errorMessage).toStrictEqual(errorMessage)
-      })
-    })
-  })
-
-  describe('When validateMessage throws', () => {
+  describe('whenEmailCouldntBeDeliveredAndEmailIsValid', () => {
     beforeEach(() => {
-      mapMessage.mockImplementation(() => { throw new Error('Invalid message') })
+      email = require('../../../mocks/components/email')
     })
 
-    test('should throw error "Invalid message"', () => {
-      const wrapper = () => mapMessage(email, frn, INVALID_REASON)
-      expect(wrapper).toThrow(/^Invalid message$/)
-      expect(wrapper).toThrow(Error)
+    test('should return an object', () => {
+      const result = mapMessage(email, frn, reason)
+      expect(result).toBeInstanceOf(Object)
+    })
+
+    test.each([
+      ['number of keys', (r) => expect(Object.keys(r)).toHaveLength(3)],
+      ['keys are correct', (r) => expect(Object.keys(r)).toStrictEqual(['email', 'errorMessage', 'frn'])],
+      ['email key', (r) => expect(r.email).toStrictEqual(email)],
+      ['errorMessage key', (r) => expect(r.errorMessage).toStrictEqual(errorMessage)],
+      ['frn key', (r) => expect(r.frn).toStrictEqual(frn)]
+    ])('should check %s', (_, assertion) => {
+      const result = mapMessage(email, frn, reason)
+      assertion(result)
+    })
+  })
+
+  describe('whenEmailCouldntBeDeliveredAndEmailIsEmpty', () => {
+    beforeEach(() => {
+      email = ''
+    })
+
+    test('should return an object', () => {
+      const result = mapMessage(email, frn, reason)
+      expect(result).toBeInstanceOf(Object)
+    })
+
+    test.each([
+      ['number of keys', (r) => expect(Object.keys(r)).toHaveLength(3)],
+      ['keys are correct', (r) => expect(Object.keys(r)).toStrictEqual(['email', 'errorMessage', 'frn'])],
+      ['email key', (r) => expect(r.email).toStrictEqual(email)],
+      ['errorMessage key', (r) => expect(r.errorMessage).toStrictEqual(errorMessage)],
+      ['frn key', (r) => expect(r.frn).toStrictEqual(frn)]
+    ])('should check %s', (_, assertion) => {
+      const result = mapMessage(email, frn, reason)
+      assertion(result)
+    })
+  })
+
+  describe('whenEmailCouldntBeDeliveredAndEmailIsInvalid', () => {
+    beforeEach(() => {
+      email = 'not-valid'
+    })
+
+    test('should return an object', () => {
+      const result = mapMessage(email, frn, reason)
+      expect(result).toBeInstanceOf(Object)
+    })
+
+    test.each([
+      ['number of keys', (r) => expect(Object.keys(r)).toHaveLength(3)],
+      ['keys are correct', (r) => expect(Object.keys(r)).toStrictEqual(['email', 'errorMessage', 'frn'])],
+      ['email key', (r) => expect(r.email).toStrictEqual(email)],
+      ['errorMessage key', (r) => expect(r.errorMessage).toStrictEqual(errorMessage)],
+      ['frn key', (r) => expect(r.frn).toStrictEqual(frn)]
+    ])('should check %s', (_, assertion) => {
+      const result = mapMessage(email, frn, reason)
+      assertion(result)
     })
   })
 })

@@ -1,6 +1,112 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`getDataRow should return row data with FAILED status 1`] = `
+{
+  "Business Address": "Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD",
+  "Business Name": "Business Name",
+  "Delivery Method": "Email",
+  "Document DB ID": "12345",
+  "Email": "email@example.com",
+  "Error(s)": "Status Code: 400, Reason: Bad Request, Error: Invalid data, Message: Data validation failed",
+  "FRN": "1234567890",
+  "Filename": "filename.pdf",
+  "Notify Email Requested": "2022-07-01 01:00:00",
+  "Payment Reference": "PR123",
+  "SBI": "123456789",
+  "Scheme Name": "Scheme Name",
+  "Scheme Short Name": "Scheme Short Name",
+  "Scheme Year": "2022",
+  "Statement Data Received": "2022-07-01 00:00:00",
+  "Statement Delivery Notification": "2022-07-01 03:00:00",
+  "Statement Failure Notification": "2022-07-01 02:00:00",
+  "Status": "FAILED",
+}
+`;
+
+exports[`getDataRow should return row data with PENDING status 1`] = `
+{
+  "Business Address": "Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD",
+  "Business Name": "Business Name",
+  "Delivery Method": "Email",
+  "Document DB ID": "12345",
+  "Email": "email@example.com",
+  "Error(s)": "",
+  "FRN": "1234567890",
+  "Filename": "filename.pdf",
+  "Notify Email Requested": "2022-07-01 01:00:00",
+  "Payment Reference": "PR123",
+  "SBI": "123456789",
+  "Scheme Name": "Scheme Name",
+  "Scheme Short Name": "Scheme Short Name",
+  "Scheme Year": "2022",
+  "Statement Data Received": "2022-07-01 00:00:00",
+  "Statement Delivery Notification": "",
+  "Statement Failure Notification": "2022-07-01 02:00:00",
+  "Status": "PENDING",
+}
+`;
+
+exports[`getDataRow should return row data with SUCCESS status 1`] = `
+{
+  "Business Address": "Address Line 1, Address Line 2, Address Line 3, Address Line 4, Address Line 5, AB12 3CD",
+  "Business Name": "Business Name",
+  "Delivery Method": "Email",
+  "Document DB ID": "12345",
+  "Email": "email@example.com",
+  "Error(s)": "",
+  "FRN": "1234567890",
+  "Filename": "filename.pdf",
+  "Notify Email Requested": "2022-07-01 01:00:00",
+  "Payment Reference": "PR123",
+  "SBI": "123456789",
+  "Scheme Name": "Scheme Name",
+  "Scheme Short Name": "Scheme Short Name",
+  "Scheme Year": "2022",
+  "Statement Data Received": "2022-07-01 00:00:00",
+  "Statement Delivery Notification": "2022-07-01 03:00:00",
+  "Statement Failure Notification": "2022-07-01 02:00:00",
+  "Status": "SUCCESS",
+}
+`;
+
+exports[`getDataRow should return row data with missing fields 1`] = `
+{
+  "Business Address": "",
+  "Business Name": "",
+  "Delivery Method": "",
+  "Document DB ID": "",
+  "Email": "",
+  "Error(s)": "",
+  "FRN": "",
+  "Filename": "",
+  "Notify Email Requested": "",
+  "Payment Reference": "",
+  "SBI": "",
+  "Scheme Name": "",
+  "Scheme Short Name": "",
+  "Scheme Year": "",
+  "Statement Data Received": "",
+  "Statement Delivery Notification": "",
+  "Statement Failure Notification": "",
+  "Status": "PENDING",
+}
+`;
+
+exports[`sendReport should handle stream errors and rollback 1`] = `
+"Status,Error(s),FRN,SBI,Payment Reference,Scheme Name,Scheme Short Name,Scheme Year,Delivery Method,Business Name,Address,Email,Filename,Document DB ID,Statement Data Received,Notify Email Requested,Statement Failure Notification,Statement Delivery Notification
+Pending,,,,,,,,email,,,,,1,,,,
+Pending,,,,,,,,sms,,,,,2,,,,
+Pending,"Status Code: 500, Reason: Server Error, Error: Internal Server Error, Message: Failed",,,,,,,letter,,,,,3,,,2025-11-12 19:17:49,"
+`;
+
 exports[`sendReport should rollback transaction and throw error on stream error 1`] = `
+"Status,Error(s),FRN,SBI,Payment Reference,Scheme Name,Scheme Short Name,Scheme Year,Delivery Method,Business Name,Address,Email,Filename,Document DB ID,Statement Data Received,Notify Email Requested,Statement Failure Notification,Statement Delivery Notification
+Success,,,,,,,,email,,,,,1,,2022-07-01 10:00:00,,2022-07-02 10:00:00
+Success,,,,,,,,sms,,,,,2,,2022-07-03 10:00:00,,2022-07-04 10:00:00
+Success,"Status Code: 500, Reason: Server Error, Error: Internal Server Error, Message: Failed to deliver",,,,,,,letter,,,,,3,,2022-07-03 10:00:00,2022-07-04 12:00:00,2022-07-04 10:00:00"
+`;
+
+exports[`sendReport should rollback transaction on stream error 1`] = `
 "Status,Error(s),FRN,SBI,Payment Reference,Scheme Name,Scheme Short Name,Scheme Year,Delivery Method,Business Name,Address,Email,Filename,Document DB ID,Statement Data Received,Notify Email Requested,Statement Failure Notification,Statement Delivery Notification
 Success,,,,,,,,email,,,,,1,,2022-07-01 10:00:00,,2022-07-02 10:00:00
 Success,,,,,,,,sms,,,,,2,,2022-07-03 10:00:00,,2022-07-04 10:00:00

@@ -23,53 +23,53 @@ describe('fetchStatementFile', () => {
     await expect(fetchStatementFile(url)).rejects.toThrow('Network Error')
   })
 
-  test('should throw an error and log messages when e.response exists', async () => {
-    const url = 'https://example.com/statement.pdf'
-    const errorMessage = 'Request failed with status code 404'
-    const mockError = {
-      message: errorMessage,
-      response: {
-        status: 404,
-        data: {
-          message: 'Not Found'
-        }
-      }
+  const errorScenarios = [
+    {
+      description: 'when e.response exists',
+      mockError: {
+        message: 'Request failed with status code 404',
+        response: { status: 404, data: { message: 'Not Found' } }
+      },
+      expectedLogs: [
+        'FetchStatementFile Error: Request failed with status code 404',
+        'Fetch File Status code: 404',
+        'Error message: Not Found'
+      ]
+    },
+    {
+      description: 'when e.request exists',
+      mockError: {
+        message: 'Network Error',
+        request: {}
+      },
+      expectedLogs: [
+        'FetchStatementFile Error: Network Error',
+        'No response received from the server when fetching file.'
+      ]
+    },
+    {
+      description: 'when error is thrown during setup',
+      mockError: {
+        message: 'Something went wrong'
+      },
+      expectedLogs: [
+        'FetchStatementFile Error: Something went wrong',
+        'Error setting up the fetchStatementFile request: Something went wrong'
+      ]
     }
-    axios.get.mockRejectedValue(mockError)
-    console.error = jest.fn()
+  ]
 
-    await expect(fetchStatementFile(url)).rejects.toEqual(mockError)
-    expect(console.error).toHaveBeenCalledWith(`FetchStatementFile Error: ${errorMessage}`)
-    expect(console.error).toHaveBeenCalledWith(`Fetch File Status code: ${mockError.response.status}`)
-    expect(console.error).toHaveBeenCalledWith(`Error message: ${mockError.response.data.message}`)
-  })
+  test.each(errorScenarios)(
+    'should throw an error and log messages $description',
+    async ({ mockError, expectedLogs }) => {
+      const url = 'https://example.com/statement.pdf'
+      axios.get.mockRejectedValue(mockError)
+      console.error = jest.fn()
 
-  test('should throw an error and log messages when e.request exists', async () => {
-    const url = 'https://example.com/statement.pdf'
-    const errorMessage = 'Network Error'
-    const mockError = {
-      message: errorMessage,
-      request: {}
+      await expect(fetchStatementFile(url)).rejects.toEqual(mockError)
+      expectedLogs.forEach(log => {
+        expect(console.error).toHaveBeenCalledWith(log)
+      })
     }
-    axios.get.mockRejectedValue(mockError)
-    console.error = jest.fn()
-
-    await expect(fetchStatementFile(url)).rejects.toEqual(mockError)
-    expect(console.error).toHaveBeenCalledWith(`FetchStatementFile Error: ${errorMessage}`)
-    expect(console.error).toHaveBeenCalledWith('No response received from the server when fetching file.')
-  })
-
-  test('should throw an error and log messages when error is thrown during setup', async () => {
-    const url = 'https://example.com/statement.pdf'
-    const errorMessage = 'Something went wrong'
-    const mockError = {
-      message: errorMessage
-    }
-    axios.get.mockRejectedValue(mockError)
-    console.error = jest.fn()
-
-    await expect(fetchStatementFile(url)).rejects.toEqual(mockError)
-    expect(console.error).toHaveBeenCalledWith(`FetchStatementFile Error: ${errorMessage}`)
-    expect(console.error).toHaveBeenCalledWith(`Error setting up the fetchStatementFile request: ${errorMessage}`)
-  })
+  )
 })
