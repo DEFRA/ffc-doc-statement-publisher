@@ -1,43 +1,20 @@
 const validateFilename = require('../../../app/messaging/filename-regex-validation')
 
 describe('validateFilename', () => {
-  test('validates a string that matches the pattern', () => {
+  test('should return true for a valid filename', () => {
     const validFilename = 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'
     expect(validateFilename(validFilename)).toBe(true)
   })
 
-  test('returns false for a string with invalid team name', () => {
-    const invalidTeamName = 'FF_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'
-    expect(validateFilename(invalidTeamName)).toBe(false)
-  })
-
-  test('returns false for a string with invalid document prefix', () => {
-    const invalidDocumentPrefix = 'FFC_123PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'
-    expect(validateFilename(invalidDocumentPrefix)).toBe(false)
-  })
-
-  test('returns false for a string with invalid scheme short name', () => {
-    const invalidSchemeShortName = 'FFC_PaymentStatement_D_2024_1234567890_2022080515301012.pdf'
-    expect(validateFilename(invalidSchemeShortName)).toBe(false)
-  })
-
-  test('returns false for a string with invalid scheme year', () => {
-    const invalidSchemeYear = 'FFC_PaymentStatement_DP_22_1234567890_2022080515301012.pdf'
-    expect(validateFilename(invalidSchemeYear)).toBe(false)
-  })
-
-  test('returns false for a string with invalid FRN number', () => {
-    const invalidFrn = 'FFC_PaymentStatement_DP_2024_123456789_2022080515301012.pdf'
-    expect(validateFilename(invalidFrn)).toBe(false)
-  })
-
-  test('returns false for a string with invalid timestamp', () => {
-    const invalidTimestamp = 'FFC_PaymentStatement_DP_2024_1234567890_202208051530101.pdf'
-    expect(validateFilename(invalidTimestamp)).toBe(false)
-  })
-
-  test('returns false for a string with invalid extension', () => {
-    const invalidExtension = 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.docx'
-    expect(validateFilename(invalidExtension)).toBe(false)
+  test.each([
+    ['invalid team name', 'FF_PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'],
+    ['invalid document prefix', 'FFC_123PaymentStatement_DP_2024_1234567890_2022080515301012.pdf'],
+    ['invalid scheme short name', 'FFC_PaymentStatement_D_2024_1234567890_2022080515301012.pdf'],
+    ['invalid scheme year', 'FFC_PaymentStatement_DP_22_1234567890_2022080515301012.pdf'],
+    ['invalid FRN number', 'FFC_PaymentStatement_DP_2024_123456789_2022080515301012.pdf'],
+    ['invalid timestamp', 'FFC_PaymentStatement_DP_2024_1234567890_202208051530101.pdf'],
+    ['invalid extension', 'FFC_PaymentStatement_DP_2024_1234567890_2022080515301012.docx']
+  ])('should return false for a string with %s', (_, invalidFilename) => {
+    expect(validateFilename(invalidFilename)).toBe(false)
   })
 })
