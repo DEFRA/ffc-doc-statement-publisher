@@ -15,7 +15,7 @@ const { DELIVERED, SENDING, CREATED, TEMPORARY_FAILURE, PERMANENT_FAILURE, TECHN
 const { INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const updateDeliveries = require('../../../app/monitoring/update-deliveries')
 
-describe('update deliveries', () => {
+describe('updateDeliveries', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.spyOn(console, 'log').mockImplementation(() => { })
@@ -46,10 +46,8 @@ describe('update deliveries', () => {
 
     const result = await updateDeliveries()
 
-    expect(result).toHaveProperty('totalProcessed')
-    expect(result).toHaveProperty('duration')
-    expect(result.totalProcessed).toBe(1)
-    expect(result.duration).toBe(1)
+    expect(result).toHaveProperty('totalProcessed', 1)
+    expect(result).toHaveProperty('duration', 1)
   })
 
   test('should process deliveries in batches', async () => {
@@ -113,27 +111,17 @@ describe('update deliveries', () => {
     )
   })
 
-  test('should handle different delivery statuses', async () => {
-    const testCases = [
-      { status: DELIVERED, description: 'delivered' },
-      { status: SENDING, description: 'sending' },
-      { status: CREATED, description: 'created' },
-      { status: TEMPORARY_FAILURE, description: 'temporary failure' },
-      { status: PERMANENT_FAILURE, description: 'permanent failure' },
-      { status: TECHNICAL_FAILURE, description: 'technical failure' }
-    ]
+  test.each([
+    DELIVERED, SENDING, CREATED, TEMPORARY_FAILURE, PERMANENT_FAILURE, TECHNICAL_FAILURE
+  ])('should handle delivery status %s', async (status) => {
+    mockCheckDeliveryStatus.mockResolvedValue({ data: { status } })
 
-    for (const testCase of testCases) {
-      jest.clearAllMocks()
-      mockCheckDeliveryStatus.mockResolvedValue({ data: { status: testCase.status } })
+    await updateDeliveries()
 
-      await updateDeliveries()
-
-      expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledWith(
-        expect.objectContaining({ deliveryId: 'test-id' }),
-        { data: { status: testCase.status } }
-      )
-    }
+    expect(mockUpdateDeliveryFromResponse).toHaveBeenCalledWith(
+      expect.objectContaining({ deliveryId: 'test-id' }),
+      { data: { status } }
+    )
   })
 
   test('should handle empty batch', async () => {
@@ -159,47 +147,36 @@ describe('update deliveries', () => {
   })
 
   test('should calculate duration correctly', async () => {
-    const mockStart = 1000
-    const mockEnd = 2500
-
     jest.spyOn(Date, 'now')
-      .mockReturnValueOnce(mockStart) // First call when measuring start time
-      .mockReturnValueOnce(mockEnd) // Second call when calculating duration
+      .mockReturnValueOnce(1000)
+      .mockReturnValueOnce(2500)
 
     const result = await updateDeliveries()
-
     expect(result.duration).toBe(1.5)
   })
 
-  test('should handle error reasons correctly', async () => {
-    const testCases = [
-      { reason: INVALID, message: 'Invalid request' },
-      { reason: REJECTED, message: 'Rejected request' }
-    ]
-
-    for (const testCase of testCases) {
-      jest.clearAllMocks()
-      mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
-        const deliveries = [{ deliveryId: 'test-id', reference: 'test-ref' }]
-
-        mockCheckDeliveryStatus.mockImplementation(() => {
-          const error = new Error(testCase.message)
-          error.reason = testCase.reason
-          throw error
-        })
-
-        await processFn(deliveries)
-        return { totalProcessed: 1, batchCount: 1 }
+  test.each([
+    { reason: INVALID, message: 'Invalid request' },
+    { reason: REJECTED, message: 'Rejected request' }
+  ])('should handle error reason %s', async ({ reason, message }) => {
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      const deliveries = [{ deliveryId: 'test-id', reference: 'test-ref' }]
+      mockCheckDeliveryStatus.mockImplementation(() => {
+        const error = new Error(message)
+        error.reason = reason
+        throw error
       })
+      await processFn(deliveries)
+      return { totalProcessed: 1, batchCount: 1 }
+    })
 
-      await updateDeliveries()
+    await updateDeliveries()
 
-      expect(mockCheckDeliveryStatus).toHaveBeenCalledTimes(1)
-      expect(mockUpdateDeliveryFromResponse).not.toHaveBeenCalled()
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update delivery test-id'),
-        testCase.message
-      )
-    }
+    expect(mockCheckDeliveryStatus).toHaveBeenCalledTimes(1)
+    expect(mockUpdateDeliveryFromResponse).not.toHaveBeenCalled()
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to update delivery test-id'),
+      message
+    )
   })
 })

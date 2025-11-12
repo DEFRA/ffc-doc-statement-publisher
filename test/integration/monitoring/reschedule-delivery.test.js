@@ -1,17 +1,18 @@
 let mockSendEmail
 const MOCK_PREPARED_FILE = 'mock-prepared-file'
 let mockPrepareUpload
+
 jest.mock('notifications-node-client', () => {
   return {
-    NotifyClient: jest.fn().mockImplementation(() => {
-      return {
-        sendEmail: mockSendEmail,
-        prepareUpload: mockPrepareUpload
-      }
-    })
+    NotifyClient: jest.fn().mockImplementation(() => ({
+      sendEmail: mockSendEmail,
+      prepareUpload: mockPrepareUpload
+    }))
   }
 })
+
 jest.mock('ffc-messaging')
+
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
 const db = require('../../../app/data')
@@ -26,10 +27,11 @@ const TEST_FILE = path.resolve(__dirname, '../../files/test.pdf')
 let blobServiceClient
 let container
 
-describe('reschedule deliveries', () => {
+describe('rescheduleDeliveries', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
+
     blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionStr)
     container = blobServiceClient.getContainerClient(config.container)
     await container.deleteIfExists()
@@ -79,38 +81,24 @@ describe('reschedule deliveries', () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(1)
   })
 
-  test('should send email to requested email address', async () => {
+  test('should send email with correct personalisation', async () => {
     await rescheduleDelivery(mockDelivery1)
+
+    const personalisation = mockSendEmail.mock.calls[0][2].personalisation
+    const expectedValues = [
+      ['link_to_file', MOCK_PREPARED_FILE],
+      ['schemeName', mockStatement1.schemeName],
+      ['schemeShortName', mockStatement1.schemeShortName],
+      ['schemeFrequency', mockStatement1.schemeFrequency],
+      ['schemeYear', mockStatement1.schemeYear],
+      ['businessName', mockStatement1.businessName]
+    ]
+
+    expectedValues.forEach(([key, value]) => {
+      expect(personalisation[key]).toBe(value)
+    })
+
+    // Check email recipient
     expect(mockSendEmail.mock.calls[0][1]).toBe(mockStatement1.email)
-  })
-
-  test('should send email with file link', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.link_to_file).toBe(MOCK_PREPARED_FILE)
-  })
-
-  test('should send email with scheme name', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeName).toBe(mockStatement1.schemeName)
-  })
-
-  test('should send email with scheme short name', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeShortName).toBe(mockStatement1.schemeShortName)
-  })
-
-  test('should send email with scheme frequency', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeFrequency.toLowerCase()).toBe(mockStatement1.schemeFrequency.toLowerCase())
-  })
-
-  test('should send email with scheme year', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.schemeYear).toBe(mockStatement1.schemeYear)
-  })
-
-  test('should send email with business name', async () => {
-    await rescheduleDelivery(mockDelivery1)
-    expect(mockSendEmail.mock.calls[0][2].personalisation.businessName).toBe(mockStatement1.businessName)
   })
 })
