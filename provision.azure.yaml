@@ -5,6 +5,8 @@ resources:
   topics:
     - name: ffc-doc-statement-crm
       role: sender
+    - name: ffc-doc-alerting
+      role: sender
     - name: ffc-doc-statement-publish
       role: receiver
       subscriptions:
