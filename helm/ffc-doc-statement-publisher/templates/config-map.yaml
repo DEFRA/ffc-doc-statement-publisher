@@ -28,7 +28,6 @@ data:
   AZURE_STORAGE_REPORT_FOLDER: {{ quote .Values.container.storageReportFolder }}
   NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
-  NOTIFY_EMAIL_TEMPLATE_KEY: {{ quote .Values.container.notifyEmailTemplateKey }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
   DELINKED_INTERVAL_NUMBER: {{ quote .Values.container.DelinkedIntervalNumber }}
   DELINKED_INTERVAL_TYPE: {{ quote .Values.container.DelinkedIntervalType }}
