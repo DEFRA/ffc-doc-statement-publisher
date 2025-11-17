@@ -3,7 +3,8 @@ module.exports = (sequelize, DataTypes) => {
     deliveryId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
+      comment: "Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     },
     statementId: {
       type: DataTypes.INTEGER,
@@ -12,24 +13,29 @@ module.exports = (sequelize, DataTypes) => {
         model: 'statements',
         key: 'statementId'
       },
-      index: true
+      index: true,
+      comment: "Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     },
     method: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      comment: "Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     },
     reference: {
       type: DataTypes.UUID,
-      index: true
+      index: true,
+      comment: "Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     },
     requested: {
       type: DataTypes.DATE,
       allowNull: false,
-      index: true
+      index: true,
+      comment: "Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     },
     completed: {
       type: DataTypes.DATE,
-      index: true
+      index: true,
+      comment: "Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"
     }
   },
   {
