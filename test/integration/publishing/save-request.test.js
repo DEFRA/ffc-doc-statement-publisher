@@ -9,7 +9,7 @@ const { EMPTY: EMPTY_ERROR, INVALID: INVALID_ERROR } = require('../../../app/con
 const SYSTEM_TIME = require('../../mocks/components/system-time')
 const MESSAGE = require('../../mocks/objects/message')
 
-const REFERENCE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED)).data.id
+const REFERENCE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED).data.id
 
 let reference, reason
 
@@ -53,7 +53,7 @@ describe('saveRequest', () => {
     await db.sequelize.close()
   })
 
-  const request = JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body
+  const request = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body
 
   describe.each(failureReasons)('When failure reason is $name', ({ value, errorMessage, sendCRM }) => {
     beforeEach(() => {

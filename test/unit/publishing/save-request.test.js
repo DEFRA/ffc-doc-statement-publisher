@@ -2,7 +2,7 @@ const db = require('../../../app/data')
 const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
 const saveRequest = require('../../../app/publishing/save-request')
 
-const REFERENCE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED)).data.id
+const REFERENCE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED).data.id
 const { EMAIL } = require('../../../app/constants/methods')
 const { EMPTY, INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const { EMPTY: EMPTY_ERROR, INVALID: INVALID_ERROR } = require('../../../app/constants/crm-error-messages')
@@ -30,7 +30,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
   })
 
   describe.each([
-    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body }
+    { name: 'statement', request: structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body }
   ])('When request is $name', ({ request }) => {
     const failureReasons = [
       { reason: undefined, sendMessage: false, errorMessage: null },

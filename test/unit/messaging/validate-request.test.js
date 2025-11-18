@@ -1,7 +1,7 @@
 const validateRequest = require('../../../app/messaging/validate-request')
 
 describe('Validate request', () => {
-  const validRequest = JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body
+  const validRequest = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body
 
   test('returns undefined for a valid statement request', () => {
     const result = validateRequest(validRequest)

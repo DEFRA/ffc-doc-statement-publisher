@@ -30,7 +30,7 @@ describe('publishStatement', () => {
   })
 
   describe.each([
-    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body }
+    { name: 'statement', request: structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body }
   ])('When request is a $name', ({ request }) => {
     beforeEach(async () => {
       const blockBlobClient = container.getBlockBlobClient(`${storageConfig.folder}/${request.filename}`)

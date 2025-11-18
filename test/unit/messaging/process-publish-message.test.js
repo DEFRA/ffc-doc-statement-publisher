@@ -34,7 +34,7 @@ describe('processPublishMessage', () => {
   })
 
   describe.each([
-    { name: 'statement', message: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)) }
+    { name: 'statement', message: structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE) }
   ])('when message is a $name', ({ message }) => {
     describe('when successful', () => {
       beforeEach(async () => {

@@ -4,7 +4,7 @@ let messagingMockRequest
 
 describe('request schema', () => {
   beforeEach(() => {
-    messagingMockRequest = JSON.parse(JSON.stringify(require('../../mocks/messaging-schema')))
+    messagingMockRequest = structuredClone(require('../../mocks/messaging-schema'))
   })
 
   // --- Valid cases ---
