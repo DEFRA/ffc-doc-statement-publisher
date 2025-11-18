@@ -1,34 +1,30 @@
 const { retry } = require('../../app/retry')
-let mockFunction
 
 describe('retry', () => {
+  let mockFunction
+
   beforeEach(() => {
     jest.clearAllMocks()
-    mockFunction = jest.fn().mockResolvedValue('success')
+    mockFunction = jest.fn()
   })
 
-  test('calls function', async () => {
-    await retry(mockFunction)
-    expect(mockFunction).toHaveBeenCalled()
-  })
+  test.each([
+    ['successful on first try', ['success'], 1],
+    ['fails once then succeeds', ['error', 'success'], 2],
+    ['fails repeatedly up to max retries', ['error', 'error'], 2]
+  ])('%s', async (_, results, expectedCalls) => {
+    results.forEach((res, i) => {
+      if (res === 'success') {
+        mockFunction.mockResolvedValueOnce('success')
+      } else {
+        mockFunction.mockRejectedValueOnce('error')
+      }
+    })
 
-  test('calls function once if successful', async () => {
-    await retry(mockFunction)
-    expect(mockFunction).toHaveBeenCalledTimes(1)
-  })
-
-  test('retries function call once if fails', async () => {
-    mockFunction.mockRejectedValueOnce('error')
-    mockFunction.mockResolvedValueOnce('success')
-    await retry(mockFunction)
-    expect(mockFunction).toHaveBeenCalledTimes(2)
-  })
-
-  test('retries function call up to maximum retries', async () => {
-    mockFunction.mockRejectedValue('error')
     try {
-      await retry(mockFunction, 1)
+      await retry(mockFunction, expectedCalls - 1)
     } catch {}
-    expect(mockFunction).toHaveBeenCalledTimes(2)
+
+    expect(mockFunction).toHaveBeenCalledTimes(expectedCalls)
   })
 })

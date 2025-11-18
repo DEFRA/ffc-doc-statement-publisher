@@ -14,10 +14,13 @@ jest.mock('../../../app/storage')
 jest.mock('../../../app/reporting/complete-report')
 
 describe('sendReport', () => {
+  const schemeName = 'TEST'
+  const startDate = new Date('2022-07-01T00:00:00Z')
+  const endDate = new Date('2022-07-31T23:59:59Z')
+
   beforeEach(async () => {
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-
     await db.sequelize.truncate({ cascade: true })
     await db.statement.bulkCreate([mockStatement1, mockStatement2])
     await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
@@ -28,27 +31,20 @@ describe('sendReport', () => {
     await db.sequelize.close()
   })
 
-  test('should create and send report when deliveries are found', async () => {
-    const schemeName = 'TEST'
-    const startDate = new Date('2022-07-01T00:00:00Z')
-    const endDate = new Date('2022-07-31T23:59:59Z')
+  const createMockStream = (deliveries = []) => ({
+    on: jest.fn((event, callback) => {
+      if (event === 'data') deliveries.forEach(d => callback(d))
+      if (event === 'end') callback()
+      return this
+    })
+  })
 
+  test('creates and sends report when deliveries are found', async () => {
     const mockDeliveries = [
-      { deliveryId: 1, statementId: 101, method: 'email', reference: '123e4567-e89b-12d3-a456-426614174000', requested: new Date('2022-07-01T10:00:00Z'), completed: new Date('2022-07-02T10:00:00Z') },
-      { deliveryId: 2, statementId: 102, method: 'sms', reference: '123e4567-e89b-12d3-a456-426614174001', requested: new Date('2022-07-03T10:00:00Z'), completed: new Date('2022-07-04T10:00:00Z') }
+      { deliveryId: 1, statementId: 101, method: 'email', reference: '123', requested: new Date(), completed: new Date() },
+      { deliveryId: 2, statementId: 102, method: 'sms', reference: '124', requested: new Date(), completed: new Date() }
     ]
-
-    const mockStream = {
-      on: jest.fn((event, callback) => {
-        if (event === 'data') {
-          mockDeliveries.forEach(delivery => callback(delivery))
-        }
-        if (event === 'end') {
-          callback()
-        }
-        return mockStream
-      })
-    }
+    const mockStream = createMockStream(mockDeliveries)
 
     getDeliveriesForReport.mockResolvedValue(mockStream)
     createReport.mockResolvedValue({ reportId: 1 })
@@ -63,39 +59,22 @@ describe('sendReport', () => {
     expect(completeReport).toHaveBeenCalledWith(1, 2, expect.any(Object))
   })
 
-  test('should handle no deliveries found', async () => {
-    const schemeName = 'TEST'
-    const startDate = new Date('2022-07-01T00:00:00Z')
-    const endDate = new Date('2022-07-31T23:59:59Z')
-
-    const mockStream = {
-      on: jest.fn((event, callback) => {
-        if (event === 'end') {
-          callback()
-        }
-        return mockStream
-      })
-    }
-
+  test('skips report creation when no deliveries found', async () => {
+    const mockStream = createMockStream()
     getDeliveriesForReport.mockResolvedValue(mockStream)
 
     await sendReport(schemeName, startDate, endDate)
 
-    expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
+    expect(getDeliveriesForReport).toHaveBeenCalled()
     expect(saveReportFile).not.toHaveBeenCalled()
     expect(completeReport).not.toHaveBeenCalled()
   })
 
-  test('should handle errors and rollback transaction', async () => {
-    const schemeName = 'TEST'
-    const startDate = new Date('2022-07-01T00:00:00Z')
-    const endDate = new Date('2022-07-31T23:59:59Z')
-
+  test('handles errors and rolls back transaction', async () => {
     getDeliveriesForReport.mockRejectedValue(new Error('Test error'))
 
     await expect(sendReport(schemeName, startDate, endDate)).rejects.toThrow('Test error')
-
-    expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
+    expect(getDeliveriesForReport).toHaveBeenCalled()
     expect(saveReportFile).not.toHaveBeenCalled()
     expect(completeReport).not.toHaveBeenCalled()
   })

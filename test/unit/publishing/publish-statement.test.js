@@ -35,7 +35,7 @@ const publishStatement = require('../../../app/publishing/publish-statement')
 const { EMAIL } = require('../../../app/constants/methods')
 const mapSchemeTemplateId = require('../../../app/constants/map-scheme-template-id')
 
-const NOTIFY_RESPONSE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED))
+const NOTIFY_RESPONSE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED)
 
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 

@@ -24,41 +24,36 @@ describe('getSchemeTemplateId', () => {
     consoleLogSpy.mockRestore()
   })
 
-  test('returns null when scheme is undefined', () => {
-    const result = getSchemeTemplateId(undefined)
-    expect(result).toBeNull()
+  describe('returns null for invalid schemes', () => {
+    test('when scheme is undefined', () => {
+      expect(getSchemeTemplateId(undefined)).toBeNull()
+    })
+
+    test('when scheme has no shortName', () => {
+      const result = getSchemeTemplateId({})
+      expect(result).toBeNull()
+      expect(consoleLogSpy).not.toHaveBeenCalled()
+    })
+
+    test('when scheme shortName unknown', () => {
+      const scheme = { shortName: 'UNKNOWN' }
+      const result = getSchemeTemplateId(scheme)
+      expect(result).toBeNull()
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))
+    })
   })
 
-  test('returns null when scheme has no shortName', () => {
-    const result = getSchemeTemplateId({})
-    expect(result).toBeNull()
-    expect(consoleLogSpy).not.toHaveBeenCalled()
-  })
+  describe('returns template IDs for known year-specific schemes', () => {
+    const cases = [
+      [{ shortName: 'DP', year: '2024' }, 'DP_2024'],
+      [{ shortName: 'DP', year: '2025' }, 'DP_2025'],
+      [{ shortName: 'SFI', year: '2023' }, 'SFI_2023']
+    ]
 
-  test('returns null and logs message when getDocTypeIdForScheme is called with no shortName', () => {
-    const scheme = { shortName: 'UNKNOWN' }
-
-    const result = getSchemeTemplateId(scheme)
-    expect(result).toBeNull()
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))
-  })
-
-  test('returns template ID for DP 2024', () => {
-    const scheme = { shortName: 'DP', year: '2024' }
-    const result = getSchemeTemplateId(scheme)
-    expect(result).toBe(mapSchemeTemplateId.DP_2024)
-  })
-
-  test('returns template ID for DP 2025', () => {
-    const scheme = { shortName: 'DP', year: '2025' }
-    const result = getSchemeTemplateId(scheme)
-    expect(result).toBe(mapSchemeTemplateId.DP_2025)
-  })
-
-  test('returns template ID for SFI 2023', () => {
-    const scheme = { shortName: 'SFI', year: '2023' }
-    const result = getSchemeTemplateId(scheme)
-    expect(result).toBe(mapSchemeTemplateId.SFI_2023)
+    test.each(cases)('scheme %o returns mapped template ID %s', (scheme, mapKey) => {
+      const result = getSchemeTemplateId(scheme)
+      expect(result).toBe(mapSchemeTemplateId[mapKey])
+    })
   })
 
   test('returns general template ID when year-specific template not found', () => {
@@ -81,10 +76,9 @@ describe('getSchemeTemplateId', () => {
     expect(result).toBe(mockTemplate)
   })
 
-  test('returns null when no matching template is found anywhere', () => {
+  test('returns null when no matching template found anywhere', () => {
     const scheme = { shortName: 'UNKNOWN', year: '2023' }
     documentTypes.find = jest.fn().mockReturnValue(undefined)
-
     const result = getSchemeTemplateId(scheme)
     expect(result).toBeNull()
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No template found for scheme'))

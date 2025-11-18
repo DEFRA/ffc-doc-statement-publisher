@@ -1,28 +1,47 @@
 const db = require('../../../app/data')
-
 const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
-
 const saveRequest = require('../../../app/publishing/save-request')
 
-const REFERENCE = JSON.parse(JSON.stringify(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED)).data.id
 const { EMAIL } = require('../../../app/constants/methods')
 const { EMPTY, INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const { EMPTY: EMPTY_ERROR, INVALID: INVALID_ERROR } = require('../../../app/constants/crm-error-messages')
 
 const SYSTEM_TIME = require('../../mocks/components/system-time')
-
 const MESSAGE = require('../../mocks/objects/message')
 
-let reference
-let method
-let reason
+const REFERENCE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED).data.id
 
-describe('Save statement and delivery and send to CRM and save failure if so', () => {
-  beforeEach(async () => {
+let reference, reason
+
+const statementKeys = [
+  { key: 'businessName', column: 'businessName' },
+  { key: 'sbi', column: 'sbi' },
+  { key: 'filename', column: 'filename' },
+  { key: 'email', column: 'email' },
+  { key: 'documentReference', column: 'documentReference' }
+]
+
+const addressKeys = [
+  { key: 'line1', column: 'addressLine1' },
+  { key: 'line2', column: 'addressLine2' },
+  { key: 'line3', column: 'addressLine3' },
+  { key: 'line4', column: 'addressLine4' },
+  { key: 'line5', column: 'addressLine5' },
+  { key: 'postcode', column: 'postcode' }
+]
+
+const failureReasons = [
+  { name: 'undefined', value: undefined, errorMessage: null, sendCRM: false },
+  { name: 'EMPTY', value: EMPTY, errorMessage: EMPTY_ERROR, sendCRM: true },
+  { name: 'INVALID', value: INVALID, errorMessage: INVALID_ERROR, sendCRM: true },
+  { name: 'REJECTED', value: REJECTED, errorMessage: INVALID_ERROR, sendCRM: true },
+  { name: 'Unknown', value: 'Not known failure reason', errorMessage: null, sendCRM: false }
+]
+
+describe('saveRequest', () => {
+  beforeEach(() => {
     jest.useFakeTimers().setSystemTime(SYSTEM_TIME)
-
     reference = REFERENCE
-    method = EMAIL
   })
 
   afterEach(async () => {
@@ -34,790 +53,86 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
     await db.sequelize.close()
   })
 
-  describe.each([
-    { name: 'statement', request: JSON.parse(JSON.stringify(require('../../mocks/messages/publish').STATEMENT_MESSAGE)).body }
-  ])('When request is $name', ({ name, request }) => {
-    describe('When successful', () => {
-      beforeEach(async () => {
-        reason = undefined
-      })
+  const request = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body
 
-      test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, { reason })
+  describe.each(failureReasons)('When failure reason is $name', ({ value, errorMessage, sendCRM }) => {
+    beforeEach(() => {
+      reason = value
+    })
 
-        const statement = await db.statement.findAll()
-        expect(statement.length).toBe(1)
-      })
+    test('saves 1 statement', async () => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const statements = await db.statement.findAll()
+      expect(statements.length).toBe(1)
+    })
 
-      test.each([
-        { key: 'businessName', column: 'businessName' },
-        { key: 'sbi', column: 'sbi' },
-        { key: 'filename', column: 'filename' },
-        { key: 'email', column: 'email' },
-        { key: 'documentReference', column: 'documentReference' }
-      ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, { reason })
+    test.each(statementKeys)('saves statement $key to column $column', async ({ key, column }) => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const statement = await db.statement.findOne()
+      expect(statement[column]).toBe(request[key])
+    })
 
-        const statement = await db.statement.findOne()
-        expect(request[key]).toBeDefined()
-        expect(statement[column]).toBeDefined()
-        expect(statement[column]).toBe(request[key])
-      })
+    test('saves statement FRN as string', async () => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const statement = await db.statement.findOne()
+      expect(statement.frn).toBe(String(request.frn))
+    })
 
-      test('should save string request key frn to statement column frn', async () => {
-        await saveRequest(request, reference, method, { reason })
+    test.each(addressKeys)('saves address $key to statement $column', async ({ key, column }) => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const statement = await db.statement.findOne()
+      expect(statement[column]).toBe(request.address[key])
+    })
 
-        const statement = await db.statement.findOne()
-        expect(request.frn).toBeDefined()
-        expect(statement.frn).toBeDefined()
-        expect(statement.frn).toBe(String(request.frn))
-      })
+    test('saves 1 delivery with correct fields', async () => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const delivery = await db.delivery.findOne()
+      const statement = await db.statement.findOne()
+      expect(delivery.statementId).toBe(statement.statementId)
+      expect(delivery.method).toBe(EMAIL)
+      expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
+      expect(delivery.completed).toBeNull()
+      expect(delivery.reference).toBe(reference ?? null)
+    })
 
-      test('should save request key address.line1 to statement column addressLine1', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.line1).toBeDefined()
-        expect(statement.addressLine1).toBeDefined()
-        expect(statement.addressLine1).toBe(request.address.line1)
-      })
-
-      test('should save request key address.line2 to statement column addressLine2', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.line2).toBeDefined()
-        expect(statement.addressLine2).toBeDefined()
-        expect(statement.addressLine2).toBe(request.address.line2)
-      })
-
-      test('should save request key address.line3 to statement column addressLine3', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.line3).toBeDefined()
-        expect(statement.addressLine3).toBeDefined()
-        expect(statement.addressLine3).toBe(request.address.line3)
-      })
-
-      test('should save request key address.line4 to statement column addressLine4', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.line4).toBeDefined()
-        expect(statement.addressLine4).toBeDefined()
-        expect(statement.addressLine4).toBe(request.address.line4)
-      })
-
-      test('should save request key address.line5 to statement column addressLine5', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.line5).toBeDefined()
-        expect(statement.addressLine5).toBeDefined()
-        expect(statement.addressLine5).toBe(request.address.line5)
-      })
-
-      test('should save request key address.postcode to statement column postcode', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request.address.postcode).toBeDefined()
-        expect(statement.postcode).toBeDefined()
-        expect(statement.postcode).toBe(request.address.postcode)
-      })
-
-      test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(1)
-      })
-
-      test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
+    test('saves 1 failure if reason provided', async () => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      const failures = await db.failure.findAll()
+      if (value) {
+        expect(failures.length).toBe(1)
+        const failure = await db.failure.findOne()
         const delivery = await db.delivery.findOne()
-        expect(delivery.statementId).toBe(statement.statementId)
-      })
+        expect(failure.deliveryId).toBe(delivery.deliveryId)
+        expect(failure.reason).toBe(value)
+        expect(failure.failed).toStrictEqual(SYSTEM_TIME)
+      } else {
+        expect(failures.length).toBe(0)
+      }
+    })
 
-      test('should save delivery with method method', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.method).toBe(method)
-      })
-
-      test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.completed).toBeNull()
-      })
-
-      test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBe(reference)
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = null
-
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = undefined
-
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should not save failure', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const failure = await db.failure.findAll()
-        expect(failure.length).toBe(0)
-      })
-
-      test('should not send message to CRM', async () => {
-        await saveRequest(request, reference, method, { reason })
-
+    test(`CRM message ${sendCRM ? 'is sent' : 'is not sent'}`, async () => {
+      await saveRequest(request, reference, EMAIL, { reason })
+      if (sendCRM) {
+        expect(mockMessageSender().sendMessage).toHaveBeenCalled()
+        expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      } else {
         expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
         expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
-      })
+      }
     })
 
-    describe('When failure reason is EMPTY', () => {
-      beforeEach(async () => {
-        reason = EMPTY
-      })
-
-      test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findAll()
-        expect(statement.length).toBe(1)
-      })
-
-      test.each([
-        { key: 'businessName', column: 'businessName' },
-        { key: 'sbi', column: 'sbi' },
-        { key: 'filename', column: 'filename' },
-        { key: 'email', column: 'email' },
-        { key: 'documentReference', column: 'documentReference' }
-      ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request[key]).toBeDefined()
-        expect(statement[column]).toBeDefined()
-        expect(statement[column]).toBe(request[key])
-      })
-
-      test('should save statement with frn', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.frn).toBe(request.frn.toString())
-      })
-
-      test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine1).toBe(request.address.line1)
-      })
-
-      test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine2).toBe(request.address.line2)
-      })
-
-      test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine3).toBe(request.address.line3)
-      })
-
-      test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine4).toBe(request.address.line4)
-      })
-
-      test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine5).toBe(request.address.line5)
-      })
-
-      test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.postcode).toBe(request.address.postcode)
-      })
-
-      test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(1)
-      })
-
-      test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        const delivery = await db.delivery.findOne()
-        expect(delivery.statementId).toBe(statement.statementId)
-      })
-
-      test('should save delivery with method method', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.method).toBe(method)
-      })
-
-      test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.completed).toBeNull()
-      })
-
-      test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBe(reference)
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = null
-
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = undefined
-
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save 1 failure', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const failure = await db.failure.findAll()
-        expect(failure.length).toBe(1)
-      })
-
-      test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findOne()
-        const failure = await db.failure.findOne()
-        expect(failure.deliveryId).toBe(delivery.deliveryId)
-      })
-
-      test('should save failure with reason as EMPTY', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.reason).toBe(EMPTY)
-      })
-
-      test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.failed).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should send message to CRM', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-      })
-
-      test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-        expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
-      })
-
-      test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, method, { reason })
-
+    if (sendCRM) {
+      test('CRM message content is correct', async () => {
+        await saveRequest(request, reference, EMAIL, { reason })
         expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
           ...MESSAGE,
           body: {
             email: request.email,
-            errorMessage: EMPTY_ERROR,
+            errorMessage,
             frn: request.frn
           }
         })
       })
-    })
-
-    describe('When failure reason is INVALID', () => {
-      beforeEach(async () => {
-        reason = INVALID
-      })
-
-      test('should save 1 statement', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findAll()
-        expect(statement.length).toBe(1)
-      })
-
-      test.each([
-        { key: 'businessName', column: 'businessName' },
-        { key: 'sbi', column: 'sbi' },
-        { key: 'filename', column: 'filename' },
-        { key: 'email', column: 'email' },
-        { key: 'documentReference', column: 'documentReference' }
-      ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(request[key]).toBeDefined()
-        expect(statement[column]).toBeDefined()
-        expect(statement[column]).toBe(request[key])
-      })
-
-      test('should save statement with frn', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.frn).toBe(request.frn.toString())
-      })
-
-      test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine1).toBe(request.address.line1)
-      })
-
-      test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine2).toBe(request.address.line2)
-      })
-
-      test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine3).toBe(request.address.line3)
-      })
-
-      test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine4).toBe(request.address.line4)
-      })
-
-      test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine5).toBe(request.address.line5)
-      })
-
-      test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.postcode).toBe(request.address.postcode)
-      })
-
-      test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(1)
-      })
-
-      test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        const delivery = await db.delivery.findOne()
-        expect(delivery.statementId).toBe(statement.statementId)
-      })
-
-      test('should save delivery with email method', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.method).toBe(EMAIL)
-      })
-
-      test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.completed).toBeNull()
-      })
-
-      test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBe(reference)
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = null
-
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = undefined
-
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save 1 failure', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findAll()
-        expect(failure.length).toBe(1)
-      })
-
-      test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        const failure = await db.failure.findOne()
-        expect(failure.deliveryId).toBe(delivery.deliveryId)
-      })
-
-      test('should save failure with reason as INVALID', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.reason).toBe(INVALID)
-      })
-
-      test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.failed).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should send message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-      })
-
-      test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-        expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
-      })
-
-      test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
-          ...MESSAGE,
-          body: {
-            email: request.email,
-            errorMessage: INVALID_ERROR,
-            frn: request.frn
-          }
-        })
-      })
-    })
-
-    describe('When failure reason is REJECTED', () => {
-      beforeEach(async () => {
-        reason = REJECTED
-      })
-
-      test('should save 1 statement', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findAll()
-        expect(statement.length).toBe(1)
-      })
-
-      test.each([
-        { key: 'businessName', column: 'businessName' },
-        { key: 'sbi', column: 'sbi' },
-        { key: 'filename', column: 'filename' },
-        { key: 'email', column: 'email' },
-        { key: 'documentReference', column: 'documentReference' }
-      ])('should save request key $key to statement column $column', async ({ key, column }) => {
-        await saveRequest(request, reference, method, { reason })
-
-        const statement = await db.statement.findOne()
-        console.log(statement[column], request[key])
-        expect(request[key]).toBeDefined()
-        expect(statement[column]).toBeDefined()
-        expect(statement[column]).toBe(request[key])
-      })
-
-      test('should save statement with frn', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.frn).toBe(request.frn.toString())
-      })
-
-      test('should save statement with address line 1', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine1).toBe(request.address.line1)
-      })
-
-      test('should save statement with address line 2', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine2).toBe(request.address.line2)
-      })
-
-      test('should save statement with address line 3', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine3).toBe(request.address.line3)
-      })
-
-      test('should save statement with address line 4', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine4).toBe(request.address.line4)
-      })
-
-      test('should save statement with address line 5', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.addressLine5).toBe(request.address.line5)
-      })
-
-      test('should save statement with address postcode', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        expect(statement.postcode).toBe(request.address.postcode)
-      })
-
-      test('should save 1 delivery', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(1)
-      })
-
-      test('should save delivery with statement id', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const statement = await db.statement.findOne()
-        const delivery = await db.delivery.findOne()
-        expect(delivery.statementId).toBe(statement.statementId)
-      })
-
-      test('should save delivery with email method', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.method).toBe(EMAIL)
-      })
-
-      test('should save delivery with SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should save delivery with null completed date', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.completed).toBeNull()
-      })
-
-      test('should save delivery with reference if reference', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBe(reference)
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = null
-
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save delivery with null reference when reference is null', async () => {
-        reference = undefined
-
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        expect(delivery.reference).toBeNull()
-      })
-
-      test('should save 1 failure', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findAll()
-        expect(failure.length).toBe(1)
-      })
-
-      test('should save failure with deliveryId', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const delivery = await db.delivery.findOne()
-        const failure = await db.failure.findOne()
-        expect(failure.deliveryId).toBe(delivery.deliveryId)
-      })
-
-      test('should save failure with reason as REJECTED', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.reason).toBe(REJECTED)
-      })
-
-      test('should save failure with failed as SYSTEM_TIME', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        const failure = await db.failure.findOne()
-        expect(failure.failed).toStrictEqual(SYSTEM_TIME)
-      })
-
-      test('should send message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).toHaveBeenCalled()
-      })
-
-      test('should send 1 message to CRM', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-        expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
-      })
-
-      test('should send message to CRM with correct content', async () => {
-        await saveRequest(request, reference, EMAIL, { reason })
-
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
-          ...MESSAGE,
-          body: {
-            email: request.email,
-            errorMessage: INVALID_ERROR,
-            frn: request.frn
-          }
-        })
-      })
-    })
-
-    describe('When failure reason is "Not known failure reason"', () => {
-      beforeEach(async () => {
-        reason = 'Not known failure reason'
-      })
-
-      test('should still save statement', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
-
-        const statement = await db.statement.findAll()
-        expect(statement.length).toBe(1)
-      })
-
-      test('should still save delivery', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
-
-        const delivery = await db.delivery.findAll()
-        expect(delivery.length).toBe(1)
-      })
-
-      test('should still save failure', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
-
-        const failure = await db.failure.findAll()
-        expect(failure.length).toBe(1)
-      })
-
-      test('should not send message to CRM', async () => {
-        try { await saveRequest(request, reference, EMAIL, { reason }) } catch { }
-
-        expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
-      })
-    })
+    }
   })
 })

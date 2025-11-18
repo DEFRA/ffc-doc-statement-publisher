@@ -8,7 +8,7 @@ jest.mock('../../../app/data')
 jest.mock('../../../app/publishing/publish')
 jest.mock('../../../app/publishing/is-dp-scheme')
 
-describe('scheduleLetter', () => {
+describe('processScheduleLetter', () => {
   let mockTransaction
   let delivery
   let statement
@@ -36,11 +36,7 @@ describe('scheduleLetter', () => {
       email: 'test@example.com'
     }
 
-    publishResponse = {
-      data: {
-        id: 'notify-ref-789'
-      }
-    }
+    publishResponse = { data: { id: 'notify-ref-789' } }
 
     db.statement.findOne.mockResolvedValue(statement)
     isDpScheme.mockReturnValue(true)
@@ -55,7 +51,6 @@ describe('scheduleLetter', () => {
 
   test('gets statement using transaction', async () => {
     await scheduleLetter(delivery, mockTransaction)
-
     expect(db.statement.findOne).toHaveBeenCalledWith({
       where: { statementId: delivery.statementId },
       transaction: mockTransaction
@@ -64,7 +59,6 @@ describe('scheduleLetter', () => {
 
   test('throws error if statement not found', async () => {
     db.statement.findOne.mockResolvedValue(null)
-
     await expect(scheduleLetter(delivery, mockTransaction))
       .rejects
       .toThrow(`Statement not found for statementId: ${delivery.statementId}`)
@@ -77,7 +71,6 @@ describe('scheduleLetter', () => {
 
     test('returns false without scheduling letter', async () => {
       const result = await scheduleLetter(delivery, mockTransaction)
-
       expect(result).toBe(false)
       expect(publish).not.toHaveBeenCalled()
       expect(db.delivery.create).not.toHaveBeenCalled()
@@ -85,9 +78,7 @@ describe('scheduleLetter', () => {
 
     test('logs non-DP scheme message', async () => {
       const consoleSpy = jest.spyOn(console, 'log')
-
       await scheduleLetter(delivery, mockTransaction)
-
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(`Letter not scheduled - not DP scheme: ${statement.schemeShortName}`)
       )
@@ -101,7 +92,6 @@ describe('scheduleLetter', () => {
 
     test('publishes letter with correct parameters', async () => {
       await scheduleLetter(delivery, mockTransaction)
-
       expect(publish).toHaveBeenCalledWith(
         statement.emailTemplate,
         statement.email,
@@ -114,30 +104,23 @@ describe('scheduleLetter', () => {
     test('creates new delivery record with correct data', async () => {
       const timestamp = new Date()
       jest.spyOn(global, 'Date').mockImplementation(() => timestamp)
-
       await scheduleLetter(delivery, mockTransaction)
-
       expect(db.delivery.create).toHaveBeenCalledWith({
         statementId: delivery.statementId,
         method: LETTER,
         reference: publishResponse.data.id,
         requested: timestamp
-      }, {
-        transaction: mockTransaction
-      })
+      }, { transaction: mockTransaction })
     })
 
     test('returns true on successful scheduling', async () => {
       const result = await scheduleLetter(delivery, mockTransaction)
-
       expect(result).toBe(true)
     })
 
     test('logs success message', async () => {
       const consoleSpy = jest.spyOn(console, 'log')
-
       await scheduleLetter(delivery, mockTransaction)
-
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(`Letter scheduled successfully for statement ${statement.filename}`)
       )
@@ -145,37 +128,22 @@ describe('scheduleLetter', () => {
   })
 
   describe('error handling', () => {
-    test('throws publish error', async () => {
-      const error = new Error('Publish failed')
-      publish.mockRejectedValue(error)
+    const errorCases = [
+      { name: 'publish error', mockFn: () => publish.mockRejectedValue(new Error('Publish failed')), expectedError: 'Publish failed' },
+      { name: 'delivery creation error', mockFn: () => db.delivery.create.mockRejectedValue(new Error('DB error')), expectedError: 'DB error' }
+    ]
 
-      await expect(scheduleLetter(delivery, mockTransaction))
-        .rejects
-        .toThrow(error)
+    test.each(errorCases)('throws $name', async ({ mockFn, expectedError }) => {
+      mockFn()
+      await expect(scheduleLetter(delivery, mockTransaction)).rejects.toThrow(expectedError)
     })
 
-    test('throws delivery creation error', async () => {
-      const error = new Error('DB error')
-      db.delivery.create.mockRejectedValue(error)
-
-      await expect(scheduleLetter(delivery, mockTransaction))
-        .rejects
-        .toThrow(error)
-    })
-
-    test('logs error message', async () => {
+    test('logs publish errors', async () => {
       const consoleSpy = jest.spyOn(console, 'error')
       const error = new Error('Test error')
       publish.mockRejectedValue(error)
-
-      try {
-        await scheduleLetter(delivery, mockTransaction)
-      } catch { }
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to schedule letter:',
-        error
-      )
+      try { await scheduleLetter(delivery, mockTransaction) } catch { }
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to schedule letter:', error)
     })
   })
 })
