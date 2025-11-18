@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const report = sequelize.define('report', {
-    reportId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    reportId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, comment: 'Status report' },
     lastDeliveryId: DataTypes.INTEGER,
     schemeName: DataTypes.STRING,
     reportStartDate: DataTypes.DATE,
