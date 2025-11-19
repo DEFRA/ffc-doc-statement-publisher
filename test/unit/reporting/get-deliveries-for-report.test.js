@@ -6,9 +6,7 @@ jest.mock('../../../app/data')
 jest.mock('pg-query-stream')
 
 describe('getDeliveriesForReport', () => {
-  const mockClient = {
-    query: jest.fn()
-  }
+  const mockClient = { query: jest.fn() }
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -28,16 +26,13 @@ describe('getDeliveriesForReport', () => {
 
     const mockStream = {
       on: jest.fn((event, callback) => {
-        if (event === 'data') {
-          mockDeliveries.forEach(delivery => callback(delivery))
-        }
-        if (event === 'end') {
-          callback()
-        }
+        if (event === 'data') mockDeliveries.forEach(callback)
+        if (event === 'end') callback()
         return mockStream
       })
     }
 
+    QueryStream.mockImplementation(() => mockStream)
     mockClient.query.mockReturnValue(mockStream)
 
     const result = await getDeliveriesForReport(schemeName, start, end, transaction)

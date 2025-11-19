@@ -16,7 +16,7 @@ const createFailure = require('../../../app/monitoring/create-failure')
 const scheduleLetter = require('../../../app/monitoring/schedule-letter')
 const failed = require('../../../app/monitoring/failed')
 
-describe('failed', () => {
+describe('processFailed', () => {
   let delivery
   let failure
   let mockStatement
@@ -92,25 +92,19 @@ describe('failed', () => {
     )
   })
 
-  describe('when delivery method is EMAIL', () => {
-    beforeEach(() => {
-      delivery.method = EMAIL
-    })
-
-    test('schedules letter with transaction', async () => {
+  describe('delivery method behavior', () => {
+    test.each([
+      { method: EMAIL, shouldSchedule: true },
+      { method: LETTER, shouldSchedule: false }
+    ])('when delivery method is %s', async ({ method, shouldSchedule }) => {
+      delivery.method = method
       await failed(delivery, failure)
-      expect(scheduleLetter).toHaveBeenCalledWith(delivery, mockTransaction())
-    })
-  })
 
-  describe('when delivery method is LETTER', () => {
-    beforeEach(() => {
-      delivery.method = LETTER
-    })
-
-    test('does not schedule letter', async () => {
-      await failed(delivery, failure)
-      expect(scheduleLetter).not.toHaveBeenCalled()
+      if (shouldSchedule) {
+        expect(scheduleLetter).toHaveBeenCalledWith(delivery, mockTransaction())
+      } else {
+        expect(scheduleLetter).not.toHaveBeenCalled()
+      }
     })
   })
 
@@ -120,51 +114,18 @@ describe('failed', () => {
   })
 
   describe('error handling', () => {
-    const testCases = [
-      {
-        name: 'getStatementByStatementId fails',
-        mockSetup: () => getStatementByStatementId.mockRejectedValue(new Error('DB Error')),
-        expectedError: 'DB Error'
-      },
-      {
-        name: 'completeDelivery fails',
-        mockSetup: () => completeDelivery.mockRejectedValue(new Error('Complete Failed')),
-        expectedError: 'Complete Failed'
-      },
-      {
-        name: 'createFailure fails',
-        mockSetup: () => createFailure.mockRejectedValue(new Error('Create Failed')),
-        expectedError: 'Create Failed'
-      },
-      {
-        name: 'scheduleLetter fails',
-        mockSetup: () => scheduleLetter.mockRejectedValue(new Error('Schedule Failed')),
-        expectedError: 'Schedule Failed'
-      }
+    const errorTestCases = [
+      { name: 'getStatementByStatementId fails', mockSetup: () => getStatementByStatementId.mockRejectedValue(new Error('DB Error')), expectedError: 'DB Error' },
+      { name: 'completeDelivery fails', mockSetup: () => completeDelivery.mockRejectedValue(new Error('Complete Failed')), expectedError: 'Complete Failed' },
+      { name: 'createFailure fails', mockSetup: () => createFailure.mockRejectedValue(new Error('Create Failed')), expectedError: 'Create Failed' },
+      { name: 'scheduleLetter fails', mockSetup: () => scheduleLetter.mockRejectedValue(new Error('Schedule Failed')), expectedError: 'Schedule Failed' }
     ]
 
-    testCases.forEach(({ name, mockSetup, expectedError }) => {
-      describe(`when ${name}`, () => {
-        beforeEach(() => {
-          mockSetup()
-        })
-
-        test('rolls back transaction', async () => {
-          await expect(failed(delivery, failure)).rejects.toThrow()
-          expect(mockTransaction().rollback).toHaveBeenCalled()
-        })
-
-        test('throws original error', async () => {
-          await expect(failed(delivery, failure)).rejects.toThrow(expectedError)
-        })
-
-        test('does not commit transaction', async () => {
-          try {
-            await failed(delivery, failure)
-          } catch { }
-          expect(mockTransaction().commit).not.toHaveBeenCalled()
-        })
-      })
+    test.each(errorTestCases)('rolls back transaction and throws when %s', async ({ mockSetup, expectedError }) => {
+      mockSetup()
+      await expect(failed(delivery, failure)).rejects.toThrow(expectedError)
+      expect(mockTransaction().rollback).toHaveBeenCalled()
+      expect(mockTransaction().commit).not.toHaveBeenCalled()
     })
 
     describe('when transaction commit fails', () => {

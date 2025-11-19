@@ -1,8 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`sendReport should rollback transaction and throw error on stream error 1`] = `
-"Status,Error(s),FRN,SBI,Payment Reference,Scheme Name,Scheme Short Name,Scheme Year,Delivery Method,Business Name,Address,Email,Filename,Document DB ID,Statement Data Received,Notify Email Requested,Statement Failure Notification,Statement Delivery Notification
-Success,,,,,,,,email,,,,,1,,2022-07-01 10:00:00,,2022-07-02 10:00:00
-Success,,,,,,,,sms,,,,,2,,2022-07-03 10:00:00,,2022-07-04 10:00:00
-Success,"Status Code: 500, Reason: Server Error, Error: Internal Server Error, Message: Failed to deliver",,,,,,,letter,,,,,3,,2022-07-03 10:00:00,2022-07-04 12:00:00,2022-07-04 10:00:00"
-`;

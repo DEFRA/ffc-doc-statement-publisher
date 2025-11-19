@@ -3,14 +3,13 @@ const { getOutstandingDeliveries } = require('../../../app/monitoring/get-outsta
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
 
-describe('get outstanding deliveries', () => {
+describe('getOutstandingDeliveries', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     const testDate = new Date(2022, 7, 5, 15, 30, 10, 120)
     jest.useFakeTimers().setSystemTime(testDate)
 
     await db.sequelize.truncate({ cascade: true })
-
     await db.statement.bulkCreate([mockStatement1, mockStatement2])
   })
 
@@ -57,13 +56,12 @@ describe('get outstanding deliveries', () => {
   })
 
   test('respects limit parameter', async () => {
-    const outstandingDelivery1 = { ...mockDelivery1 }
-    const outstandingDelivery2 = {
-      ...mockDelivery2,
-      completed: null
-    }
+    const deliveries = [
+      { ...mockDelivery1 },
+      { ...mockDelivery2, completed: null }
+    ]
 
-    await db.delivery.bulkCreate([outstandingDelivery1, outstandingDelivery2])
+    await db.delivery.bulkCreate(deliveries)
 
     const allResults = await getOutstandingDeliveries()
     expect(allResults.length).toBe(2)

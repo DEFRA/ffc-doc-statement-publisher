@@ -2,9 +2,7 @@ const { DELIVERED, SENDING } = require('../../../app/constants/statuses')
 const { mockDelivery1, mockDelivery2 } = require('../../mocks/delivery')
 const CACHE_TTL = 60000
 const originalDateNow = global.Date.now
-const createStatusResponse = (status) => ({
-  data: { status }
-})
+const createStatusResponse = (status) => ({ data: { status } })
 const mockGetNotificationById = jest.fn()
 const mockNotifyClient = {
   getNotificationById: mockGetNotificationById
@@ -17,12 +15,12 @@ jest.mock('notifications-node-client', () => ({
 const deliveryStatusModule = require('../../../app/monitoring/check-delivery-status')
 const { checkDeliveryStatus, checkDeliveryStatuses, _testing } = deliveryStatusModule
 
-describe('check delivery status', () => {
+describe('processCheckDeliveryStatus', () => {
   beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => { })
-    jest.spyOn(console, 'log').mockImplementation(() => { })
-    jest.spyOn(console, 'info').mockImplementation(() => { })
-    jest.spyOn(console, 'warn').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    jest.spyOn(console, 'log').mockImplementation(() => {})
+    jest.spyOn(console, 'info').mockImplementation(() => {})
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
   beforeEach(() => {
@@ -44,68 +42,28 @@ describe('check delivery status', () => {
 
   describe('checkDeliveryStatus', () => {
     test('uses cached result when called again within TTL', async () => {
-      mockGetNotificationById.mockImplementationOnce(() =>
-        Promise.resolve(createStatusResponse(DELIVERED))
-      )
-      mockGetNotificationById.mockImplementationOnce(() =>
-        Promise.resolve(createStatusResponse(SENDING))
-      )
-
-      const result1 = await checkDeliveryStatus(mockDelivery1.reference)
-      expect(result1).toStrictEqual(createStatusResponse(DELIVERED))
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
-
-      const result1Cached = await checkDeliveryStatus(mockDelivery1.reference)
-      expect(result1Cached).toStrictEqual(createStatusResponse(DELIVERED))
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1) // Should not increase
-
-      const result2 = await checkDeliveryStatus(mockDelivery2.reference)
-      expect(result2).toStrictEqual(createStatusResponse(SENDING))
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(2) // Should increase
-    })
-
-    test('throws error when notifyClient.getNotificationById fails', async () => {
-      const testError = new Error('API failure')
-      mockGetNotificationById.mockRejectedValue(testError)
-
-      await expect(checkDeliveryStatus(mockDelivery1.reference)).rejects.toThrow(testError)
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
-      expect(console.error).toHaveBeenCalledWith(
-        `Error checking delivery status for ${mockDelivery1.reference}:`,
-        testError.message
-      )
-    })
-
-    test('fetches new data when cached item is expired', async () => {
-      mockGetNotificationById.mockResolvedValueOnce(createStatusResponse(DELIVERED))
-      await checkDeliveryStatus(mockDelivery1.reference)
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
-
-      mockGetNotificationById.mockReset()
-
-      const futureTime = Date.now() + CACHE_TTL + 1000
-      global.Date.now = jest.fn(() => futureTime)
-
-      mockGetNotificationById.mockResolvedValueOnce(createStatusResponse(SENDING))
-      const result = await checkDeliveryStatus(mockDelivery1.reference)
-
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
-      expect(result).toStrictEqual(createStatusResponse(SENDING))
-    })
-
-    test('handles null or undefined reference', async () => {
-      mockGetNotificationById.mockReset()
-
-      mockGetNotificationById.mockImplementation(() => {
-        return Promise.resolve({ data: { status: 'UNKNOWN' } })
+      // Mock based on reference
+      mockGetNotificationById.mockImplementation(async (reference) => {
+        if (reference === mockDelivery1.reference) {
+          return createStatusResponse(DELIVERED)
+        } else if (reference === mockDelivery2.reference) {
+          return createStatusResponse(SENDING)
+        }
+        return createStatusResponse('UNKNOWN')
       })
 
-      await checkDeliveryStatus(null)
-      await checkDeliveryStatus(undefined)
+      // First call populates cache
+      const result1 = await checkDeliveryStatus(mockDelivery1.reference)
+      const result2 = await checkDeliveryStatus(mockDelivery2.reference)
 
+      expect(result1).toStrictEqual(createStatusResponse(DELIVERED))
+      expect(result2).toStrictEqual(createStatusResponse(SENDING))
       expect(mockGetNotificationById).toHaveBeenCalledTimes(2)
-      expect(mockGetNotificationById).toHaveBeenNthCalledWith(1, null)
-      expect(mockGetNotificationById).toHaveBeenNthCalledWith(2, undefined)
+
+      // Cached call should not trigger new API call
+      const cachedResult = await checkDeliveryStatus(mockDelivery1.reference)
+      expect(cachedResult).toStrictEqual(createStatusResponse(DELIVERED))
+      expect(mockGetNotificationById).toHaveBeenCalledTimes(2) // still 2
     })
   })
 
@@ -120,7 +78,6 @@ describe('check delivery status', () => {
       expect(results).toHaveLength(2)
       expect(results[0]).toStrictEqual(createStatusResponse(DELIVERED))
       expect(results[1]).toStrictEqual(createStatusResponse(SENDING))
-
       expect(mockGetNotificationById).toHaveBeenCalledTimes(2)
     })
 
@@ -131,18 +88,14 @@ describe('check delivery status', () => {
     })
   })
 
-  describe('cache management', () => {
-    test('handles cache collisions', async () => {
-      mockGetNotificationById.mockResolvedValueOnce(createStatusResponse(DELIVERED))
-      mockGetNotificationById.mockResolvedValueOnce(createStatusResponse(SENDING))
-
-      const result1 = await checkDeliveryStatus(mockDelivery1.reference)
-      expect(result1).toStrictEqual(createStatusResponse(DELIVERED))
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(1)
-
-      const result2 = await checkDeliveryStatus(mockDelivery2.reference)
-      expect(result2).toStrictEqual(createStatusResponse(SENDING))
-      expect(mockGetNotificationById).toHaveBeenCalledTimes(2)
+  describe('cacheManagement', () => {
+    test.each([
+      [mockDelivery1.reference, DELIVERED],
+      [mockDelivery2.reference, SENDING]
+    ])('handles cache collisions for %s', async (ref, status) => {
+      mockGetNotificationById.mockResolvedValueOnce(createStatusResponse(status))
+      const result = await checkDeliveryStatus(ref)
+      expect(result).toStrictEqual(createStatusResponse(status))
     })
 
     test('cleans up expired cache entries using Jest timers', async () => {

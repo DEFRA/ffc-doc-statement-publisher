@@ -1,17 +1,14 @@
-jest.mock('ffc-messaging', () => {
-  return {
-    MessageReceiver: jest.fn().mockImplementation(() => ({
-      subscribe: jest.fn(),
-      closeConnection: jest.fn()
-    }))
-  }
-})
+jest.mock('ffc-messaging', () => ({
+  MessageReceiver: jest.fn().mockImplementation(() => ({
+    subscribe: jest.fn(),
+    closeConnection: jest.fn()
+  }))
+}))
 
 jest.mock('../../../app/data')
 jest.mock('../../../app/alert', () => ({
   sendAlert: jest.fn()
 }))
-
 jest.mock('../../../app/messaging/process-publish-message')
 
 const messageService = require('../../../app/messaging')
@@ -28,12 +25,12 @@ describe('messaging', () => {
     await messageService.stop()
   })
 
-  test('start runs successfully', async () => {
+  test('should start successfully', async () => {
     await messageService.start()
     expect(MessageReceiver).toHaveBeenCalledTimes(3)
   })
 
-  test('start throws and alerts on receiver subscribe failure', async () => {
+  test('should throw and send alert when receiver subscribe fails', async () => {
     MessageReceiver.mockImplementation(() => ({
       subscribe: jest.fn().mockRejectedValue(new Error('Subscribe failed')),
       closeConnection: jest.fn()
@@ -47,7 +44,7 @@ describe('messaging', () => {
     )
   })
 
-  test('publishAction handles message processing error and sends alert', async () => {
+  test('should send alert when publishAction fails during message processing', async () => {
     const mockMessage = { body: 'test' }
     const mockReceiver = { subscribe: jest.fn(), closeConnection: jest.fn() }
     MessageReceiver.mockImplementation(() => mockReceiver)

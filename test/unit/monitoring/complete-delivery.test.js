@@ -7,7 +7,7 @@ jest.mock('../../../app/data', () => ({
   }
 }))
 
-describe('completeDelivery', () => {
+describe('processCompleteDelivery', () => {
   const deliveryId = '123'
   const transaction = { /* mock transaction */ }
 
@@ -15,8 +15,11 @@ describe('completeDelivery', () => {
     jest.clearAllMocks()
   })
 
-  test('should update delivery and return true when successful', async () => {
-    db.delivery.update.mockResolvedValue([1, {}])
+  test.each([
+    { updatedRows: 1, expected: true, description: 'updates delivery successfully' },
+    { updatedRows: 0, expected: false, description: 'returns false when no rows updated' }
+  ])('should $description', async ({ updatedRows, expected }) => {
+    db.delivery.update.mockResolvedValue([updatedRows, {}])
 
     const result = await completeDelivery(deliveryId, transaction)
 
@@ -28,16 +31,7 @@ describe('completeDelivery', () => {
         returning: true
       }
     )
-    expect(result).toBe(true)
-  })
-
-  test('should return false when no rows are updated', async () => {
-    db.delivery.update.mockResolvedValue([0, {}])
-
-    const result = await completeDelivery(deliveryId, transaction)
-
-    expect(db.delivery.update).toHaveBeenCalled()
-    expect(result).toBe(false)
+    expect(result).toBe(expected)
   })
 
   test('should throw error when update fails', async () => {
