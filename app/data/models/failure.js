@@ -1,5 +1,5 @@
-const comment = "Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"
-const commentDate = "Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"
+const comment = 'Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
+const commentDate = 'Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
 
 module.exports = (sequelize, DataTypes) => {
   /**
