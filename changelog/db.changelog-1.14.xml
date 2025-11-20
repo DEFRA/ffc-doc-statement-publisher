@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.9.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+  <changeSet id="1" author="John Barnard">
+    <tagDatabase tag="v1.14.0" />
+  </changeSet>
+  <changeSet id="2" author="John Barnard">
+    <setColumnRemarks tableName="deliveries" columnName="deliveryId" remarks="Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="deliveries" columnName="statementId" remarks="Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="deliveries" columnName="method" remarks="Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="deliveries" columnName="reference" remarks="Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="deliveries" columnName="requested" remarks="Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="deliveries" columnName="completed" remarks="Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify"/>
+    <setColumnRemarks tableName="failures" columnName="failureId" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="deliveryId" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="statusCode" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="reason" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="error" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="message" remarks="Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="failures" columnName="failed" remarks="Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report"/>
+    <setColumnRemarks tableName="reports" columnName="reportId" remarks="Status report"/>
+    <setColumnRemarks tableName="statements" columnName="statementId" remarks="History of statements and related customer data"/>
+  </changeSet>
+</databaseChangeLog>
