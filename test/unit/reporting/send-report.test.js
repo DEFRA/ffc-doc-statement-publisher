@@ -93,7 +93,10 @@ describe('sendReport', () => {
 
   test('should handle no deliveries found', async () => {
     mockStream.on.mockImplementation((event, cb) => {
-      if (event === 'end') cb()
+      if (event === 'end') {
+        cb()
+      }
+
       return mockStream
     })
 
@@ -119,7 +122,10 @@ describe('sendReport', () => {
   test('should rollback transaction on stream error', async () => {
     const error = new Error('Stream error')
     mockStream.on.mockImplementation((event, callback) => {
-      if (event === 'error') process.nextTick(() => callback(error))
+      if (event === 'error') {
+        process.nextTick(() => callback(error))
+      }
+
       return mockStream
     })
     getDeliveriesForReport.mockResolvedValue(mockStream)
@@ -130,7 +136,10 @@ describe('sendReport', () => {
 
   test('should rollback transaction when no data is received', async () => {
     mockStream.on.mockImplementation((event, callback) => {
-      if (event === 'end') process.nextTick(callback)
+      if (event === 'end') {
+        process.nextTick(callback)
+      }
+      
       return mockStream
     })
     getDeliveriesForReport.mockResolvedValue(mockStream)

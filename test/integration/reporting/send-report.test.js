@@ -33,8 +33,13 @@ describe('sendReport', () => {
 
   const createMockStream = (deliveries = []) => ({
     on: jest.fn((event, callback) => {
-      if (event === 'data') deliveries.forEach(d => callback(d))
-      if (event === 'end') callback()
+      if (event === 'data') {
+        deliveries.forEach(d => callback(d))
+      }
+      else if (event === 'end') {
+        callback()
+      }
+      
       return this
     })
   })
