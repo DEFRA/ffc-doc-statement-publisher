@@ -28,11 +28,10 @@ describe('getDeliveriesForReport', () => {
       on: jest.fn((event, callback) => {
         if (event === 'data') {
           mockDeliveries.forEach(callback)
-        }
-        else if (event === 'end') {
+        } else if (event === 'end') {
           callback()
         }
-        
+
         return mockStream
       })
     }

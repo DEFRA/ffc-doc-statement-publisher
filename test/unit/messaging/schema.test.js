@@ -38,11 +38,10 @@ describe('request schema', () => {
   ])('validates $field with value $value', ({ field, value }) => {
     if (value === undefined) {
       delete messagingMockRequest[field]
-    }
-    else {
+    } else {
       messagingMockRequest[field] = value
     }
-    
+
     const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeDefined()
   })

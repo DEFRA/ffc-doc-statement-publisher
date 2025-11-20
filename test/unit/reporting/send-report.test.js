@@ -139,7 +139,7 @@ describe('sendReport', () => {
       if (event === 'end') {
         process.nextTick(callback)
       }
-      
+
       return mockStream
     })
     getDeliveriesForReport.mockResolvedValue(mockStream)
