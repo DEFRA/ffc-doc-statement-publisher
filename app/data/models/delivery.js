@@ -1,9 +1,13 @@
+const comment = 'Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify'
+const commentDate = 'Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify'
+
 module.exports = (sequelize, DataTypes) => {
   const delivery = sequelize.define('delivery', {
     deliveryId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
+      comment
     },
     statementId: {
       type: DataTypes.INTEGER,
@@ -12,27 +16,31 @@ module.exports = (sequelize, DataTypes) => {
         model: 'statements',
         key: 'statementId'
       },
-      index: true
+      index: true,
+      comment
     },
     method: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      comment
     },
     reference: {
       type: DataTypes.UUID,
-      index: true
+      index: true,
+      comment
     },
     requested: {
       type: DataTypes.DATE,
       allowNull: false,
-      index: true
+      index: true,
+      comment: commentDate
     },
     completed: {
       type: DataTypes.DATE,
-      index: true
+      index: true,
+      comment: commentDate
     }
-  },
-  {
+  }, {
     tableName: 'deliveries',
     freezeTableName: true,
     timestamps: false,

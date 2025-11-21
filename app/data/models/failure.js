@@ -1,3 +1,6 @@
+const comment = 'Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
+const commentDate = 'Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
+
 module.exports = (sequelize, DataTypes) => {
   /**
    * Please see https://docs.notifications.service.gov.uk/node.html#send-an-email-error-codes for
@@ -12,13 +15,13 @@ module.exports = (sequelize, DataTypes) => {
    * @param {DATE}        failed when the failure occured
    */
   const failure = sequelize.define('failure', {
-    failureId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    deliveryId: DataTypes.INTEGER,
-    statusCode: DataTypes.INTEGER,
-    reason: DataTypes.STRING,
-    error: DataTypes.STRING,
-    message: DataTypes.STRING,
-    failed: DataTypes.DATE
+    failureId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, comment },
+    deliveryId: { type: DataTypes.INTEGER, comment },
+    statusCode: { type: DataTypes.INTEGER, comment },
+    reason: { type: DataTypes.STRING, comment },
+    error: { type: DataTypes.STRING, comment },
+    message: { type: DataTypes.STRING, comment },
+    failed: { type: DataTypes.DATE, comment, commentDate }
   },
   {
     tableName: 'failures',
