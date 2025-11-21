@@ -36,8 +36,12 @@ describe('request schema', () => {
     { field: 'sbi', value: 10000000000 },
     { field: 'sbi', value: 100 }
   ])('validates $field with value $value', ({ field, value }) => {
-    if (value === undefined) delete messagingMockRequest[field]
-    else messagingMockRequest[field] = value
+    if (value === undefined) {
+      delete messagingMockRequest[field]
+    } else {
+      messagingMockRequest[field] = value
+    }
+
     const result = schema.validate(messagingMockRequest)
     expect(result.error).toBeDefined()
   })
