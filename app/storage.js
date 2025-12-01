@@ -45,6 +45,14 @@ const getOutboundBlobClient = async (filename) => {
 
 const getFile = async (filename) => {
   const blob = await getOutboundBlobClient(filename)
+  const exists = await blob.exists()
+
+  if (!exists) {
+    const error = new Error(`File not found in blob storage: ${filename} (container: ${config.container}, folder: ${config.folder})`)
+    error.code = 'BLOB_NOT_FOUND'
+    throw error
+  }
+
   return blob.downloadToBuffer()
 }
 

@@ -71,6 +71,16 @@ const publishStatement = async (request) => {
       reason = handlePublishReasoning(err)
       errorObject = standardErrorObject(err, reason)
       console.error(`Publication error: ${request.filename} - ${reason}`)
+
+      const { sendAlert } = require('../alert')
+      await sendAlert('statement publication', {
+        filename: request.filename,
+        email: request.email,
+        frn: request.frn,
+        sbi: request.sbi,
+        scheme: request.scheme?.name,
+        reason
+      }, `Failed to publish statement: ${reason}`)
     }
     await saveRequest(request, response?.data?.id, publishStatementType, errorObject)
   } catch (err) {

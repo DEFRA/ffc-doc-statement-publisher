@@ -25,22 +25,34 @@ const handlePublishReasoning = (error) => {
     case ('Email is invalid: The email provided is invalid.'):
     case ('email_address Not a valid email address'):
       return INVALID
-    default:
+    default: {
       if (error.response?.data) {
         const apiError = error.response.data
-        console.log('GOV.UK Notify API Error:', JSON.stringify(apiError, null, 2))
+        console.error('GOV.UK Notify API Error:', JSON.stringify(apiError, null, 2))
 
         logAPIIssue(apiError)
 
         if (apiError.message || (apiError.errors && apiError.errors.length > 0)) {
           const reason = apiError.message || apiError.errors[0]
-          console.log(`API Error reason: ${reason}`)
+          console.error(`API Error reason: ${reason}`)
           return UNSUCCESSFUL
         }
       }
 
-      console.log(`Publish fail reason: ${error.message}`)
+      const errorDetails = {
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode
+      }
+
+      if (process.env.NODE_ENV !== 'production' && error.code !== 'BLOB_NOT_FOUND') {
+        errorDetails.stack = error.stack
+      }
+
+      console.error('Publish failure details:', errorDetails)
+
       return UNSUCCESSFUL
+    }
   }
 }
 

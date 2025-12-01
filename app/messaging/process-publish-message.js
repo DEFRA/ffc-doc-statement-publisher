@@ -12,7 +12,8 @@ const processPublishMessage = async (message, receiver) => {
     console.log('Statement publishing request received:', util.inspect(request, false, null, true))
 
     validateRequest(request)
-    const emailTemplate = getRequestEmailTemplateByType(message.applicationProperties.type, documentTypes)
+    const type = message.applicationProperties?.type || request.type
+    const emailTemplate = getRequestEmailTemplateByType(type, documentTypes)
     request.emailTemplate = emailTemplate
 
     await publishStatement(request)
@@ -21,10 +22,10 @@ const processPublishMessage = async (message, receiver) => {
     console.error('Unable to publish statement:', err)
 
     const alertPayload = {
-      type: message?.applicationProperties.type || 'Unknown',
+      type: message?.applicationProperties?.type || message?.body?.type || 'Unknown',
       frn: message?.body?.frn,
       sbi: message?.body?.sbi,
-      scheme: message?.scheme?.name,
+      scheme: message?.body?.scheme?.name,
       filename: message?.body?.filename,
       businessName: message?.body?.businessName,
       request: { body: message?.body }

@@ -22,6 +22,11 @@ describe('handlePublishReasoning', () => {
   describe('API response errors', () => {
     beforeEach(() => {
       console.log = jest.fn()
+      console.error = jest.fn()
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
     })
 
     test.each([
@@ -44,7 +49,7 @@ describe('handlePublishReasoning', () => {
     ])('logs API error reason and returns UNSUCCESSFUL for %o', (err, logMsg) => {
       const result = handlePublishReasoning(err)
       expect(result).toBe(UNSUCCESSFUL)
-      expect(console.log).toHaveBeenCalledWith(logMsg)
+      expect(console.error).toHaveBeenCalledWith(logMsg)
     })
 
     test('does not log API key issue if errors array does not match', () => {
@@ -58,6 +63,75 @@ describe('handlePublishReasoning', () => {
       const result = handlePublishReasoning(error)
       expect(result).toBe(UNSUCCESSFUL)
       expect(console.log).not.toHaveBeenCalledWith('Possible API key issue detected')
+    })
+  })
+
+  describe('errorDetails logging', () => {
+    beforeEach(() => {
+      console.error = jest.fn()
+      process.env.NODE_ENV = 'development'
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+      process.env.NODE_ENV = 'test'
+    })
+
+    test('logs errorDetails with message, code, and statusCode', () => {
+      const err = new Error('Test error')
+      err.code = 'TEST_CODE'
+      err.statusCode = 500
+
+      const result = handlePublishReasoning(err)
+
+      expect(result).toBe(UNSUCCESSFUL)
+      expect(console.error).toHaveBeenCalledWith('Publish failure details:', {
+        message: 'Test error',
+        code: 'TEST_CODE',
+        statusCode: 500,
+        stack: err.stack
+      })
+    })
+
+    test('includes stack in errorDetails when not in production and code is not BLOB_NOT_FOUND', () => {
+      const err = new Error('Test error')
+      err.code = 'SOME_CODE'
+
+      handlePublishReasoning(err)
+
+      const callArgs = console.error.mock.calls.find(call => call[0] === 'Publish failure details:')
+      expect(callArgs[1].stack).toBeDefined()
+    })
+
+    test('excludes stack from errorDetails when in production', () => {
+      process.env.NODE_ENV = 'production'
+      const err = new Error('Test error')
+      err.code = 'SOME_CODE'
+
+      handlePublishReasoning(err)
+
+      const callArgs = console.error.mock.calls.find(call => call[0] === 'Publish failure details:')
+      expect(callArgs[1].stack).toBeUndefined()
+    })
+
+    test('excludes stack from errorDetails when code is BLOB_NOT_FOUND', () => {
+      const err = new Error('Test error')
+      err.code = 'BLOB_NOT_FOUND'
+
+      handlePublishReasoning(err)
+
+      const callArgs = console.error.mock.calls.find(call => call[0] === 'Publish failure details:')
+      expect(callArgs[1].stack).toBeUndefined()
+    })
+
+    test('logs errorDetails with undefined values when error properties are missing', () => {
+      const err = new Error('Test error')
+
+      handlePublishReasoning(err)
+
+      const callArgs = console.error.mock.calls.find(call => call[0] === 'Publish failure details:')
+      expect(callArgs[1].code).toBeUndefined()
+      expect(callArgs[1].statusCode).toBeUndefined()
     })
   })
 })

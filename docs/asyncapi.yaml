@@ -57,18 +57,11 @@ components:
   schemas:
     DelinkedPublishRequest:
       type: object
-      required:
-        - address
-        - businessName
-        - documentReference
-        - filename
-        - frn
-        - sbi
       properties:
-        address:
-          $ref: '#/components/schemas/Address'
         businessName:
           $ref: '#/components/schemas/BusinessName'
+        address:
+          $ref: '#/components/schemas/Address'
         documentReference:
           $ref: '#/components/schemas/DocumentReference'
         email:
@@ -79,8 +72,51 @@ components:
           $ref: '#/components/schemas/FRN'
         sbi:
           $ref: '#/components/schemas/SBI'
+        paymentBand1:
+          $ref: "#/components/schemas/PaymentBand1"
+        paymentBand2:
+          $ref: "#/components/schemas/PaymentBand2"
+        paymentBand3:
+          $ref: "#/components/schemas/PaymentBand3"
+        paymentBand4:
+          $ref: "#/components/schemas/PaymentBand4"
+        percentageReduction1:
+          $ref: "#/components/schemas/PercentageReduction1"
+        percentageReduction2:
+          $ref: "#/components/schemas/PercentageReduction2"
+        percentageReduction3:
+          $ref: "#/components/schemas/PercentageReduction3"
+        percentageReduction4:
+          $ref: "#/components/schemas/PercentageReduction4"
+        progressiveReductions1:
+          $ref: "#/components/schemas/ProgressiveReductions1"
+        progressiveReductions2:
+          $ref: "#/components/schemas/ProgressiveReductions2"
+        progressiveReductions3:
+          $ref: "#/components/schemas/ProgressiveReductions3"
+        progressiveReductions4:
+          $ref: "#/components/schemas/ProgressiveReductions4"
+        referenceAmount:
+          $ref: "#/components/schemas/ReferenceAmount"
+        totalProgressiveReduction:
+          $ref: "#/components/schemas/TotalProgressiveReduction"
+        totalDelinkedPayment:
+          $ref: "#/components/schemas/TotalDelinkedPayment"
+        transactionDate:
+          $ref: "#/components/schemas/TransactionDate"
+        paymentAmount:
+          type: string
+          description: The calculated payment amount
+          example: "5000.00"
+          pattern: '^\d+\.\d{2}$'
+        paymentPeriod:
+          $ref: "#/components/schemas/PaymentPeriod"
+        paymentAmountCalculated:
+          $ref: "#/components/schemas/PaymentAmountCalculated"
         scheme:
           $ref: '#/components/schemas/SchemeDelinked'
+        type:
+          $ref: '#/components/schemas/TypeDelinked'
     CrmInvalidEmailResponse:
       type: object
       required:
@@ -121,6 +157,8 @@ components:
           $ref: '#/components/schemas/SBI'
         scheme:
           $ref: '#/components/schemas/Scheme'
+        type:
+          $ref: '#/components/schemas/TypeSFI23'
     Address:
       type: object
       properties:
@@ -149,9 +187,9 @@ components:
           description: The postcode
           example: AB1 2CD
     AgreementNumber:
-      type: string
+      type: number
       description: The agreement number
-      example: Z1234567
+      example: 123456789
     BusinessName:
       type: string
       description: The business name
@@ -199,9 +237,84 @@ components:
         characters, descriptor in PascalCase, Scheme ID using 3 to 6 uppercase
         characters, Scheme Year using 4 digits, FRN using 10 digits, date and
         time using 16 digits and then .pdf. All separated by underscore.
-      example: FFC_PaymentStatement_DP_2024_1234567890_2022080515301212.pdf
+      example: FFC_PaymentSfi23QuarterlyStatement_SFI_2023_1234567890_2022080515301212.pdf
       pattern: >-
         ^[A-Z]{3,6}\_[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*\_[A-Z]{3,6}_\d{4}_\d{10}_\d{16}\.pdf$
+    PaymentAmountCalculated:
+      type: string
+      description: TotalDelinkedPayment /2 should match paymentAmount
+      example: "25125.00"
+      pattern: '^\d+\.\d{2}$'
+    PaymentPeriod:
+          type: string
+          description: The period covered by the payment
+          example: "1st Day of some date"
+          maxLength: 200
+    PaymentBand1:
+      type: string
+      description: first payment band bracket amount
+      example: "30000"
+      pattern: '^\d+(\.\d{2})?$'
+    PaymentBand2:
+      type: string
+      description: second payment band bracket amount
+      example: "50000"
+      pattern: '^\d+(\.\d{2})?$'
+    PaymentBand3:
+      type: string
+      description: third payment band bracket amount
+      example: "150000"
+      pattern: '^\d+(\.\d{2})?$'
+    PaymentBand4:
+      type: string
+      description: fourth payment band bracket amount
+      example: "99999999.99"
+      pattern: '^\d+(\.\d{2})?$'    
+    PercentageReduction1:
+      type: string
+      description: First percentage bracket for progressive reductions
+      example: "50.00"
+      pattern: '^\d{1,3}\.\d{2}$'
+    PercentageReduction2:
+      type: string
+      description: Second percentage bracket for progressive reductions
+      example: "55.00"
+      pattern: '^\d{1,3}\.\d{2}$'
+    PercentageReduction3:
+      type: string
+      description: Third percentage bracket for progressive reductions
+      example: "60.00"
+      pattern: '^\d{1,3}\.\d{2}$'
+    PercentageReduction4:
+      type: string
+      description: Fourth percentage bracket for progressive reductions
+      example: "70.00"
+      pattern: '^\d{1,3}\.\d{2}$'    
+    ProgressiveReductions1:
+      type: string
+      description: Value against band1 for progressive reductions
+      example: "11000.00"
+      pattern: '^\d+\.\d{2}$'
+    ProgressiveReductions2:
+      type: string
+      description: Value against band2 for progressive reductions
+      example: "22000.00"
+      pattern: '^\d+\.\d{2}$'
+    ProgressiveReductions3:
+      type: string
+      description: Value against band3 for progressive reductions
+      example: "33000.00"
+      pattern: '^\d+\.\d{2}$'
+    ProgressiveReductions4:
+      type: string
+      description: Value against band4 for progressive reductions
+      example: "44000.00"
+      pattern: '^\d+\.\d{2}$'    
+    ReferenceAmount:
+      type: string
+      description: Current reference amount of total
+      example: "125000.00"
+      pattern: '^\d+\.\d{2}$'    
     SBI:
       type: number
       description: Single Business Identifier
@@ -234,6 +347,8 @@ components:
         - shortName
         - year
       properties:
+        agreementNumber:
+          $ref: '#/components/schemas/AgreementNumber'
         name:
           $ref: '#/components/schemas/SchemeNameDelinked'
         shortName:
@@ -255,7 +370,7 @@ components:
     SchemeShortName:
       type: string
       description: The short name of the scheme
-      example: DP
+      example: SFI
     SchemeYearDelinked:
       type: string
       description: The marketing year
@@ -268,3 +383,27 @@ components:
       type: string
       description: The frequency of payments
       example: Quarterly
+    TotalDelinkedPayment:
+      type: string
+      description: Total annual delinked payment amount
+      example: "50250.00"
+      pattern: '^\d+\.\d{2}$'
+    TotalProgressiveReduction:
+      type: string
+      description: Total progressive reduction amount
+      example: "74750.00"
+      pattern: '^\d+\.\d{2}$'
+    TransactionDate:
+      type: string
+      format: date-time
+      description: The date the transaction was made
+      example: "2022-08-22T16:45:20.891Z"
+    TypeDelinked:
+      type: string
+      enum:
+        - "uk.gov.doc.delinked-statement.publish"
+      description:  DELINKED CALCULATION document type
+    TypeSFI23:
+      type: string
+      enum:
+        - "uk.gov.doc.sfi-23-quarterly-statement.publish"  
