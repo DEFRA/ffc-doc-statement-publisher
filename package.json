@@ -1,6 +1,6 @@
 {
   "name": "ffc-doc-statement-publisher",
-  "version": "2.2.28",
+  "version": "2.2.29",
   "description": "Publish statements",
   "homepage": "https://github.com/DEFRA/ffc-doc-statement-publisher",
   "main": "app/index.js",
