@@ -8,6 +8,7 @@ const saveRequest = require('./save-request')
 const isDpScheme = require('./is-dp-scheme')
 const standardErrorObject = require('./standard-error-object')
 const getSchemeTemplateId = require('./get-scheme-template-id')
+const { sendAlert } = require('../alert')
 
 const publishStatement = async (request) => {
   const startTime = Date.now()
@@ -72,7 +73,6 @@ const publishStatement = async (request) => {
       errorObject = standardErrorObject(err, reason)
       console.error(`Publication error: ${request.filename} - ${reason}`)
 
-      const { sendAlert } = require('../alert')
       await sendAlert('statement publication', {
         filename: request.filename,
         email: request.email,

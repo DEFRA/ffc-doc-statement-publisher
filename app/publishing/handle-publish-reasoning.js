@@ -1,30 +1,39 @@
 const { EMPTY, INVALID, UNSUCCESSFUL } = require('../constants/failure-reasons')
-const forbidden = 403
 
-const isAPIRelated = (string) =>
-  typeof string === 'string' &&
-(string.includes('authorization') || string.includes('api key'))
+const forbidden = 403
+const EMPTY_EMAIL_ERROR = 'Email is invalid: Email cannot be empty.'
+const INVALID_EMAIL_ERROR_1 = 'Email is invalid: The email provided is invalid.'
+const INVALID_EMAIL_ERROR_2 = 'email_address Not a valid email address'
+
+const isAPIRelated = (string) => {
+  return (
+    typeof string === 'string' &&
+    (string.includes('authorization') || string.includes('api key'))
+  )
+}
 
 const logAPIIssue = (apiError) => {
   if (
     apiError.status_code === forbidden ||
-(Array.isArray(apiError.errors) &&
-apiError.errors.some(
-  (e) =>
-    (typeof e === 'string' && isAPIRelated(e)) ||
-(typeof e === 'object' && typeof e.message === 'string' && isAPIRelated(e.message))
-))
+    (Array.isArray(apiError.errors) &&
+      apiError.errors.some((e) => {
+        return (
+          (typeof e === 'string' && isAPIRelated(e)) ||
+          (typeof e === 'object' && typeof e.message === 'string' && isAPIRelated(e.message))
+        )
+      }))
   ) {
     console.log('Possible API key issue detected')
   }
 }
 
-const isEmptyEmailError = (msg) =>
-  msg === 'Email is invalid: Email cannot be empty.'
+const isEmptyEmailError = (msg) => {
+  return msg === EMPTY_EMAIL_ERROR
+}
 
-const isInvalidEmailError = (msg) =>
-  msg === 'Email is invalid: The email provided is invalid.' ||
-msg === 'email_address Not a valid email address'
+const isInvalidEmailError = (msg) => {
+  return msg === INVALID_EMAIL_ERROR_1 || msg === INVALID_EMAIL_ERROR_2
+}
 
 const extractApiErrorReason = (apiError) => {
   console.error('GOV.UK Notify API Error:', JSON.stringify(apiError, null, 2))
