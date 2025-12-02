@@ -95,15 +95,16 @@ const saveReportFile = async (filename, readableStream) => {
           console.log('[STORAGE] Upload completed')
           resolve()
         })
-        .catch(reject)
+        .catch((error) => {
+          console.error('[STORAGE] Error saving report file:', error)
+          reject(error)
+        })
     })
   } catch (error) {
     console.error('[STORAGE] Error saving report file:', error)
     throw error
   }
 }
-
-module.exports = { saveReportFile }
 
 const getReportFile = async (filename) => {
   containersInitialised ?? await initialiseContainers()
