@@ -54,12 +54,18 @@ const logErrorDetails = (error) => {
 const handlePublishReasoning = (error) => {
   const msg = error?.message
 
-  if (isEmptyEmailError(msg)) return EMPTY
-  if (isInvalidEmailError(msg)) return INVALID
+  if (isEmptyEmailError(msg)) {
+    return EMPTY
+  }
+  if (isInvalidEmailError(msg)) {
+    return INVALID
+  }
 
   if (error?.response?.data) {
     const apiError = error.response.data
-    if (extractApiErrorReason(apiError)) return UNSUCCESSFUL
+    if (extractApiErrorReason(apiError)) {
+      return UNSUCCESSFUL
+    }
   }
 
   logErrorDetails(error || {})
