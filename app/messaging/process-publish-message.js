@@ -23,12 +23,12 @@ const processPublishMessage = async (message, receiver) => {
 
     const alertPayload = {
       type: type || 'Unknown',
-      frn: request?.frn, // Use request instead of message?.body?.frn
+      frn: request?.frn,
       sbi: request?.sbi,
       scheme: request?.scheme?.name,
       filename: request?.filename,
       businessName: request?.businessName,
-      request: { body: request } // Use request instead of message?.body
+      request: { body: request }
     }
     sendAlert('statement publish message', alertPayload, `Unable to publish statement: ${err.message}`)
 
