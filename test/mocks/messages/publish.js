@@ -60,7 +60,7 @@ const STATEMENT_MESSAGE = {
     paymentPeriod: 'Q3-2025',
     transactionDate: '2025-10-06 00:00:00.000',
     scheme: {
-      agreementNumber: 'Z1234567',
+      agreementNumber: 123456789,
       name: LONG_NAMES.DELINKED,
       shortName: SHORT_NAMES.DP,
       year: String(MARKETING_YEAR),
@@ -92,7 +92,7 @@ const LETTER_STATEMENT_MESSAGE = {
     filename: STATEMENT_FILENAME,
     statementFileUrl: STATEMENT_FILENAME,
     scheme: {
-      agreementNumber: 'Z1234567',
+      agreementNumber: 123456789,
       name: LONG_NAMES.DELINKED,
       shortName: SHORT_NAMES.DP,
       year: String(MARKETING_YEAR),

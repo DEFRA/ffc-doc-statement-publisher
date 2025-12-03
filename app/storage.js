@@ -45,6 +45,14 @@ const getOutboundBlobClient = async (filename) => {
 
 const getFile = async (filename) => {
   const blob = await getOutboundBlobClient(filename)
+  const exists = await blob.exists()
+
+  if (!exists) {
+    const error = new Error(`File not found in blob storage: ${filename} (container: ${config.container}, folder: ${config.folder})`)
+    error.code = 'BLOB_NOT_FOUND'
+    throw error
+  }
+
   return blob.downloadToBuffer()
 }
 
@@ -87,15 +95,16 @@ const saveReportFile = async (filename, readableStream) => {
           console.log('[STORAGE] Upload completed')
           resolve()
         })
-        .catch(reject)
+        .catch((error) => {
+          console.error('[STORAGE] Error saving report file:', error)
+          reject(error)
+        })
     })
   } catch (error) {
     console.error('[STORAGE] Error saving report file:', error)
     throw error
   }
 }
-
-module.exports = { saveReportFile }
 
 const getReportFile = async (filename) => {
   containersInitialised ?? await initialiseContainers()
