@@ -5,7 +5,10 @@ describe('storage', () => {
   let storage
   const mockstorage = {
     upload: jest.fn().mockResolvedValue({}),
-    url: 'test-url'
+    url: 'test-url',
+    exists: jest.fn(),
+    downloadToBuffer: jest.fn(),
+    uploadStream: jest.fn().mockResolvedValue({})
   }
 
   const mockContainer = {
@@ -45,12 +48,16 @@ describe('storage', () => {
     }))
 
     jest.spyOn(console, 'log').mockImplementation(() => {})
+    jest.spyOn(console, 'debug').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
 
     storage = require('../../app/storage')
   })
 
   afterEach(() => {
     console.log.mockRestore()
+    console.debug.mockRestore()
+    console.error.mockRestore()
   })
 
   test('uses connection string when config.useConnectionStr is true', async () => {
@@ -182,6 +189,113 @@ describe('storage', () => {
       await storage.initialiseContainers()
       expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-folder/default.txt')
       expect(mockstorage.upload).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('getFile', () => {
+    test('downloads file when it exists', async () => {
+      mockstorage.exists.mockResolvedValue(true)
+      mockstorage.downloadToBuffer.mockResolvedValue(Buffer.from('file content'))
+
+      const result = await storage.getFile('test.txt')
+
+      expect(mockstorage.exists).toHaveBeenCalled()
+      expect(mockstorage.downloadToBuffer).toHaveBeenCalled()
+      expect(result).toEqual(Buffer.from('file content'))
+    })
+
+    test('throws error when file does not exist', async () => {
+      mockstorage.exists.mockResolvedValue(false)
+
+      await expect(storage.getFile('test.txt')).rejects.toThrow('File not found in blob storage: test.txt (container: test-container, folder: test-folder)')
+      expect(mockstorage.exists).toHaveBeenCalled()
+      expect(mockstorage.downloadToBuffer).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('saveReportFile', () => {
+    let readableStream
+
+    beforeEach(() => {
+      readableStream = {
+        on: jest.fn(),
+        pipe: jest.fn()
+      }
+    })
+
+    test('saves report file successfully with data', async () => {
+      const filename = 'report.csv'
+      const chunk = Buffer.from('chunk')
+      readableStream.on.mockImplementation((event, callback) => {
+        if (event === 'data') callback(chunk)
+        if (event === 'end') callback()
+      })
+
+      await storage.saveReportFile(filename, readableStream)
+
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Starting report file save:', filename)
+      expect(console.debug).toHaveBeenCalledWith('[STORAGE] Received chunk:', chunk)
+      expect(console.debug).toHaveBeenCalledWith('[STORAGE] Stream ended, had data:', true)
+      expect(mockstorage.uploadStream).toHaveBeenCalledWith(
+        readableStream,
+        4 * 1024 * 1024,
+        5,
+        { blobHTTPHeaders: { blobContentType: 'text/csv' } }
+      )
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Upload completed')
+    })
+
+    test('saves report file successfully without data', async () => {
+      const filename = 'empty-report.csv'
+      readableStream.on.mockImplementation((event, callback) => {
+        if (event === 'end') callback()
+      })
+
+      await storage.saveReportFile(filename, readableStream)
+
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Starting report file save:', filename)
+      expect(console.debug).toHaveBeenCalledWith('[STORAGE] Stream ended, had data:', false)
+      expect(mockstorage.uploadStream).toHaveBeenCalled()
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Upload completed')
+    })
+
+    test('handles stream error', async () => {
+      const filename = 'error-report.csv'
+      const error = new Error('Stream error')
+      readableStream.on.mockImplementation((event, callback) => {
+        if (event === 'error') callback(error)
+      })
+
+      await expect(storage.saveReportFile(filename, readableStream)).rejects.toThrow('Stream error')
+
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Starting report file save:', filename)
+      expect(console.error).toHaveBeenCalledWith('[STORAGE] Stream error:', error)
+    })
+
+    test('handles upload error', async () => {
+      const filename = 'upload-error-report.csv'
+      const uploadError = new Error('Upload failed')
+      mockstorage.uploadStream.mockRejectedValue(uploadError)
+      readableStream.on.mockImplementation((event, callback) => {
+        if (event === 'end') callback()
+      })
+
+      await expect(storage.saveReportFile(filename, readableStream)).rejects.toThrow('Upload failed')
+
+      expect(console.log).toHaveBeenCalledWith('[STORAGE] Starting report file save:', filename)
+      expect(console.error).toHaveBeenCalledWith('[STORAGE] Error saving report file:', uploadError)
+    })
+  })
+
+  describe('getReportFile', () => {
+    test('downloads report file', async () => {
+      mockstorage.downloadToBuffer.mockResolvedValue(Buffer.from('report content'))
+
+      const result = await storage.getReportFile('report.csv')
+
+      expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-report-folder/report.csv')
+      expect(mockstorage.downloadToBuffer).toHaveBeenCalled()
+      expect(result).toEqual(Buffer.from('report content'))
     })
   })
 })

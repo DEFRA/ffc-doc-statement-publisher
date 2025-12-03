@@ -7,12 +7,13 @@ const documentTypes = require('../constants/document-types')
 const { sendAlert } = require('../alert')
 
 const processPublishMessage = async (message, receiver) => {
+  const request = message.body
+  const type = message.applicationProperties?.type || request.type
   try {
-    const request = message.body
     console.log('Statement publishing request received:', util.inspect(request, false, null, true))
 
     validateRequest(request)
-    const emailTemplate = getRequestEmailTemplateByType(message.applicationProperties.type, documentTypes)
+    const emailTemplate = getRequestEmailTemplateByType(type, documentTypes)
     request.emailTemplate = emailTemplate
 
     await publishStatement(request)
@@ -21,13 +22,13 @@ const processPublishMessage = async (message, receiver) => {
     console.error('Unable to publish statement:', err)
 
     const alertPayload = {
-      type: message?.applicationProperties.type || 'Unknown',
-      frn: message?.body?.frn,
-      sbi: message?.body?.sbi,
-      scheme: message?.scheme?.name,
-      filename: message?.body?.filename,
-      businessName: message?.body?.businessName,
-      request: { body: message?.body }
+      type: type || 'Unknown',
+      frn: request?.frn,
+      sbi: request?.sbi,
+      scheme: request?.scheme?.name,
+      filename: request?.filename,
+      businessName: request?.businessName,
+      request: { body: request }
     }
     sendAlert('statement publish message', alertPayload, `Unable to publish statement: ${err.message}`)
 

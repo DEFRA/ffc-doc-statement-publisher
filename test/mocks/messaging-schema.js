@@ -14,10 +14,28 @@ module.exports = {
     postcode: 'TE1 1ST'
   },
   scheme: {
-    agreementNumber: 'Z1234567',
+    agreementNumber: 123456789,
     name: 'TestSchem',
-    shortName: 'TS',
+    shortName: 'DP',
     year: '2022',
     frequency: 'Annual'
-  }
+  },
+  paymentBand1: 'Band A',
+  paymentBand2: 'Band B',
+  paymentBand3: 'Band C',
+  paymentBand4: 'Band D',
+  percentageReduction1: '10.00',
+  percentageReduction2: '20.00',
+  percentageReduction3: '30.00',
+  percentageReduction4: '40.00',
+  progressiveReductions1: '100.00',
+  progressiveReductions2: '200.00',
+  progressiveReductions3: '300.00',
+  progressiveReductions4: '400.00',
+  referenceAmount: '5000.00',
+  totalProgressiveReduction: '1000.00',
+  totalDelinkedPayment: '500.00',
+  paymentAmountCalculated: '4500.00',
+  paymentPeriod: 'Q1 2022',
+  transactionDate: '2022-01-15'
 }
