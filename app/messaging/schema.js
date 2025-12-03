@@ -85,14 +85,14 @@ module.exports = Joi.object({
     'string.max': `Business name must be at most ${maxBusinessNameLength} characters`,
     'any.required': 'Business name is required'
   }),
-  frn: Joi.number().integer().min(minFrn).max(maxFrn).required().messages({
+  frn: Joi.number().integer().min(minFrn).max(maxFrn).required().strict().messages({
     'number.base': 'FRN must be a number',
     'number.integer': 'FRN must be an integer',
     'number.min': `FRN must be at least ${minFrn}`,
     'number.max': `FRN must be at most ${maxFrn}`,
     'any.required': 'FRN is required'
   }),
-  sbi: Joi.number().integer().min(minSbi).max(maxSbi).required().messages({
+  sbi: Joi.number().integer().min(minSbi).max(maxSbi).required().strict().messages({
     'number.base': 'SBI must be a number',
     'number.integer': 'SBI must be an integer',
     'number.min': `SBI must be at least ${minSbi}`,
@@ -150,8 +150,9 @@ module.exports = Joi.object({
       'string.max': `Frequency must be at most ${maxFrequencyLength} characters`,
       'any.required': 'Frequency is required'
     }),
-    agreementNumber: Joi.string().optional().allow('', null).messages({
-      'number.base': 'Agreement number must be a string'
+    agreementNumber: Joi.number().integer().optional().allow('', null).messages({
+      'number.base': 'Agreement number must be a number',
+      'number.integer': 'Agreement number must be an integer'
     })
   }).required().messages({
     'object.base': 'scheme must be an object',
