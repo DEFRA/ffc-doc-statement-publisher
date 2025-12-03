@@ -37,6 +37,7 @@
     "ffc-pay-event-publisher": "1.2.1",
     "joi": "17.6.0",
     "log-timestamp": "0.3.0",
+    "notifications-node-client": "8.2.1",
     "pg-query-stream": "4.8.1",
     "sequelize": "6.29.3"
   },
