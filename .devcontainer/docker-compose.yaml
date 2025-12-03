@@ -32,7 +32,7 @@ services:
       POSTGRES_PASSWORD: postgres
 
   ffc-doc-statement-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:3.32.0
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: ffc-doc-statement-azurite
     command: >
       azurite-blob --loose --blobHost 0.0.0.0
