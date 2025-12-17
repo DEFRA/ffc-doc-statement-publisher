@@ -1,5 +1,7 @@
 services:
   ffc-doc-statement-publisher:
+    ports:
+      - "3010:3010"
     build:
       context: .
       target: production

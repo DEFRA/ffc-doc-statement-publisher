@@ -3,12 +3,14 @@ const mqConfig = require('./message')
 const dbConfig = require('./database')
 const storageConfig = require('./storage')
 const reportConfig = require('./report')
+const { port } = require('../schemas/components/frn')
 const deliveryCheck = 3600000
 const reportCheck = 86400000
 const retainPeriodInWeeks = 78
 
 const schema = Joi.object({
   env: Joi.string().valid('development', 'test', 'production').default('development'),
+  port: Joi.number().default(3010),
   deliveryCheckInterval: Joi.number().default(deliveryCheck),
   reportingCheckInterval: Joi.number().default(reportCheck),
   notifyApiKey: Joi.string().required(),
@@ -21,6 +23,7 @@ const schema = Joi.object({
 
 const config = {
   env: process.env.NODE_ENV,
+  port: process.env.PORT ? parseInt(process.env.PORT) : undefined,
   deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL ? parseInt(process.env.DELIVERY_CHECK_INTERVAL) : undefined,
   reportingCheckInterval: process.env.REPORTING_CHECK_INTERVAL ? parseInt(process.env.REPORTING_CHECK_INTERVAL) : undefined,
   notifyApiKey: process.env.NOTIFY_API_KEY,
