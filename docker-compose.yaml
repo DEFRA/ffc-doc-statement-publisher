@@ -45,6 +45,9 @@ services:
       RETENTION_PERIOD_IN_WEEKS: ${RETENTION_PERIOD_IN_WEEKS}
       SEND_CRM_FAILURE_MESSAGE_ENABLED: ${SEND_CRM_FAILURE_MESSAGE_ENABLED:-false}
       ALERT_TOPIC_ADDRESS: ${ALERT_TOPIC_ADDRESS:-ffc-doc-alerting}${MESSAGE_QUEUE_SUFFIX}
+    networks:
+      - default
+      - docs
 
   ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine
@@ -52,9 +55,17 @@ services:
       POSTGRES_DB: ffc_doc_statement_publisher
       POSTGRES_PASSWORD: ppp
       POSTGRES_USERNAME: postgres
+    networks:
+      - default
 
   ffc-doc-statement-azurite:
     image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     command: "azurite-blob --loose --blobHost 0.0.0.0"
     labels:
       com.docker.compose.pay.role: ffc-doc-statement-azurite
+    networks:
+      - default
+networks:
+  docs:
+    name: ffc-doc
+    external: true
