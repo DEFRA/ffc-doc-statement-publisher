@@ -6,12 +6,14 @@ const reportConfig = require('./report')
 const deliveryCheck = 3600000
 const reportCheck = 86400000
 const retainPeriodInWeeks = 78
+const metricsPollingInterval = 86400000
 
 const schema = Joi.object({
   env: Joi.string().valid('development', 'test', 'production').default('development'),
   port: Joi.number().default(3010),
   deliveryCheckInterval: Joi.number().default(deliveryCheck),
   reportingCheckInterval: Joi.number().default(reportCheck),
+  metricsPollingInterval: Joi.number().default(metricsPollingInterval),
   notifyApiKey: Joi.string().required(),
   notifyApiKeyLetter: Joi.string().required(),
   retentionPeriodInWeeks: Joi.number().default(retainPeriodInWeeks),
@@ -25,6 +27,7 @@ const config = {
   port: process.env.PORT ? Number.parseInt(process.env.PORT) : undefined,
   deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL ? Number.parseInt(process.env.DELIVERY_CHECK_INTERVAL) : undefined,
   reportingCheckInterval: process.env.REPORTING_CHECK_INTERVAL ? Number.parseInt(process.env.REPORTING_CHECK_INTERVAL) : undefined,
+  metricsPollingInterval: process.env.METRICS_POLLING_INTERVAL_MS ? Number.parseInt(process.env.METRICS_POLLING_INTERVAL_MS) : undefined,
   notifyApiKey: process.env.NOTIFY_API_KEY,
   notifyApiKeyLetter: process.env.NOTIFY_API_KEY_LETTER,
   retentionPeriodInWeeks: process.env.RETENTION_PERIOD_IN_WEEKS ? Number.parseInt(process.env.RETENTION_PERIOD_IN_WEEKS) : undefined,

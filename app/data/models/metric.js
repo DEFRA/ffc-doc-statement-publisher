@@ -1,5 +1,16 @@
-function metric (sequelize, DataTypes) {
-  const metric = sequelize.define('metric', {
+const {
+  DEFAULT_TOTAL_STATEMENTS,
+  DEFAULT_PRINT_POST_COUNT,
+  DEFAULT_PRINT_POST_COST,
+  DEFAULT_PRINT_POST_UNIT_COST,
+  DEFAULT_EMAIL_COUNT,
+  DEFAULT_FAILURE_COUNT,
+  PERIOD_TYPE_MAX_LENGTH,
+  SCHEME_NAME_MAX_LENGTH
+} = require('../../constants/metric-defaults')
+
+function defineMetricColumns (DataTypes) {
+  return {
     id: {
       type: DataTypes.BIGINT,
       primaryKey: true,
@@ -11,12 +22,12 @@ function metric (sequelize, DataTypes) {
       field: 'snapshot_date'
     },
     periodType: {
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(PERIOD_TYPE_MAX_LENGTH),
       allowNull: false,
       field: 'period_type'
     },
     schemeName: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(SCHEME_NAME_MAX_LENGTH),
       allowNull: true,
       field: 'scheme_name'
     },
@@ -27,32 +38,32 @@ function metric (sequelize, DataTypes) {
     },
     totalStatements: {
       type: DataTypes.INTEGER,
-      defaultValue: 0,
+      defaultValue: DEFAULT_TOTAL_STATEMENTS,
       field: 'total_statements'
     },
     printPostCount: {
       type: DataTypes.INTEGER,
-      defaultValue: 0,
+      defaultValue: DEFAULT_PRINT_POST_COUNT,
       field: 'print_post_count'
     },
     printPostCost: {
       type: DataTypes.BIGINT,
-      defaultValue: 0,
+      defaultValue: DEFAULT_PRINT_POST_COST,
       field: 'print_post_cost'
     },
     printPostUnitCost: {
       type: DataTypes.INTEGER,
-      defaultValue: 200,
+      defaultValue: DEFAULT_PRINT_POST_UNIT_COST,
       field: 'print_post_unit_cost'
     },
     emailCount: {
       type: DataTypes.INTEGER,
-      defaultValue: 0,
+      defaultValue: DEFAULT_EMAIL_COUNT,
       field: 'email_count'
     },
     failureCount: {
       type: DataTypes.INTEGER,
-      defaultValue: 0,
+      defaultValue: DEFAULT_FAILURE_COUNT,
       field: 'failure_count'
     },
     calculatedAt: {
@@ -70,7 +81,11 @@ function metric (sequelize, DataTypes) {
       allowNull: true,
       field: 'data_end_date'
     }
-  }, {
+  }
+}
+
+function defineMetricOptions () {
+  return {
     tableName: 'metrics',
     timestamps: false,
     indexes: [
@@ -85,9 +100,13 @@ function metric (sequelize, DataTypes) {
         fields: ['scheme_year', 'period_type']
       }
     ]
-  })
+  }
+}
 
-  return metric
+function metric (sequelize, DataTypes) {
+  const columns = defineMetricColumns(DataTypes)
+  const options = defineMetricOptions()
+  return sequelize.define('metric', columns, options)
 }
 
 module.exports = metric

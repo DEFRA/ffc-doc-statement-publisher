@@ -1,9 +1,10 @@
 const { OK } = require('../../constants/ok')
+const HTTP_OK = 200
 
 module.exports = {
   method: 'GET',
   path: '/healthy',
-  handler: (request, h) => {
-    return h.response(OK).code(200)
+  handler: (_request, h) => {
+    return h.response(OK).code(HTTP_OK)
   }
 }

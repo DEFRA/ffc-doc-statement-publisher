@@ -101,6 +101,20 @@ describe('metrics routes', () => {
 
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
+
+        test('defaults to "all" period when not provided', async () => {
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findAll).toHaveBeenCalledWith({
+            where: {
+              snapshotDate: '2024-06-15',
+              periodType: 'all'
+            },
+            order: [['schemeName', 'ASC']]
+          })
+        })
       })
 
       describe('monthInYear validation', () => {
@@ -216,11 +230,27 @@ describe('metrics routes', () => {
 
           await route.handler(mockRequest, mockH)
 
+          expect(consoleErrorSpy).toHaveBeenCalledWith('Error calculating monthInYear metrics:', error)
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Metrics calculation failed',
             message: 'Calculation failed'
           })
           expect(mockResponse.code).toHaveBeenCalledWith(500)
+        })
+
+        test('logs error and throws when calculateMetricsForPeriod fails', async () => {
+          mockRequest.query.schemeYear = '2024'
+          mockRequest.query.month = '6'
+          const originalError = new Error('Database connection lost')
+          calculateMetricsForPeriod.mockRejectedValue(originalError)
+
+          await route.handler(mockRequest, mockH)
+
+          expect(consoleErrorSpy).toHaveBeenCalledWith('Error calculating monthInYear metrics:', originalError)
+          expect(mockH.response).toHaveBeenCalledWith({
+            error: 'Metrics calculation failed',
+            message: 'Database connection lost'
+          })
         })
       })
 
@@ -235,6 +265,16 @@ describe('metrics routes', () => {
             message: 'schemeYear is required for year period'
           })
           expect(mockResponse.code).toHaveBeenCalledWith(400)
+        })
+
+        test('accepts year period with valid schemeYear', async () => {
+          mockRequest.query.period = 'year'
+          mockRequest.query.schemeYear = '2024'
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
       })
 
@@ -271,6 +311,15 @@ describe('metrics routes', () => {
             },
             order: [['schemeName', 'ASC']]
           })
+        })
+
+        test('excludes schemeYear from where clause when not provided', async () => {
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          const callArgs = db.metric.findAll.mock.calls[0][0]
+          expect(callArgs.where).not.toHaveProperty('schemeYear')
         })
 
         test('filters out null schemeName and calculates totals', async () => {
@@ -361,6 +410,86 @@ describe('metrics routes', () => {
           })
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
+
+        test('handles all null schemeNames', async () => {
+          const mockMetrics = [
+            {
+              schemeName: null,
+              schemeYear: '2024',
+              totalStatements: 5,
+              printPostCount: 2,
+              printPostCost: '50',
+              printPostUnitCost: '25',
+              emailCount: 3,
+              failureCount: 1
+            }
+          ]
+          db.metric.findAll.mockResolvedValue(mockMetrics)
+
+          await route.handler(mockRequest, mockH)
+
+          expect(mockH.response).toHaveBeenCalledWith({
+            payload: {
+              totalStatements: 0,
+              totalPrintPost: 0,
+              totalPrintPostCost: 0,
+              totalEmail: 0,
+              totalFailures: 0,
+              statementsByScheme: []
+            }
+          })
+        })
+
+        test('correctly parses printPostCost as integer', async () => {
+          const mockMetrics = [
+            {
+              schemeName: 'Scheme A',
+              schemeYear: '2024',
+              totalStatements: 10,
+              printPostCount: 5,
+              printPostCost: '150',
+              printPostUnitCost: '30',
+              emailCount: 5,
+              failureCount: 0
+            }
+          ]
+          db.metric.findAll.mockResolvedValue(mockMetrics)
+
+          await route.handler(mockRequest, mockH)
+
+          const response = mockH.response.mock.calls[0][0]
+          expect(response.payload.totalPrintPostCost).toBe(150)
+        })
+
+        test('maps all metric fields correctly', async () => {
+          const mockMetrics = [
+            {
+              schemeName: 'Test Scheme',
+              schemeYear: '2023',
+              totalStatements: 100,
+              printPostCount: 50,
+              printPostCost: '1000',
+              printPostUnitCost: '20',
+              emailCount: 50,
+              failureCount: 5
+            }
+          ]
+          db.metric.findAll.mockResolvedValue(mockMetrics)
+
+          await route.handler(mockRequest, mockH)
+
+          const response = mockH.response.mock.calls[0][0]
+          expect(response.payload.statementsByScheme[0]).toEqual({
+            schemeName: 'Test Scheme',
+            schemeYear: '2023',
+            totalStatements: 100,
+            printPostCount: 50,
+            printPostCost: '1000',
+            printPostUnitCost: '20',
+            emailCount: 50,
+            failureCount: 5
+          })
+        })
       })
 
       describe('error handling', () => {
@@ -376,6 +505,66 @@ describe('metrics routes', () => {
             message: 'An error occurred while fetching metrics'
           })
           expect(mockResponse.code).toHaveBeenCalledWith(500)
+        })
+
+        test('returns 500 when unexpected error occurs', async () => {
+          const error = new Error('Unexpected error')
+          db.metric.findAll.mockRejectedValue(error)
+
+          await route.handler(mockRequest, mockH)
+
+          expect(consoleErrorSpy).toHaveBeenCalled()
+          expect(mockResponse.code).toHaveBeenCalledWith(500)
+        })
+
+        test('handles errors during metrics processing', async () => {
+          db.metric.findAll.mockRejectedValue(new Error('Processing failed'))
+
+          await route.handler(mockRequest, mockH)
+
+          expect(mockH.response).toHaveBeenCalledWith({
+            error: 'Internal server error',
+            message: 'An error occurred while fetching metrics'
+          })
+        })
+      })
+
+      describe('query parameter parsing', () => {
+        test('parses schemeYear as integer', async () => {
+          mockRequest.query.period = 'year'
+          mockRequest.query.schemeYear = '2023'
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findAll).toHaveBeenCalledWith({
+            where: expect.objectContaining({
+              schemeYear: 2023
+            }),
+            order: [['schemeName', 'ASC']]
+          })
+        })
+
+        test('parses month as integer', async () => {
+          mockRequest.query.period = 'monthInYear'
+          mockRequest.query.schemeYear = '2024'
+          mockRequest.query.month = '6'
+          calculateMetricsForPeriod.mockResolvedValue()
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          expect(calculateMetricsForPeriod).toHaveBeenCalledWith('monthInYear', 2024, 6)
+        })
+
+        test('handles null schemeYear correctly', async () => {
+          mockRequest.query.period = 'all'
+          db.metric.findAll.mockResolvedValue([])
+
+          await route.handler(mockRequest, mockH)
+
+          const callArgs = db.metric.findAll.mock.calls[0][0]
+          expect(callArgs.where.schemeYear).toBeUndefined()
         })
       })
     })

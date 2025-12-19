@@ -1,12 +1,20 @@
 const db = require('../../data')
 const { calculateMetricsForPeriod } = require('../../metrics-calculator')
 
+const VALID_PERIODS = ['all', 'ytd', 'year', 'monthInYear', 'month', 'week', 'day']
+const MIN_YEAR = 2000
+const FUTURE_YEAR_OFFSET = 10
+const MIN_MONTH = 1
+const MAX_MONTH = 12
+const HTTP_OK = 200
+const HTTP_BAD_REQUEST = 400
+const HTTP_INTERNAL_SERVER_ERROR = 500
+
 const validatePeriod = (period) => {
-  const validPeriods = ['all', 'ytd', 'year', 'monthInYear', 'month', 'week', 'day']
-  if (!validPeriods.includes(period)) {
+  if (!VALID_PERIODS.includes(period)) {
     return {
       error: 'Invalid period type',
-      message: `Period must be one of: ${validPeriods.join(', ')}`
+      message: `Period must be one of: ${VALID_PERIODS.join(', ')}`
     }
   }
   return null
@@ -20,18 +28,19 @@ const validateMonthInYearParams = (schemeYear, month) => {
     }
   }
 
-  if (month < 1 || month > 12) {
+  if (month < MIN_MONTH || month > MAX_MONTH) {
     return {
       error: 'Invalid month',
-      message: 'Month must be between 1 and 12'
+      message: `Month must be between ${MIN_MONTH} and ${MAX_MONTH}`
     }
   }
 
   const currentYear = new Date().getFullYear()
-  if (schemeYear < 2000 || schemeYear > currentYear + 10) {
+  const maxYear = currentYear + FUTURE_YEAR_OFFSET
+  if (schemeYear < MIN_YEAR || schemeYear > maxYear) {
     return {
       error: 'Invalid schemeYear',
-      message: `schemeYear must be between 2000 and ${currentYear + 10}`
+      message: `schemeYear must be between ${MIN_YEAR} and ${maxYear}`
     }
   }
 
@@ -48,98 +57,132 @@ const validateYearParams = (period, schemeYear) => {
   return null
 }
 
+const handleMonthInYearCalculation = async (schemeYear, month) => {
+  try {
+    await calculateMetricsForPeriod('monthInYear', schemeYear, month)
+  } catch (err) {
+    console.error('Error calculating monthInYear metrics:', err)
+    const error = new Error('Metrics calculation failed')
+    error.statusCode = HTTP_INTERNAL_SERVER_ERROR
+    error.details = {
+      error: 'Metrics calculation failed',
+      message: err.message
+    }
+    throw error
+  }
+}
+
+const buildWhereClause = (period, schemeYear) => {
+  const snapshotDate = new Date().toISOString().split('T')[0]
+  const whereClause = {
+    snapshotDate,
+    periodType: period
+  }
+
+  if (schemeYear) {
+    whereClause.schemeYear = schemeYear
+  }
+
+  return whereClause
+}
+
+const calculateTotals = (schemeMetrics) => {
+  return schemeMetrics.reduce((acc, m) => ({
+    totalStatements: acc.totalStatements + m.totalStatements,
+    printPostCount: acc.printPostCount + m.printPostCount,
+    printPostCost: acc.printPostCost + Number.parseInt(m.printPostCost),
+    emailCount: acc.emailCount + m.emailCount,
+    failureCount: acc.failureCount + m.failureCount
+  }), {
+    totalStatements: 0,
+    printPostCount: 0,
+    printPostCost: 0,
+    emailCount: 0,
+    failureCount: 0
+  })
+}
+
+const formatMetricsResponse = (totals, schemeMetrics) => {
+  return {
+    payload: {
+      totalStatements: totals?.totalStatements || 0,
+      totalPrintPost: totals?.printPostCount || 0,
+      totalPrintPostCost: totals?.printPostCost || 0,
+      totalEmail: totals?.emailCount || 0,
+      totalFailures: totals?.failureCount || 0,
+      statementsByScheme: schemeMetrics.map(m => ({
+        schemeName: m.schemeName,
+        schemeYear: m.schemeYear,
+        totalStatements: m.totalStatements,
+        printPostCount: m.printPostCount,
+        printPostCost: m.printPostCost,
+        printPostUnitCost: m.printPostUnitCost,
+        emailCount: m.emailCount,
+        failureCount: m.failureCount
+      }))
+    }
+  }
+}
+
+const fetchMetrics = async (period, schemeYear) => {
+  const whereClause = buildWhereClause(period, schemeYear)
+  return await db.metric.findAll({
+    where: whereClause,
+    order: [['schemeName', 'ASC']]
+  })
+}
+
+const processMetrics = (metrics) => {
+  const schemeMetrics = metrics.filter(m => m.schemeName !== null)
+  const totals = calculateTotals(schemeMetrics)
+  return formatMetricsResponse(totals, schemeMetrics)
+}
+
+const handleMetricsRequest = async (request, h) => {
+  const period = request.query.period || 'all'
+  const schemeYear = request.query.schemeYear ? Number.parseInt(request.query.schemeYear) : null
+  const month = request.query.month ? Number.parseInt(request.query.month) : null
+
+  let validationError = validatePeriod(period)
+  if (validationError) {
+    return h.response(validationError).code(HTTP_BAD_REQUEST)
+  }
+
+  if (period === 'monthInYear') {
+    validationError = validateMonthInYearParams(schemeYear, month)
+    if (validationError) {
+      return h.response(validationError).code(HTTP_BAD_REQUEST)
+    }
+
+    try {
+      await handleMonthInYearCalculation(schemeYear, month)
+    } catch (error) {
+      return h.response(error.details).code(error.statusCode)
+    }
+  }
+
+  validationError = validateYearParams(period, schemeYear)
+  if (validationError) {
+    return h.response(validationError).code(HTTP_BAD_REQUEST)
+  }
+
+  const metrics = await fetchMetrics(period, schemeYear)
+  const response = processMetrics(metrics)
+  return h.response(response).code(HTTP_OK)
+}
+
 module.exports = [{
   method: 'GET',
   path: '/metrics',
   handler: async (request, h) => {
     try {
-      const period = request.query.period || 'all'
-      const schemeYear = request.query.schemeYear ? Number.parseInt(request.query.schemeYear) : null
-      const month = request.query.month ? Number.parseInt(request.query.month) : null
-
-      let validationError = validatePeriod(period)
-      if (validationError) {
-        return h.response(validationError).code(400)
-      }
-
-      if (period === 'monthInYear') {
-        validationError = validateMonthInYearParams(schemeYear, month)
-        if (validationError) {
-          return h.response(validationError).code(400)
-        }
-
-        try {
-          await calculateMetricsForPeriod('monthInYear', schemeYear, month)
-        } catch (calcError) {
-          console.error('Error calculating monthInYear metrics:', calcError)
-          return h.response({
-            error: 'Metrics calculation failed',
-            message: calcError.message
-          }).code(500)
-        }
-      }
-
-      validationError = validateYearParams(period, schemeYear)
-      if (validationError) {
-        return h.response(validationError).code(400)
-      }
-
-      const snapshotDate = new Date().toISOString().split('T')[0]
-
-      const whereClause = {
-        snapshotDate,
-        periodType: period
-      }
-
-      if (schemeYear) {
-        whereClause.schemeYear = schemeYear
-      }
-
-      const metrics = await db.metric.findAll({
-        where: whereClause,
-        order: [['schemeName', 'ASC']]
-      })
-
-      const schemeMetrics = metrics.filter(m => m.schemeName !== null)
-      const totals = schemeMetrics.reduce((acc, m) => ({
-        totalStatements: acc.totalStatements + m.totalStatements,
-        printPostCount: acc.printPostCount + m.printPostCount,
-        printPostCost: acc.printPostCost + Number.parseInt(m.printPostCost),
-        emailCount: acc.emailCount + m.emailCount,
-        failureCount: acc.failureCount + m.failureCount
-      }), {
-        totalStatements: 0,
-        printPostCount: 0,
-        printPostCost: 0,
-        emailCount: 0,
-        failureCount: 0
-      })
-
-      return h.response({
-        payload: {
-          totalStatements: totals?.totalStatements || 0,
-          totalPrintPost: totals?.printPostCount || 0,
-          totalPrintPostCost: totals?.printPostCost || 0,
-          totalEmail: totals?.emailCount || 0,
-          totalFailures: totals?.failureCount || 0,
-          statementsByScheme: schemeMetrics.map(m => ({
-            schemeName: m.schemeName,
-            schemeYear: m.schemeYear,
-            totalStatements: m.totalStatements,
-            printPostCount: m.printPostCount,
-            printPostCost: m.printPostCost,
-            printPostUnitCost: m.printPostUnitCost,
-            emailCount: m.emailCount,
-            failureCount: m.failureCount
-          }))
-        }
-      }).code(200)
+      return await handleMetricsRequest(request, h)
     } catch (error) {
       console.error('Error fetching metrics:', error)
       return h.response({
         error: 'Internal server error',
         message: 'An error occurred while fetching metrics'
-      }).code(500)
+      }).code(HTTP_INTERNAL_SERVER_ERROR)
     }
   }
 }]
