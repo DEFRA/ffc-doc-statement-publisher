@@ -52,15 +52,15 @@ process.on('SIGINT', async () => {
 
 const startup = (async () => {
   await initialiseContainers()
-  
+
   // Start HTTP server
   server = await createServer()
   await server.start()
   console.log('HTTP server running on', server.info.uri)
 
-  //Sart metrics polling
+  // Sart metrics polling
   startMetricsPolling()
-  
+
   // Start existing services
   await messaging.start()
   await monitoring.start()

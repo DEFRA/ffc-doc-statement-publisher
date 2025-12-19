@@ -79,7 +79,7 @@ const calculateMetricsForPeriod = async (period, schemeYear = null, month = null
   const results = await db.delivery.findAll({
     attributes: [
       [db.sequelize.fn('COUNT', db.sequelize.fn('DISTINCT', db.sequelize.col('delivery.deliveryId'))), 'totalStatements'],
-      [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = 'letter' THEN 1 END)`), 'printPostCount'],
+      [db.sequelize.literal('COUNT(CASE WHEN "delivery"."method" = \'letter\' THEN 1 END)'), 'printPostCount'],
       [db.sequelize.literal(`SUM(
         CASE 
           WHEN "delivery"."method" = 'letter' AND "delivery"."completed" >= '2026-01-05' THEN ${PRINT_POST_UNIT_COST_2026}
@@ -88,7 +88,7 @@ const calculateMetricsForPeriod = async (period, schemeYear = null, month = null
           ELSE 0 
         END
       )`), 'printPostCost'],
-      [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = 'email' THEN 1 END)`), 'emailCount'],
+      [db.sequelize.literal('COUNT(CASE WHEN "delivery"."method" = \'email\' THEN 1 END)'), 'emailCount'],
       [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
     ],
     include: [
@@ -129,20 +129,6 @@ const calculateMetricsForPeriod = async (period, schemeYear = null, month = null
       dataEndDate: endDate
     })
   }
-
-  const totals = results.reduce((acc, r) => ({
-    totalStatements: acc.totalStatements + Number.parseInt(r.totalStatements),
-    printPostCount: acc.printPostCount + Number.parseInt(r.printPostCount),
-    printPostCost: acc.printPostCost + Number.parseInt(r.printPostCost),
-    emailCount: acc.emailCount + Number.parseInt(r.emailCount),
-    failureCount: acc.failureCount + Number.parseInt(r.failureCount)
-  }), {
-    totalStatements: 0,
-    printPostCount: 0,
-    printPostCost: 0,
-    emailCount: 0,
-    failureCount: 0
-  })
 }
 
 const calculateAllMetrics = async () => {
@@ -160,7 +146,7 @@ const calculateAllMetrics = async () => {
     for (let i = 0; i <= yearsToCalculate; i++) {
       const year = currentYear - i
       await calculateMetricsForPeriod('year', year)
-      
+
       for (let month = 1; month <= 12; month++) {
         await calculateMetricsForPeriod('monthInYear', year, month)
       }

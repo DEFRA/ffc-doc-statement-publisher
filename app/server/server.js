@@ -20,7 +20,7 @@ const createServer = async () => {
   await server.register(require('../server/plugins/errors'))
   await server.register(require('../server/plugins/router'))
   await server.register(require('../server/plugins/logging'))
-  
+
   // Development-only plugins
   if (config.isDev) {
     await server.register(require('blipp'))

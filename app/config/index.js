@@ -3,7 +3,6 @@ const mqConfig = require('./message')
 const dbConfig = require('./database')
 const storageConfig = require('./storage')
 const reportConfig = require('./report')
-const { port } = require('../schemas/components/frn')
 const deliveryCheck = 3600000
 const reportCheck = 86400000
 const retainPeriodInWeeks = 78
@@ -23,12 +22,12 @@ const schema = Joi.object({
 
 const config = {
   env: process.env.NODE_ENV,
-  port: process.env.PORT ? parseInt(process.env.PORT) : undefined,
-  deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL ? parseInt(process.env.DELIVERY_CHECK_INTERVAL) : undefined,
-  reportingCheckInterval: process.env.REPORTING_CHECK_INTERVAL ? parseInt(process.env.REPORTING_CHECK_INTERVAL) : undefined,
+  port: process.env.PORT ? Number.parseInt(process.env.PORT) : undefined,
+  deliveryCheckInterval: process.env.DELIVERY_CHECK_INTERVAL ? Number.parseInt(process.env.DELIVERY_CHECK_INTERVAL) : undefined,
+  reportingCheckInterval: process.env.REPORTING_CHECK_INTERVAL ? Number.parseInt(process.env.REPORTING_CHECK_INTERVAL) : undefined,
   notifyApiKey: process.env.NOTIFY_API_KEY,
   notifyApiKeyLetter: process.env.NOTIFY_API_KEY_LETTER,
-  retentionPeriodInWeeks: process.env.RETENTION_PERIOD_IN_WEEKS ? parseInt(process.env.RETENTION_PERIOD_IN_WEEKS) : undefined,
+  retentionPeriodInWeeks: process.env.RETENTION_PERIOD_IN_WEEKS ? Number.parseInt(process.env.RETENTION_PERIOD_IN_WEEKS) : undefined,
   statementReceiverApiVersion: process.env.STATEMENT_RECEIVER_API_VERSION,
   statementReceiverEndpoint: process.env.STATEMENT_RECEIVER_ENDPOINT,
   sendCrmFailureMessageEnabled: process.env.SEND_CRM_FAILURE_MESSAGE_ENABLED

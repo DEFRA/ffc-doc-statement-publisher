@@ -1,5 +1,4 @@
 const db = require('../../data')
-const { Op } = require('sequelize')
 const { calculateMetricsForPeriod } = require('../../metrics-calculator')
 
 const validatePeriod = (period) => {
@@ -103,18 +102,18 @@ module.exports = [{
 
       const schemeMetrics = metrics.filter(m => m.schemeName !== null)
       const totals = schemeMetrics.reduce((acc, m) => ({
-  totalStatements: acc.totalStatements + m.totalStatements,
-  printPostCount: acc.printPostCount + m.printPostCount,
-  printPostCost: acc.printPostCost + Number.parseInt(m.printPostCost),
-  emailCount: acc.emailCount + m.emailCount,
-  failureCount: acc.failureCount + m.failureCount
-}), {
-  totalStatements: 0,
-  printPostCount: 0,
-  printPostCost: 0,
-  emailCount: 0,
-  failureCount: 0
-})
+        totalStatements: acc.totalStatements + m.totalStatements,
+        printPostCount: acc.printPostCount + m.printPostCount,
+        printPostCost: acc.printPostCost + Number.parseInt(m.printPostCost),
+        emailCount: acc.emailCount + m.emailCount,
+        failureCount: acc.failureCount + m.failureCount
+      }), {
+        totalStatements: 0,
+        printPostCount: 0,
+        printPostCost: 0,
+        emailCount: 0,
+        failureCount: 0
+      })
 
       return h.response({
         payload: {
