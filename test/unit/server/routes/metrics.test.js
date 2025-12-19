@@ -95,6 +95,7 @@ describe('metrics routes', () => {
           } else if (period === 'monthInYear') {
             mockRequest.query.schemeYear = '2024'
             mockRequest.query.month = '6'
+            calculateMetricsForPeriod.mockResolvedValue()
           }
 
           await route.handler(mockRequest, mockH)

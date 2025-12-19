@@ -176,7 +176,7 @@ module.exports = [{
   path: '/metrics',
   handler: async (request, h) => {
     try {
-      return handleMetricsRequest(request, h)
+      return await handleMetricsRequest(request, h)
     } catch (error) {
       console.error('Error fetching metrics:', error)
       return h.response({
