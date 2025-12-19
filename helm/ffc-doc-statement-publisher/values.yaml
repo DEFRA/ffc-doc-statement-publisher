@@ -49,6 +49,7 @@ container:
   DelinkedDayOfMonth: 15
   DelinkedDurationNumber: 1
   DelinkedDurationType: months
+  metricsPollingInterval: 86400000
   SfiIntervalNumber: 1
   SfiIntervalType: months
   SfiDayOfMonth: 15
