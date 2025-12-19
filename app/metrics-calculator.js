@@ -139,7 +139,7 @@ const buildQueryAttributes = () => [
 ]
 
 const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear) => {
-  return await db.delivery.findAll({
+  return db.delivery.findAll({
     attributes: buildQueryAttributes(),
     include: [
       buildStatementInclude(useSchemeYear, schemeYear),

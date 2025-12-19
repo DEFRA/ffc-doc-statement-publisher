@@ -126,7 +126,7 @@ const formatMetricsResponse = (totals, schemeMetrics) => {
 
 const fetchMetrics = async (period, schemeYear) => {
   const whereClause = buildWhereClause(period, schemeYear)
-  return await db.metric.findAll({
+  return db.metric.findAll({
     where: whereClause,
     order: [['schemeName', 'ASC']]
   })
@@ -176,7 +176,7 @@ module.exports = [{
   path: '/metrics',
   handler: async (request, h) => {
     try {
-      return await handleMetricsRequest(request, h)
+      return handleMetricsRequest(request, h)
     } catch (error) {
       console.error('Error fetching metrics:', error)
       return h.response({
