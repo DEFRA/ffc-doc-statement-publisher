@@ -3,7 +3,12 @@ const { calculateMetricsForPeriod } = require('../../../../app/metrics-calculato
 
 jest.mock('../../../../app/data', () => ({
   metric: {
-    findAll: jest.fn()
+    findAll: jest.fn(),
+    findOne: jest.fn()
+  },
+  sequelize: {
+    fn: jest.fn((fn, col) => `${fn}(${col})`),
+    col: jest.fn((col) => col)
   }
 }))
 
@@ -17,6 +22,9 @@ describe('metrics routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    db.metric.findOne.mockResolvedValue({
+      maxDate: '2024-06-15'
+    })
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
     metricsRoutes = require('../../../../app/server/routes/metrics')
     jest.useFakeTimers().setSystemTime(new Date('2024-06-15'))
@@ -107,6 +115,14 @@ describe('metrics routes', () => {
           db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findOne).toHaveBeenCalledWith({
+            attributes: [['MAX(snapshot_date)', 'maxDate']],
+            where: {
+              periodType: 'all'
+            },
+            raw: true
+          })
 
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
@@ -289,6 +305,14 @@ describe('metrics routes', () => {
 
           await route.handler(mockRequest, mockH)
 
+          expect(db.metric.findOne).toHaveBeenCalledWith({
+            attributes: [['MAX(snapshot_date)', 'maxDate']],
+            where: {
+              periodType: 'all'
+            },
+            raw: true
+          })
+
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
               snapshotDate: '2024-06-15',
@@ -303,6 +327,15 @@ describe('metrics routes', () => {
           db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findOne).toHaveBeenCalledWith({
+            attributes: [['MAX(snapshot_date)', 'maxDate']],
+            where: {
+              periodType: 'all',
+              schemeYear: 2024
+            },
+            raw: true
+          })
 
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
@@ -319,8 +352,47 @@ describe('metrics routes', () => {
 
           await route.handler(mockRequest, mockH)
 
-          const callArgs = db.metric.findAll.mock.calls[0][0]
-          expect(callArgs.where).not.toHaveProperty('schemeYear')
+          const findOneCall = db.metric.findOne.mock.calls[0][0]
+          const findAllCall = db.metric.findAll.mock.calls[0][0]
+
+          expect(findOneCall.where).not.toHaveProperty('schemeYear')
+          expect(findAllCall.where).not.toHaveProperty('schemeYear')
+        })
+
+        test('returns empty array when no snapshot found', async () => {
+          db.metric.findOne.mockResolvedValue(null)
+
+          await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findAll).not.toHaveBeenCalled()
+          expect(mockH.response).toHaveBeenCalledWith({
+            payload: {
+              totalStatements: 0,
+              totalPrintPost: 0,
+              totalPrintPostCost: 0,
+              totalEmail: 0,
+              totalFailures: 0,
+              statementsByScheme: []
+            }
+          })
+        })
+
+        test('returns empty array when maxDate is null', async () => {
+          db.metric.findOne.mockResolvedValue({ maxDate: null })
+
+          await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findAll).not.toHaveBeenCalled()
+          expect(mockH.response).toHaveBeenCalledWith({
+            payload: {
+              totalStatements: 0,
+              totalPrintPost: 0,
+              totalPrintPostCost: 0,
+              totalEmail: 0,
+              totalFailures: 0,
+              statementsByScheme: []
+            }
+          })
         })
 
         test('filters out null schemeName and calculates totals', async () => {
@@ -496,7 +568,7 @@ describe('metrics routes', () => {
       describe('error handling', () => {
         test('returns 500 when database query fails', async () => {
           const error = new Error('Database error')
-          db.metric.findAll.mockRejectedValue(error)
+          db.metric.findOne.mockRejectedValue(error)
 
           await route.handler(mockRequest, mockH)
 
@@ -519,7 +591,7 @@ describe('metrics routes', () => {
         })
 
         test('handles errors during metrics processing', async () => {
-          db.metric.findAll.mockRejectedValue(new Error('Processing failed'))
+          db.metric.findOne.mockRejectedValue(new Error('Processing failed'))
 
           await route.handler(mockRequest, mockH)
 
@@ -537,6 +609,15 @@ describe('metrics routes', () => {
           db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
+
+          expect(db.metric.findOne).toHaveBeenCalledWith({
+            attributes: [['MAX(snapshot_date)', 'maxDate']],
+            where: {
+              periodType: 'year',
+              schemeYear: 2023
+            },
+            raw: true
+          })
 
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: expect.objectContaining({
@@ -564,8 +645,11 @@ describe('metrics routes', () => {
 
           await route.handler(mockRequest, mockH)
 
-          const callArgs = db.metric.findAll.mock.calls[0][0]
-          expect(callArgs.where.schemeYear).toBeUndefined()
+          const findOneCall = db.metric.findOne.mock.calls[0][0]
+          const findAllCall = db.metric.findAll.mock.calls[0][0]
+
+          expect(findOneCall.where.schemeYear).toBeUndefined()
+          expect(findAllCall.where.schemeYear).toBeUndefined()
         })
       })
     })

@@ -1,5 +1,5 @@
 const { OK } = require('../../constants/ok')
-const HTTP_OK = 200
+const { HTTP_OK } = require('../../constants/statuses')
 
 module.exports = {
   method: 'GET',

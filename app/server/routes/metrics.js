@@ -1,14 +1,13 @@
 const db = require('../../data')
 const { calculateMetricsForPeriod } = require('../../metrics-calculator')
+const { HTTP_OK, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
-const VALID_PERIODS = ['all', 'ytd', 'year', 'monthInYear', 'month', 'week', 'day']
+const { PERIOD_ALL, PERIOD_YTD, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../constants/periods')
+const VALID_PERIODS = [PERIOD_ALL, PERIOD_YTD, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY]
 const MIN_YEAR = 2000
 const FUTURE_YEAR_OFFSET = 10
 const MIN_MONTH = 1
 const MAX_MONTH = 12
-const HTTP_OK = 200
-const HTTP_BAD_REQUEST = 400
-const HTTP_INTERNAL_SERVER_ERROR = 500
 
 const validatePeriod = (period) => {
   if (!VALID_PERIODS.includes(period)) {
@@ -72,20 +71,6 @@ const handleMonthInYearCalculation = async (schemeYear, month) => {
   }
 }
 
-const buildWhereClause = (period, schemeYear) => {
-  const snapshotDate = new Date().toISOString().split('T')[0]
-  const whereClause = {
-    snapshotDate,
-    periodType: period
-  }
-
-  if (schemeYear) {
-    whereClause.schemeYear = schemeYear
-  }
-
-  return whereClause
-}
-
 const calculateTotals = (schemeMetrics) => {
   return schemeMetrics.reduce((acc, m) => ({
     totalStatements: acc.totalStatements + m.totalStatements,
@@ -125,9 +110,25 @@ const formatMetricsResponse = (totals, schemeMetrics) => {
 }
 
 const fetchMetrics = async (period, schemeYear) => {
-  const whereClause = buildWhereClause(period, schemeYear)
+  const mostRecentSnapshot = await db.metric.findOne({
+    attributes: [[db.sequelize.fn('MAX', db.sequelize.col('snapshot_date')), 'maxDate']],
+    where: {
+      periodType: period,
+      ...(schemeYear && { schemeYear })
+    },
+    raw: true
+  })
+
+  if (!mostRecentSnapshot?.maxDate) {
+    return []
+  }
+
   return db.metric.findAll({
-    where: whereClause,
+    where: {
+      snapshotDate: mostRecentSnapshot.maxDate,
+      periodType: period,
+      ...(schemeYear && { schemeYear })
+    },
     order: [['schemeName', 'ASC']]
   })
 }

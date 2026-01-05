@@ -1,8 +1,6 @@
 const {
-  JANUARY,
   FIRST_DAY_OF_MONTH,
   YEAR_START_MONTH,
-  YEAR_START_DAY,
   END_OF_DAY_HOUR,
   END_OF_DAY_MINUTE,
   END_OF_DAY_SECOND,
@@ -12,20 +10,6 @@ const {
 } = require('../../../app/constants/date')
 
 describe('date constants', () => {
-  describe('JANUARY', () => {
-    test('should be defined', () => {
-      expect(JANUARY).toBeDefined()
-    })
-
-    test('should be 0', () => {
-      expect(JANUARY).toBe(0)
-    })
-
-    test('should be a number', () => {
-      expect(typeof JANUARY).toBe('number')
-    })
-  })
-
   describe('FIRST_DAY_OF_MONTH', () => {
     test('should be defined', () => {
       expect(FIRST_DAY_OF_MONTH).toBeDefined()
@@ -49,30 +33,8 @@ describe('date constants', () => {
       expect(YEAR_START_MONTH).toBe(0)
     })
 
-    test('should match JANUARY', () => {
-      expect(YEAR_START_MONTH).toBe(JANUARY)
-    })
-
     test('should be a number', () => {
       expect(typeof YEAR_START_MONTH).toBe('number')
-    })
-  })
-
-  describe('YEAR_START_DAY', () => {
-    test('should be defined', () => {
-      expect(YEAR_START_DAY).toBeDefined()
-    })
-
-    test('should be 1', () => {
-      expect(YEAR_START_DAY).toBe(1)
-    })
-
-    test('should match FIRST_DAY_OF_MONTH', () => {
-      expect(YEAR_START_DAY).toBe(FIRST_DAY_OF_MONTH)
-    })
-
-    test('should be a number', () => {
-      expect(typeof YEAR_START_DAY).toBe('number')
     })
   })
 
@@ -164,11 +126,9 @@ describe('date constants', () => {
     test('should export all date constants', () => {
       const dateConstants = require('../../../app/constants/date')
 
-      expect(Object.keys(dateConstants)).toHaveLength(10)
-      expect(dateConstants).toHaveProperty('JANUARY')
+      expect(Object.keys(dateConstants)).toHaveLength(8)
       expect(dateConstants).toHaveProperty('FIRST_DAY_OF_MONTH')
       expect(dateConstants).toHaveProperty('YEAR_START_MONTH')
-      expect(dateConstants).toHaveProperty('YEAR_START_DAY')
       expect(dateConstants).toHaveProperty('END_OF_DAY_HOUR')
       expect(dateConstants).toHaveProperty('END_OF_DAY_MINUTE')
       expect(dateConstants).toHaveProperty('END_OF_DAY_SECOND')
@@ -191,7 +151,7 @@ describe('date constants', () => {
 
   describe('year start date', () => {
     test('should create valid year start date', () => {
-      const date = new Date(2024, YEAR_START_MONTH, YEAR_START_DAY)
+      const date = new Date(2024, YEAR_START_MONTH)
 
       expect(date.getMonth()).toBe(0)
       expect(date.getDate()).toBe(1)

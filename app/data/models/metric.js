@@ -1,10 +1,8 @@
 const {
   DEFAULT_TOTAL_STATEMENTS,
-  DEFAULT_PRINT_POST_COUNT,
   DEFAULT_PRINT_POST_COST,
   DEFAULT_PRINT_POST_UNIT_COST,
-  DEFAULT_EMAIL_COUNT,
-  DEFAULT_FAILURE_COUNT,
+  DEFAULT_COUNT,
   PERIOD_TYPE_MAX_LENGTH,
   SCHEME_NAME_MAX_LENGTH
 } = require('../../constants/metric-defaults')
@@ -43,7 +41,7 @@ function defineMetricColumns (DataTypes) {
     },
     printPostCount: {
       type: DataTypes.INTEGER,
-      defaultValue: DEFAULT_PRINT_POST_COUNT,
+      defaultValue: DEFAULT_COUNT,
       field: 'print_post_count'
     },
     printPostCost: {
@@ -58,12 +56,12 @@ function defineMetricColumns (DataTypes) {
     },
     emailCount: {
       type: DataTypes.INTEGER,
-      defaultValue: DEFAULT_EMAIL_COUNT,
+      defaultValue: DEFAULT_COUNT,
       field: 'email_count'
     },
     failureCount: {
       type: DataTypes.INTEGER,
-      defaultValue: DEFAULT_FAILURE_COUNT,
+      defaultValue: DEFAULT_COUNT,
       field: 'failure_count'
     },
     calculatedAt: {

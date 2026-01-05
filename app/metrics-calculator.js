@@ -5,7 +5,6 @@ const { MILLISECONDS_PER_DAY, DAYS_PER_WEEK, DAYS_PER_MONTH } = require('./const
 const {
   FIRST_DAY_OF_MONTH,
   YEAR_START_MONTH,
-  YEAR_START_DAY,
   END_OF_DAY_HOUR,
   END_OF_DAY_MINUTE,
   END_OF_DAY_SECOND,
@@ -33,7 +32,7 @@ const getDateRangeForAll = () => ({
 })
 
 const getDateRangeForYTD = (now) => ({
-  startDate: new Date(now.getFullYear(), YEAR_START_MONTH, YEAR_START_DAY),
+  startDate: new Date(now.getFullYear(), YEAR_START_MONTH, FIRST_DAY_OF_MONTH),
   endDate: now,
   useSchemeYear: false
 })
