@@ -1,6 +1,12 @@
 const { Op } = require('sequelize')
 const db = require('./data')
-const { PRINT_POST_UNIT_COST_2024, PRINT_POST_UNIT_COST_2026, DEFAULT_PRINT_POST_UNIT_COST } = require('./constants/print-post-pricing')
+const {
+  PRINT_POST_UNIT_COST_2024,
+  PRINT_POST_UNIT_COST_2026,
+  DEFAULT_PRINT_POST_UNIT_COST,
+  PRINT_POST_PRICING_START_2024,
+  PRINT_POST_PRICING_START_2026
+} = require('./constants/print-post-pricing')
 const { MILLISECONDS_PER_DAY, DAYS_PER_WEEK, DAYS_PER_MONTH } = require('./constants/time')
 const {
   FIRST_DAY_OF_MONTH,
@@ -118,22 +124,18 @@ const buildFailureInclude = () => ({
   required: false
 })
 
-const buildPrintPostCostCalculation = () => {
-  return db.sequelize.literal(`SUM(
+const buildQueryAttributes = () => [
+  [db.sequelize.literal('COUNT(DISTINCT CASE WHEN "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)'), 'totalStatements'],
+  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
+  [db.sequelize.literal(`SUM(
     CASE 
-      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" >= '2026-01-05' THEN ${PRINT_POST_UNIT_COST_2026}
-      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" >= '2024-04-01' THEN ${PRINT_POST_UNIT_COST_2024}
-      WHEN "delivery"."method" = '${METHOD_LETTER}' THEN ${DEFAULT_PRINT_POST_UNIT_COST}
+      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
       ELSE 0 
     END
-  )`)
-}
-
-const buildQueryAttributes = () => [
-  [db.sequelize.fn('COUNT', db.sequelize.fn('DISTINCT', db.sequelize.col('delivery.deliveryId'))), 'totalStatements'],
-  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' THEN 1 END)`), 'printPostCount'],
-  [buildPrintPostCostCalculation(), 'printPostCost'],
-  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' THEN 1 END)`), 'emailCount'],
+  )`), 'printPostCost'],
+  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount'],
   [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
 ]
 
