@@ -59,7 +59,7 @@ services:
       - default
 
   ffc-doc-statement-azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     command: "azurite-blob --loose --blobHost 0.0.0.0 --skipApiVersionCheck"
     labels:
       com.docker.compose.pay.role: ffc-doc-statement-azurite
