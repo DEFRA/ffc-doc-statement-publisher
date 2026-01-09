@@ -366,14 +366,12 @@ describe('metrics routes', () => {
 
           expect(db.metric.findAll).not.toHaveBeenCalled()
           expect(mockH.response).toHaveBeenCalledWith({
-            payload: {
-              totalStatements: 0,
-              totalPrintPost: 0,
-              totalPrintPostCost: 0,
-              totalEmail: 0,
-              totalFailures: 0,
-              statementsByScheme: []
-            }
+            totalStatements: 0,
+            totalPrintPost: 0,
+            totalPrintPostCost: 0,
+            totalEmail: 0,
+            totalFailures: 0,
+            statementsByScheme: []
           })
         })
 
@@ -384,14 +382,12 @@ describe('metrics routes', () => {
 
           expect(db.metric.findAll).not.toHaveBeenCalled()
           expect(mockH.response).toHaveBeenCalledWith({
-            payload: {
-              totalStatements: 0,
-              totalPrintPost: 0,
-              totalPrintPostCost: 0,
-              totalEmail: 0,
-              totalFailures: 0,
-              statementsByScheme: []
-            }
+            totalStatements: 0,
+            totalPrintPost: 0,
+            totalPrintPostCost: 0,
+            totalEmail: 0,
+            totalFailures: 0,
+            statementsByScheme: []
           })
         })
 
@@ -433,35 +429,33 @@ describe('metrics routes', () => {
           await route.handler(mockRequest, mockH)
 
           expect(mockH.response).toHaveBeenCalledWith({
-            payload: {
-              totalStatements: 30,
-              totalPrintPost: 15,
-              totalPrintPostCost: 300,
-              totalEmail: 15,
-              totalFailures: 2,
-              statementsByScheme: [
-                {
-                  schemeName: 'Scheme A',
-                  schemeYear: '2024',
-                  totalStatements: 10,
-                  printPostCount: 5,
-                  printPostCost: '100',
-                  printPostUnitCost: '20',
-                  emailCount: 5,
-                  failureCount: 0
-                },
-                {
-                  schemeName: 'Scheme B',
-                  schemeYear: '2024',
-                  totalStatements: 20,
-                  printPostCount: 10,
-                  printPostCost: '200',
-                  printPostUnitCost: '20',
-                  emailCount: 10,
-                  failureCount: 2
-                }
-              ]
-            }
+            totalStatements: 30,
+            totalPrintPost: 15,
+            totalPrintPostCost: 300,
+            totalEmail: 15,
+            totalFailures: 2,
+            statementsByScheme: [
+              {
+                schemeName: 'Scheme A',
+                schemeYear: '2024',
+                totalStatements: 10,
+                printPostCount: 5,
+                printPostCost: '100',
+                printPostUnitCost: '20',
+                emailCount: 5,
+                failureCount: 0
+              },
+              {
+                schemeName: 'Scheme B',
+                schemeYear: '2024',
+                totalStatements: 20,
+                printPostCount: 10,
+                printPostCost: '200',
+                printPostUnitCost: '20',
+                emailCount: 10,
+                failureCount: 2
+              }
+            ]
           })
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
@@ -472,14 +466,12 @@ describe('metrics routes', () => {
           await route.handler(mockRequest, mockH)
 
           expect(mockH.response).toHaveBeenCalledWith({
-            payload: {
-              totalStatements: 0,
-              totalPrintPost: 0,
-              totalPrintPostCost: 0,
-              totalEmail: 0,
-              totalFailures: 0,
-              statementsByScheme: []
-            }
+            totalStatements: 0,
+            totalPrintPost: 0,
+            totalPrintPostCost: 0,
+            totalEmail: 0,
+            totalFailures: 0,
+            statementsByScheme: []
           })
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
@@ -502,14 +494,12 @@ describe('metrics routes', () => {
           await route.handler(mockRequest, mockH)
 
           expect(mockH.response).toHaveBeenCalledWith({
-            payload: {
-              totalStatements: 0,
-              totalPrintPost: 0,
-              totalPrintPostCost: 0,
-              totalEmail: 0,
-              totalFailures: 0,
-              statementsByScheme: []
-            }
+            totalStatements: 0,
+            totalPrintPost: 0,
+            totalPrintPostCost: 0,
+            totalEmail: 0,
+            totalFailures: 0,
+            statementsByScheme: []
           })
         })
 
@@ -531,7 +521,7 @@ describe('metrics routes', () => {
           await route.handler(mockRequest, mockH)
 
           const response = mockH.response.mock.calls[0][0]
-          expect(response.payload.totalPrintPostCost).toBe(150)
+          expect(response.totalPrintPostCost).toBe(150)
         })
 
         test('maps all metric fields correctly', async () => {
@@ -552,7 +542,7 @@ describe('metrics routes', () => {
           await route.handler(mockRequest, mockH)
 
           const response = mockH.response.mock.calls[0][0]
-          expect(response.payload.statementsByScheme[0]).toEqual({
+          expect(response.statementsByScheme[0]).toEqual({
             schemeName: 'Test Scheme',
             schemeYear: '2023',
             totalStatements: 100,

@@ -89,23 +89,21 @@ const calculateTotals = (schemeMetrics) => {
 
 const formatMetricsResponse = (totals, schemeMetrics) => {
   return {
-    payload: {
-      totalStatements: totals?.totalStatements || 0,
-      totalPrintPost: totals?.printPostCount || 0,
-      totalPrintPostCost: totals?.printPostCost || 0,
-      totalEmail: totals?.emailCount || 0,
-      totalFailures: totals?.failureCount || 0,
-      statementsByScheme: schemeMetrics.map(m => ({
-        schemeName: m.schemeName,
-        schemeYear: m.schemeYear,
-        totalStatements: m.totalStatements,
-        printPostCount: m.printPostCount,
-        printPostCost: m.printPostCost,
-        printPostUnitCost: m.printPostUnitCost,
-        emailCount: m.emailCount,
-        failureCount: m.failureCount
-      }))
-    }
+    totalStatements: totals?.totalStatements || 0,
+    totalPrintPost: totals?.printPostCount || 0,
+    totalPrintPostCost: totals?.printPostCost || 0,
+    totalEmail: totals?.emailCount || 0,
+    totalFailures: totals?.failureCount || 0,
+    statementsByScheme: schemeMetrics.map(m => ({
+      schemeName: m.schemeName,
+      schemeYear: m.schemeYear,
+      totalStatements: m.totalStatements,
+      printPostCount: m.printPostCount,
+      printPostCost: m.printPostCost,
+      printPostUnitCost: m.printPostUnitCost,
+      emailCount: m.emailCount,
+      failureCount: m.failureCount
+    }))
   }
 }
 
