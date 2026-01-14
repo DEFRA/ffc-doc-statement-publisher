@@ -35,7 +35,7 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite:3.35.0
     container_name: ffc-doc-statement-azurite
     command: >
-      azurite-blob --loose --blobHost 0.0.0.0
+      azurite-blob --loose --blobHost 0.0.0.0 --skipApiVersionCheck
     ports:
       - "10083:10000"
     volumes:
