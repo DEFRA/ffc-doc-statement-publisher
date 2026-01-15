@@ -1,0 +1,3 @@
+{{- include "ffc-helm-library.cluster-ip-service" (list . "ffc-doc-statement-publisher.cluster-ip-service") -}}
+{{- define "ffc-doc-statement-publisher.cluster-ip-service" -}}
+{{- end -}}
