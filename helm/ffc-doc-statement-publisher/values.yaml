@@ -60,6 +60,7 @@ container:
   retentionPeriodInWeeks: 78
   sendCrmFailureMessageEnabled: false
   alertTopicAddress: ffc-doc-alerting
+  port: 3010
 
 ingress:
   server: example.com
