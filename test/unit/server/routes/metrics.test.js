@@ -82,9 +82,7 @@ describe('metrics routes', () => {
       describe('period validation', () => {
         test('returns 400 for invalid period', async () => {
           mockRequest.query.period = 'invalid'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Invalid period type',
             message: 'Period must be one of: all, ytd, year, monthInYear, month, week, day'
@@ -97,25 +95,21 @@ describe('metrics routes', () => {
         ])('accepts valid period: %s', async (period) => {
           mockRequest.query.period = period
           db.metric.findAll.mockResolvedValue([])
-
           if (period === 'year') {
             mockRequest.query.schemeYear = '2024'
-          } else if (period === 'monthInYear') {
+          }
+          if (period === 'monthInYear') {
             mockRequest.query.schemeYear = '2024'
             mockRequest.query.month = '6'
             calculateMetricsForPeriod.mockResolvedValue()
           }
-
           await route.handler(mockRequest, mockH)
-
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
 
         test('defaults to "all" period when not provided', async () => {
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findOne).toHaveBeenCalledWith({
             attributes: [['MAX(snapshot_date)', 'maxDate']],
             where: {
@@ -123,13 +117,13 @@ describe('metrics routes', () => {
             },
             raw: true
           })
-
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
               snapshotDate: '2024-06-15',
               periodType: 'all'
             },
-            order: [['schemeName', 'ASC']]
+            order: [['schemeName', 'ASC']],
+            raw: true
           })
         })
       })
@@ -141,9 +135,7 @@ describe('metrics routes', () => {
 
         test('returns 400 when schemeYear is missing', async () => {
           mockRequest.query.month = '6'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Missing required parameters',
             message: 'schemeYear and month are required for monthInYear period'
@@ -153,9 +145,7 @@ describe('metrics routes', () => {
 
         test('returns 400 when month is missing', async () => {
           mockRequest.query.schemeYear = '2024'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Missing required parameters',
             message: 'schemeYear and month are required for monthInYear period'
@@ -166,12 +156,10 @@ describe('metrics routes', () => {
         test('returns 400 when month is 0', async () => {
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '0'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
-            error: 'Missing required parameters',
-            message: 'schemeYear and month are required for monthInYear period'
+            error: 'Invalid month',
+            message: 'Month must be between 1 and 12'
           })
           expect(mockResponse.code).toHaveBeenCalledWith(400)
         })
@@ -179,9 +167,7 @@ describe('metrics routes', () => {
         test('returns 400 when month is less than 1', async () => {
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '-1'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Invalid month',
             message: 'Month must be between 1 and 12'
@@ -192,9 +178,7 @@ describe('metrics routes', () => {
         test('returns 400 when month is greater than 12', async () => {
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '13'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Invalid month',
             message: 'Month must be between 1 and 12'
@@ -205,9 +189,7 @@ describe('metrics routes', () => {
         test('returns 400 when schemeYear is less than 2000', async () => {
           mockRequest.query.schemeYear = '1999'
           mockRequest.query.month = '6'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Invalid schemeYear',
             message: expect.stringContaining('schemeYear must be between 2000 and')
@@ -218,9 +200,7 @@ describe('metrics routes', () => {
         test('returns 400 when schemeYear is more than 10 years in future', async () => {
           mockRequest.query.schemeYear = '2036'
           mockRequest.query.month = '6'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Invalid schemeYear',
             message: expect.stringContaining('schemeYear must be between 2000 and')
@@ -233,9 +213,7 @@ describe('metrics routes', () => {
           mockRequest.query.month = '6'
           calculateMetricsForPeriod.mockResolvedValue()
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(calculateMetricsForPeriod).toHaveBeenCalledWith('monthInYear', 2024, 6)
         })
 
@@ -244,9 +222,7 @@ describe('metrics routes', () => {
           mockRequest.query.month = '6'
           const error = new Error('Calculation failed')
           calculateMetricsForPeriod.mockRejectedValue(error)
-
           await route.handler(mockRequest, mockH)
-
           expect(consoleErrorSpy).toHaveBeenCalledWith('Error calculating monthInYear metrics:', error)
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Metrics calculation failed',
@@ -260,9 +236,7 @@ describe('metrics routes', () => {
           mockRequest.query.month = '6'
           const originalError = new Error('Database connection lost')
           calculateMetricsForPeriod.mockRejectedValue(originalError)
-
           await route.handler(mockRequest, mockH)
-
           expect(consoleErrorSpy).toHaveBeenCalledWith('Error calculating monthInYear metrics:', originalError)
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Metrics calculation failed',
@@ -274,9 +248,7 @@ describe('metrics routes', () => {
       describe('year validation', () => {
         test('returns 400 when period is year and schemeYear is missing', async () => {
           mockRequest.query.period = 'year'
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Missing required parameter',
             message: 'schemeYear is required for year period'
@@ -288,9 +260,7 @@ describe('metrics routes', () => {
           mockRequest.query.period = 'year'
           mockRequest.query.schemeYear = '2024'
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(mockResponse.code).toHaveBeenCalledWith(200)
         })
       })
@@ -302,9 +272,7 @@ describe('metrics routes', () => {
 
         test('fetches metrics with correct where clause for default period', async () => {
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findOne).toHaveBeenCalledWith({
             attributes: [['MAX(snapshot_date)', 'maxDate']],
             where: {
@@ -312,22 +280,20 @@ describe('metrics routes', () => {
             },
             raw: true
           })
-
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
               snapshotDate: '2024-06-15',
               periodType: 'all'
             },
-            order: [['schemeName', 'ASC']]
+            order: [['schemeName', 'ASC']],
+            raw: true
           })
         })
 
         test('includes schemeYear in where clause when provided', async () => {
           mockRequest.query.schemeYear = '2024'
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findOne).toHaveBeenCalledWith({
             attributes: [['MAX(snapshot_date)', 'maxDate']],
             where: {
@@ -336,34 +302,29 @@ describe('metrics routes', () => {
             },
             raw: true
           })
-
           expect(db.metric.findAll).toHaveBeenCalledWith({
             where: {
               snapshotDate: '2024-06-15',
               periodType: 'all',
               schemeYear: 2024
             },
-            order: [['schemeName', 'ASC']]
+            order: [['schemeName', 'ASC']],
+            raw: true
           })
         })
 
         test('excludes schemeYear from where clause when not provided', async () => {
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           const findOneCall = db.metric.findOne.mock.calls[0][0]
           const findAllCall = db.metric.findAll.mock.calls[0][0]
-
           expect(findOneCall.where).not.toHaveProperty('schemeYear')
           expect(findAllCall.where).not.toHaveProperty('schemeYear')
         })
 
         test('returns empty array when no snapshot found', async () => {
           db.metric.findOne.mockResolvedValue(null)
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findAll).not.toHaveBeenCalled()
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 0,
@@ -377,9 +338,7 @@ describe('metrics routes', () => {
 
         test('returns empty array when maxDate is null', async () => {
           db.metric.findOne.mockResolvedValue({ maxDate: null })
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findAll).not.toHaveBeenCalled()
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 0,
@@ -425,9 +384,7 @@ describe('metrics routes', () => {
             }
           ]
           db.metric.findAll.mockResolvedValue(mockMetrics)
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 30,
             totalPrintPost: 15,
@@ -462,9 +419,7 @@ describe('metrics routes', () => {
 
         test('returns zeros when no metrics found', async () => {
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 0,
             totalPrintPost: 0,
@@ -490,9 +445,7 @@ describe('metrics routes', () => {
             }
           ]
           db.metric.findAll.mockResolvedValue(mockMetrics)
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 0,
             totalPrintPost: 0,
@@ -517,9 +470,7 @@ describe('metrics routes', () => {
             }
           ]
           db.metric.findAll.mockResolvedValue(mockMetrics)
-
           await route.handler(mockRequest, mockH)
-
           const response = mockH.response.mock.calls[0][0]
           expect(response.totalPrintPostCost).toBe(150)
         })
@@ -538,9 +489,7 @@ describe('metrics routes', () => {
             }
           ]
           db.metric.findAll.mockResolvedValue(mockMetrics)
-
           await route.handler(mockRequest, mockH)
-
           const response = mockH.response.mock.calls[0][0]
           expect(response.statementsByScheme[0]).toEqual({
             schemeName: 'Test Scheme',
@@ -559,9 +508,7 @@ describe('metrics routes', () => {
         test('returns 500 when database query fails', async () => {
           const error = new Error('Database error')
           db.metric.findOne.mockRejectedValue(error)
-
           await route.handler(mockRequest, mockH)
-
           expect(consoleErrorSpy).toHaveBeenCalledWith('Error fetching metrics:', error)
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Internal server error',
@@ -573,18 +520,14 @@ describe('metrics routes', () => {
         test('returns 500 when unexpected error occurs', async () => {
           const error = new Error('Unexpected error')
           db.metric.findAll.mockRejectedValue(error)
-
           await route.handler(mockRequest, mockH)
-
           expect(consoleErrorSpy).toHaveBeenCalled()
           expect(mockResponse.code).toHaveBeenCalledWith(500)
         })
 
         test('handles errors during metrics processing', async () => {
           db.metric.findOne.mockRejectedValue(new Error('Processing failed'))
-
           await route.handler(mockRequest, mockH)
-
           expect(mockH.response).toHaveBeenCalledWith({
             error: 'Internal server error',
             message: 'An error occurred while fetching metrics'
@@ -597,9 +540,7 @@ describe('metrics routes', () => {
           mockRequest.query.period = 'year'
           mockRequest.query.schemeYear = '2023'
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           expect(db.metric.findOne).toHaveBeenCalledWith({
             attributes: [['MAX(snapshot_date)', 'maxDate']],
             where: {
@@ -608,12 +549,14 @@ describe('metrics routes', () => {
             },
             raw: true
           })
-
           expect(db.metric.findAll).toHaveBeenCalledWith({
-            where: expect.objectContaining({
+            where: {
+              snapshotDate: '2024-06-15',
+              periodType: 'year',
               schemeYear: 2023
-            }),
-            order: [['schemeName', 'ASC']]
+            },
+            order: [['schemeName', 'ASC']],
+            raw: true
           })
         })
 
@@ -623,23 +566,37 @@ describe('metrics routes', () => {
           mockRequest.query.month = '6'
           calculateMetricsForPeriod.mockResolvedValue()
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
-          expect(calculateMetricsForPeriod).toHaveBeenCalledWith('monthInYear', 2024, 6)
+          expect(db.metric.findOne).toHaveBeenCalledWith({
+            attributes: [['MAX(snapshot_date)', 'maxDate']],
+            where: {
+              periodType: 'monthInYear',
+              schemeYear: 2024,
+              monthInYear: 6
+            },
+            raw: true
+          })
+          expect(db.metric.findAll).toHaveBeenCalledWith({
+            where: {
+              snapshotDate: '2024-06-15',
+              periodType: 'monthInYear',
+              schemeYear: 2024,
+              monthInYear: 6
+            },
+            order: [['schemeName', 'ASC']],
+            raw: true
+          })
         })
 
         test('handles null schemeYear correctly', async () => {
           mockRequest.query.period = 'all'
+          mockRequest.query.schemeYear = null
           db.metric.findAll.mockResolvedValue([])
-
           await route.handler(mockRequest, mockH)
-
           const findOneCall = db.metric.findOne.mock.calls[0][0]
           const findAllCall = db.metric.findAll.mock.calls[0][0]
-
-          expect(findOneCall.where.schemeYear).toBeUndefined()
-          expect(findAllCall.where.schemeYear).toBeUndefined()
+          expect(findOneCall.where).not.toHaveProperty('schemeYear')
+          expect(findAllCall.where).not.toHaveProperty('schemeYear')
         })
       })
     })

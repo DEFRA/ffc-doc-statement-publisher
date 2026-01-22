@@ -78,6 +78,11 @@ function defineMetricColumns (DataTypes) {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'data_end_date'
+    },
+    monthInYear: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'month_in_year'
     }
   }
 }
@@ -89,13 +94,16 @@ function defineMetricOptions () {
     indexes: [
       {
         unique: true,
-        fields: ['snapshot_date', 'period_type', 'scheme_name', 'scheme_year']
+        fields: ['snapshot_date', 'period_type', 'scheme_name', 'scheme_year', 'month_in_year']
       },
       {
         fields: ['snapshot_date', 'period_type']
       },
       {
         fields: ['scheme_year', 'period_type']
+      },
+      {
+        fields: ['month_in_year']
       }
     ]
   }

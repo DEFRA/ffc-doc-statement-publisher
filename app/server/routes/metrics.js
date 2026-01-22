@@ -20,7 +20,7 @@ const validatePeriod = (period) => {
 }
 
 const validateMonthInYearParams = (schemeYear, month) => {
-  if (!schemeYear || !month) {
+  if (schemeYear == null || month == null) {
     return {
       error: 'Missing required parameters',
       message: 'schemeYear and month are required for monthInYear period'
@@ -107,12 +107,13 @@ const formatMetricsResponse = (totals, schemeMetrics) => {
   }
 }
 
-const fetchMetrics = async (period, schemeYear) => {
+const fetchMetrics = async (period, schemeYear, month) => {
   const mostRecentSnapshot = await db.metric.findOne({
     attributes: [[db.sequelize.fn('MAX', db.sequelize.col('snapshot_date')), 'maxDate']],
     where: {
       periodType: period,
-      ...(schemeYear && { schemeYear })
+      ...(schemeYear && { schemeYear }),
+      ...(month && { monthInYear: month })
     },
     raw: true
   })
@@ -125,8 +126,10 @@ const fetchMetrics = async (period, schemeYear) => {
     where: {
       snapshotDate: mostRecentSnapshot.maxDate,
       periodType: period,
-      ...(schemeYear && { schemeYear })
+      ...(schemeYear && { schemeYear }),
+      ...(month && { monthInYear: month })
     },
+    raw: true,
     order: [['schemeName', 'ASC']]
   })
 }
@@ -165,7 +168,7 @@ const handleMetricsRequest = async (request, h) => {
     return h.response(validationError).code(HTTP_BAD_REQUEST)
   }
 
-  const metrics = await fetchMetrics(period, schemeYear)
+  const metrics = await fetchMetrics(period, schemeYear, month)
   const response = processMetrics(metrics)
   return h.response(response).code(HTTP_OK)
 }
