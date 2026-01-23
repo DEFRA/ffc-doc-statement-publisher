@@ -43,10 +43,10 @@ const getDateRangeForYTD = (now) => ({
   useSchemeYear: false
 })
 
-const getDateRangeForYear = () => ({
-  startDate: null,
-  endDate: null,
-  useSchemeYear: true
+const getDateRangeForYear = (schemeYear) => ({
+  startDate: new Date(schemeYear, 0, FIRST_DAY_OF_MONTH),
+  endDate: new Date(schemeYear, 11, 31, END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND, END_OF_DAY_MILLISECOND),
+  useSchemeYear: false
 })
 
 const getDateRangeForMonthInYear = (schemeYear, month) => {
@@ -75,7 +75,7 @@ const calculateDateRange = (period, schemeYear = null, month = null) => {
     case PERIOD_YTD:
       return getDateRangeForYTD(now)
     case PERIOD_YEAR:
-      return getDateRangeForYear()
+      return getDateRangeForYear(schemeYear)
     case PERIOD_MONTH_IN_YEAR:
       return getDateRangeForMonthInYear(schemeYear, month)
     case PERIOD_MONTH:
@@ -93,9 +93,10 @@ const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear)
   const whereClause = {}
 
   if (!useSchemeYear && startDate && endDate) {
+    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR) ? Op.lte : Op.lt
     whereClause.completed = {
       [Op.gte]: startDate,
-      [Op.lt]: endDate
+      [op]: endDate
     }
   }
 
@@ -125,6 +126,8 @@ const buildFailureInclude = () => ({
 })
 
 const buildQueryAttributes = () => [
+  [db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear'],
+  [db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'), 'receivedMonth'],
   [db.sequelize.literal('COUNT(DISTINCT CASE WHEN "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)'), 'totalStatements'],
   [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
   [db.sequelize.literal(`SUM(
@@ -139,7 +142,13 @@ const buildQueryAttributes = () => [
   [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
 ]
 
-const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear) => {
+const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, month) => {
+  const groupFields = [
+    db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
+    db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
+    db.sequelize.literal('statement."schemeName"'),
+    db.sequelize.literal('statement."schemeYear"')
+  ]
   return db.delivery.findAll({
     attributes: buildQueryAttributes(),
     include: [
@@ -147,24 +156,29 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear) => {
       buildFailureInclude()
     ],
     where: whereClause,
-    group: ['statement.schemeName', 'statement.schemeYear'],
+    group: groupFields,
     raw: true
   })
 }
 
 const createMetricRecord = (result, period, snapshotDate, startDate, endDate) => {
-  const resultSchemeYear = result['statement.schemeYear'] ? Number.parseInt(result['statement.schemeYear']) : null
+  const receivedMonth = result.receivedMonth ? Number.parseInt(result.receivedMonth) : null
 
   let monthValue = null
-  if (period === PERIOD_MONTH_IN_YEAR && startDate) {
-    monthValue = startDate.getMonth() + MONTH_INDEX_OFFSET
+  if (period === PERIOD_MONTH_IN_YEAR) {
+    monthValue = receivedMonth
+  }
+
+  let schemeYearValue = result['statement.schemeYear']
+  if (period === PERIOD_YEAR) {
+    schemeYearValue = result.receivedYear
   }
 
   return {
     snapshotDate,
     periodType: period,
     schemeName: result['statement.schemeName'],
-    schemeYear: resultSchemeYear,
+    schemeYear: schemeYearValue,
     monthInYear: monthValue,
     totalStatements: Number.parseInt(result.totalStatements),
     printPostCount: Number.parseInt(result.printPostCount),
@@ -206,15 +220,8 @@ const calculateMetricsForPeriod = async (period, schemeYear = null, month = null
   const snapshotDate = new Date().toISOString().split('T')[0]
 
   const whereClause = buildWhereClauseForDateRange(period, startDate, endDate, useSchemeYear)
-  const results = await fetchMetricsData(whereClause, useSchemeYear, schemeYear)
+  const results = await fetchMetricsData(whereClause, useSchemeYear, schemeYear, month)
   await saveMetrics(results, period, snapshotDate, startDate, endDate)
-}
-
-const calculateBasicPeriods = async () => {
-  const periods = [PERIOD_ALL, PERIOD_YTD, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY]
-  for (const period of periods) {
-    await calculateMetricsForPeriod(period)
-  }
 }
 
 const calculateYearlyMetrics = async (year) => {
@@ -239,7 +246,6 @@ const calculateAllMetrics = async () => {
   const yearsToCalculate = Number.parseInt(process.env.METRICS_CALCULATION_YEARS || String(DEFAULT_YEARS_TO_CALCULATE))
 
   try {
-    await calculateBasicPeriods()
     await calculateHistoricalMetrics(currentYear, yearsToCalculate)
     console.log('✓ All metrics calculated successfully')
   } catch (error) {

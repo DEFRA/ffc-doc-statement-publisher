@@ -84,12 +84,17 @@ describe('metrics-calculator', () => {
         expect.objectContaining({
           periodType: 'all',
           schemeName: 'SFI',
-          schemeYear: 2024,
+          schemeYear: '2024',
           totalStatements: 100,
           printPostCount: 50,
           printPostCost: 3850,
           emailCount: 50,
-          failureCount: 0
+          failureCount: 0,
+          snapshotDate: expect.any(String),
+          dataStartDate: null,
+          dataEndDate: null,
+          monthInYear: null,
+          printPostUnitCost: 77
         })
       )
     })
@@ -114,12 +119,17 @@ describe('metrics-calculator', () => {
         expect.objectContaining({
           periodType: 'all',
           schemeName: 'SFI',
-          schemeYear: 2024,
+          schemeYear: '2024',
           totalStatements: 100,
           printPostCount: 50,
           printPostCost: 3850,
           emailCount: 50,
-          failureCount: 0
+          failureCount: 0,
+          snapshotDate: expect.any(String),
+          dataStartDate: null,
+          dataEndDate: null,
+          monthInYear: null,
+          printPostUnitCost: 77
         }),
         { where: { id: 1 } }
       )
@@ -352,7 +362,7 @@ describe('metrics-calculator', () => {
       await calculateMetricsForPeriod('all')
       expect(db.metric.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          schemeYear: NaN,
+          schemeYear: 'invalid',
           totalStatements: NaN
         })
       )
@@ -478,7 +488,7 @@ describe('metrics-calculator', () => {
       await calculateMetricsForPeriod('all')
       const findAllCall = db.delivery.findAll.mock.calls[0][0]
       const attributes = findAllCall.attributes
-      const totalStatementsQuery = attributes[0][0]
+      const totalStatementsQuery = attributes[2][0]
       expect(totalStatementsQuery).toContain('completed" IS NOT NULL')
       expect(totalStatementsQuery).toContain('failureId" IS NULL')
     })
@@ -487,7 +497,7 @@ describe('metrics-calculator', () => {
       await calculateMetricsForPeriod('all')
       const findAllCall = db.delivery.findAll.mock.calls[0][0]
       const attributes = findAllCall.attributes
-      const printPostCostQuery = attributes[2][0]
+      const printPostCostQuery = attributes[4][0]
       expect(printPostCostQuery).toContain('completed" IS NOT NULL')
       expect(printPostCostQuery).toContain('failureId" IS NULL')
     })
@@ -513,7 +523,12 @@ describe('metrics-calculator', () => {
     test('should group results by schemeName and schemeYear', async () => {
       await calculateMetricsForPeriod('all')
       const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      expect(findAllCall.group).toEqual(['statement.schemeName', 'statement.schemeYear'])
+      expect(findAllCall.group).toEqual([
+        db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
+        db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
+        db.sequelize.literal('statement."schemeName"'),
+        db.sequelize.literal('statement."schemeYear"')
+      ])
     })
   })
 
