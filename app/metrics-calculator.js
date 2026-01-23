@@ -16,7 +16,9 @@ const {
   END_OF_DAY_SECOND,
   END_OF_DAY_MILLISECOND,
   MONTH_INDEX_OFFSET,
-  MONTHS_PER_YEAR
+  MONTHS_PER_YEAR,
+  DECEMBER_MONTH_INDEX,
+  LAST_DAY_OF_DECEMBER
 } = require('./constants/date')
 const {
   PERIOD_ALL,
@@ -45,7 +47,7 @@ const getDateRangeForYTD = (now) => ({
 
 const getDateRangeForYear = (schemeYear) => ({
   startDate: new Date(schemeYear, 0, FIRST_DAY_OF_MONTH),
-  endDate: new Date(schemeYear, 11, 31, END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND, END_OF_DAY_MILLISECOND),
+  endDate: new Date(schemeYear, DECEMBER_MONTH_INDEX, LAST_DAY_OF_DECEMBER, END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND, END_OF_DAY_MILLISECOND),
   useSchemeYear: false
 })
 
@@ -142,7 +144,7 @@ const buildQueryAttributes = () => [
   [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
 ]
 
-const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, month) => {
+const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear) => {
   const groupFields = [
     db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
     db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
