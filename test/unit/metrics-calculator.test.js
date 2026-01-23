@@ -69,6 +69,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -104,6 +106,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -140,6 +144,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'DP',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '75',
           printPostCount: '25',
           printPostCost: '1925',
@@ -178,13 +184,55 @@ describe('metrics-calculator', () => {
     })
 
     test('should handle year period with schemeYear', async () => {
+      const mockResults = [
+        {
+          'statement.schemeName': 'SFI',
+          'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
+          totalStatements: '100',
+          printPostCount: '50',
+          printPostCost: '3850',
+          emailCount: '50',
+          failureCount: '0'
+        }
+      ]
+      db.delivery.findAll.mockResolvedValue(mockResults)
       await calculateMetricsForPeriod('year', 2024)
-      expect(db.delivery.findAll).toHaveBeenCalled()
+      expect(db.metric.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          periodType: 'year',
+          schemeName: 'SFI',
+          schemeYear: '2024', // For PERIOD_YEAR, schemeYear is set to receivedYear
+          monthInYear: null
+        })
+      )
     })
 
     test('should handle monthInYear period with schemeYear and month', async () => {
+      const mockResults = [
+        {
+          'statement.schemeName': 'SFI',
+          'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '6',
+          totalStatements: '100',
+          printPostCount: '50',
+          printPostCost: '3850',
+          emailCount: '50',
+          failureCount: '0'
+        }
+      ]
+      db.delivery.findAll.mockResolvedValue(mockResults)
       await calculateMetricsForPeriod('monthInYear', 2024, 6)
-      expect(db.delivery.findAll).toHaveBeenCalled()
+      expect(db.metric.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          periodType: 'monthInYear',
+          schemeName: 'SFI',
+          schemeYear: '2024',
+          monthInYear: 6 // For PERIOD_MONTH_IN_YEAR, monthInYear is set to receivedMonth
+        })
+      )
     })
 
     test('should throw error for monthInYear period without schemeYear', async () => {
@@ -207,6 +255,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': null,
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -228,6 +278,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -237,6 +289,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'DP',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '200',
           printPostCount: '100',
           printPostCost: '7700',
@@ -254,6 +308,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '50',
           printPostCount: '25',
           printPostCost: '1925',
@@ -276,6 +332,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '50',
           printPostCount: '25',
           printPostCost: '1925',
@@ -298,6 +356,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'DP',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -326,6 +386,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '150',
           printPostCount: '75',
           printPostCost: '5775',
@@ -351,6 +413,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': 'invalid',
+          receivedYear: 'invalid',
+          receivedMonth: 'invalid',
           totalStatements: 'invalid',
           printPostCount: '0',
           printPostCost: '0',
@@ -373,6 +437,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',
@@ -391,6 +457,8 @@ describe('metrics-calculator', () => {
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
+          receivedYear: '2024',
+          receivedMonth: '1',
           totalStatements: '100',
           printPostCount: '50',
           printPostCost: '3850',

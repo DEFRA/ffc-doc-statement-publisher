@@ -144,7 +144,7 @@ const buildQueryAttributes = () => [
   [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
 ]
 
-const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear) => {
+const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month) => {
   const groupFields = [
     db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
     db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
