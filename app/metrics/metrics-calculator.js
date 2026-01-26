@@ -80,6 +80,9 @@ const calculateAllMetrics = async () => {
 }
 
 module.exports = {
+  calculateDateRange,
   calculateAllMetrics,
-  calculateMetricsForPeriod
+  calculateMetricsForPeriod,
+  calculateYearlyMetrics,
+  calculateHistoricalMetrics
 }

@@ -1,12 +1,21 @@
-const { calculateAllMetrics, calculateMetricsForPeriod } = require('../../../app/metrics/metrics-calculator')
-const {
-  PRINT_POST_UNIT_COST_2024,
-  PRINT_POST_UNIT_COST_2026,
-  DEFAULT_PRINT_POST_UNIT_COST,
-  PRINT_POST_PRICING_START_2024,
-  PRINT_POST_PRICING_START_2026
-} = require('../../../app/constants/print-post-pricing')
-const { METHOD_LETTER, METHOD_EMAIL } = require('../../../app/constants/delivery-methods')
+const { calculateDateRange, calculateAllMetrics, calculateMetricsForPeriod, calculateYearlyMetrics, calculateHistoricalMetrics } = require('../../../app/metrics/metrics-calculator')
+
+jest.mock('../../../app/metrics/get-metrics-data', () => ({
+  getDateRangeForAll: jest.fn(),
+  getDateRangeForYTD: jest.fn(),
+  getDateRangeForYear: jest.fn(),
+  getDateRangeForMonthInYear: jest.fn(),
+  getDateRangeForRelativePeriod: jest.fn()
+}))
+
+jest.mock('../../../app/metrics/build-metrics', () => ({
+  buildWhereClauseForDateRange: jest.fn(),
+  fetchMetricsData: jest.fn()
+}))
+
+jest.mock('../../../app/metrics/create-save-metrics', () => ({
+  saveMetrics: jest.fn()
+}))
 
 jest.mock('../../../app/data', () => ({
   delivery: {
@@ -26,6 +35,10 @@ jest.mock('../../../app/data', () => ({
     col: jest.fn((col) => col)
   }
 }))
+
+const { getDateRangeForAll, getDateRangeForYTD, getDateRangeForYear, getDateRangeForMonthInYear, getDateRangeForRelativePeriod } = require('../../../app/metrics/get-metrics-data')
+const { buildWhereClauseForDateRange, fetchMetricsData } = require('../../../app/metrics/build-metrics')
+const { saveMetrics } = require('../../../app/metrics/create-save-metrics')
 
 const db = require('../../../app/data')
 
@@ -47,6 +60,66 @@ describe('metrics-calculator', () => {
   afterEach(() => {
     consoleLogSpy.mockRestore()
     consoleErrorSpy.mockRestore()
+    delete process.env.METRICS_CALCULATION_YEARS
+  })
+
+  describe('calculateDateRange', () => {
+    test('should call getDateRangeForAll for all period', () => {
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      const result = calculateDateRange('all')
+      expect(getDateRangeForAll).toHaveBeenCalledWith()
+      expect(result).toEqual({ startDate: null, endDate: null, useSchemeYear: false })
+    })
+
+    test('should call getDateRangeForYTD for ytd period', () => {
+      const now = new Date()
+      getDateRangeForYTD.mockReturnValue({ startDate: new Date(now.getFullYear(), 0, 1), endDate: now, useSchemeYear: false })
+      const result = calculateDateRange('ytd')
+      expect(getDateRangeForYTD).toHaveBeenCalledWith(now)
+      expect(result.useSchemeYear).toBe(false)
+    })
+
+    test('should call getDateRangeForYear for year period', () => {
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2024, 0, 1), endDate: new Date(2024, 11, 31), useSchemeYear: false })
+      const result = calculateDateRange('year', 2024)
+      expect(getDateRangeForYear).toHaveBeenCalledWith(2024)
+      expect(result.useSchemeYear).toBe(false)
+    })
+
+    test('should call getDateRangeForMonthInYear for monthInYear period', () => {
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2024, 5, 1), endDate: new Date(2024, 6, 0), useSchemeYear: true })
+      const result = calculateDateRange('monthInYear', 2024, 6)
+      expect(getDateRangeForMonthInYear).toHaveBeenCalledWith(2024, 6)
+      expect(result.useSchemeYear).toBe(true)
+    })
+
+    test('should call getDateRangeForRelativePeriod for month period', () => {
+      const now = new Date()
+      getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
+      const result = calculateDateRange('month')
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 30)
+      expect(result.useSchemeYear).toBe(false)
+    })
+
+    test('should call getDateRangeForRelativePeriod for week period', () => {
+      const now = new Date()
+      getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
+      const result = calculateDateRange('week')
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 7)
+      expect(result.useSchemeYear).toBe(false)
+    })
+
+    test('should call getDateRangeForRelativePeriod for day period', () => {
+      const now = new Date()
+      getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
+      const result = calculateDateRange('day')
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 1)
+      expect(result.useSchemeYear).toBe(false)
+    })
+
+    test('should throw error for unknown period type', () => {
+      expect(() => calculateDateRange('unknown')).toThrow('Unknown period type: unknown')
+    })
   })
 
   describe('calculateMetricsForPeriod', () => {
@@ -54,227 +127,83 @@ describe('metrics-calculator', () => {
       expect(typeof calculateMetricsForPeriod).toBe('function')
     })
 
-    test('should call delivery.findAll with correct parameters for "all" period', async () => {
+    test('should call calculateDateRange, buildWhereClause, fetchMetricsData, and saveMetrics for all period', async () => {
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('all')
-      expect(db.delivery.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          attributes: expect.any(Array),
-          include: expect.any(Array)
-        })
-      )
-    })
-
-    test('should call metric.create for each result when no existing metric', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      db.metric.findOne.mockResolvedValue(null)
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledTimes(1)
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          periodType: 'all',
-          schemeName: 'SFI',
-          schemeYear: '2024',
-          totalStatements: 100,
-          printPostCount: 50,
-          printPostCost: 3850,
-          emailCount: 50,
-          failureCount: 0,
-          snapshotDate: expect.any(String),
-          dataStartDate: null,
-          dataEndDate: null,
-          monthInYear: null,
-          printPostUnitCost: 77
-        })
-      )
-    })
-
-    test('should call metric.update for each result when existing metric found', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      db.metric.findOne.mockResolvedValue({ id: 1 })
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.update).toHaveBeenCalledTimes(1)
-      expect(db.metric.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          periodType: 'all',
-          schemeName: 'SFI',
-          schemeYear: '2024',
-          totalStatements: 100,
-          printPostCount: 50,
-          printPostCost: 3850,
-          emailCount: 50,
-          failureCount: 0,
-          snapshotDate: expect.any(String),
-          dataStartDate: null,
-          dataEndDate: null,
-          monthInYear: null,
-          printPostUnitCost: 77
-        }),
-        { where: { id: 1 } }
-      )
-    })
-
-    test('should only count successfully delivered statements (no failures)', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'DP',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '75',
-          printPostCount: '25',
-          printPostCost: '1925',
-          emailCount: '50',
-          failureCount: '10'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          totalStatements: 75,
-          failureCount: 10
-        })
-      )
+      expect(getDateRangeForAll).toHaveBeenCalled()
+      expect(buildWhereClauseForDateRange).toHaveBeenCalledWith('all', null, null, false)
+      expect(fetchMetricsData).toHaveBeenCalledWith({}, false, null, null)
+      expect(saveMetrics).toHaveBeenCalledWith([], 'all', expect.any(String), null, null)
     })
 
     test('should handle ytd period', async () => {
+      getDateRangeForYTD.mockReturnValue({ startDate: new Date(2023, 0, 1), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('ytd')
-      expect(db.delivery.findAll).toHaveBeenCalled()
+      expect(getDateRangeForYTD).toHaveBeenCalled()
     })
 
-    test('should handle month period', async () => {
+    test('should handle month/week/day period', async () => {
+      getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('month')
-      expect(db.delivery.findAll).toHaveBeenCalled()
-    })
-
-    test('should handle week period', async () => {
       await calculateMetricsForPeriod('week')
-      expect(db.delivery.findAll).toHaveBeenCalled()
-    })
-
-    test('should handle day period', async () => {
       await calculateMetricsForPeriod('day')
-      expect(db.delivery.findAll).toHaveBeenCalled()
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalled()
     })
 
     test('should handle year period with schemeYear', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2024, 0, 1), endDate: new Date(2024, 11, 31), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('year', 2024)
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          periodType: 'year',
-          schemeName: 'SFI',
-          schemeYear: '2024', // For PERIOD_YEAR, schemeYear is set to receivedYear
-          monthInYear: null
-        })
-      )
+      expect(getDateRangeForYear).toHaveBeenCalledWith(2024)
     })
 
     test('should handle monthInYear period with schemeYear and month', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '6',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2024, 5, 1), endDate: new Date(2024, 6, 0), useSchemeYear: true })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('monthInYear', 2024, 6)
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          periodType: 'monthInYear',
-          schemeName: 'SFI',
-          schemeYear: '2024',
-          monthInYear: 6 // For PERIOD_MONTH_IN_YEAR, monthInYear is set to receivedMonth
-        })
-      )
-    })
-
-    test('should throw error for monthInYear period without schemeYear', async () => {
-      await expect(calculateMetricsForPeriod('monthInYear', null, 6))
-        .rejects.toThrow('schemeYear and month are required for monthInYear period')
-    })
-
-    test('should throw error for monthInYear period without month', async () => {
-      await expect(calculateMetricsForPeriod('monthInYear', 2024, null))
-        .rejects.toThrow('schemeYear and month are required for monthInYear period')
+      expect(getDateRangeForMonthInYear).toHaveBeenCalledWith(2024, 6)
     })
 
     test('should throw error for unknown period type', async () => {
-      await expect(calculateMetricsForPeriod('invalid-period'))
-        .rejects.toThrow('Unknown period type: invalid-period')
+      await expect(calculateMetricsForPeriod('unknown')).rejects.toThrow('Unknown period type: unknown')
     })
 
     test('should handle null schemeYear in results', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': null,
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([{
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': null,
+        receivedYear: '2024',
+        receivedMonth: '1',
+        totalStatements: '100',
+        printPostCount: '50',
+        printPostCost: '3850',
+        emailCount: '50',
+        failureCount: '0'
+      }])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          schemeYear: null
-        })
-      )
+      expect(saveMetrics).toHaveBeenCalled()
     })
 
     test('should handle multiple results', async () => {
-      const mockResults = [
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([
         {
           'statement.schemeName': 'SFI',
           'statement.schemeYear': '2024',
@@ -295,320 +224,196 @@ describe('metrics-calculator', () => {
           printPostCount: '100',
           printPostCost: '7700',
           emailCount: '100',
-          failureCount: '5'
+          failureCount: '10'
         }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
+      ])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledTimes(2)
+      expect(saveMetrics).toHaveBeenCalledWith(expect.any(Array), 'all', expect.any(String), null, null)
     })
 
     test('should include dataStartDate and dataEndDate in metric record for date-bounded periods', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '50',
-          printPostCount: '25',
-          printPostCost: '1925',
-          emailCount: '25',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      await calculateMetricsForPeriod('month')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          dataStartDate: expect.any(Date),
-          dataEndDate: expect.any(Date)
-        })
-      )
+      getDateRangeForYTD.mockReturnValue({ startDate: new Date(2023, 0, 1), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([{
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': '2024',
+        receivedYear: '2024',
+        receivedMonth: '1',
+        totalStatements: '100',
+        printPostCount: '50',
+        printPostCost: '3850',
+        emailCount: '50',
+        failureCount: '0'
+      }])
+      saveMetrics.mockResolvedValue()
+      await calculateMetricsForPeriod('ytd')
+      expect(saveMetrics).toHaveBeenCalledWith(expect.any(Array), 'ytd', expect.any(String), expect.any(Date), expect.any(Date))
     })
 
     test('should set dataStartDate and dataEndDate to null for "all" period', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '50',
-          printPostCount: '25',
-          printPostCost: '1925',
-          emailCount: '25',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          dataStartDate: null,
-          dataEndDate: null
-        })
-      )
-    })
-
-    test('should use DEFAULT_PRINT_POST_UNIT_COST in saved metric record', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'DP',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          printPostUnitCost: DEFAULT_PRINT_POST_UNIT_COST
-        })
-      )
+      expect(saveMetrics).toHaveBeenCalledWith([], 'all', expect.any(String), null, null)
     })
 
     test('should handle zero results', async () => {
-      db.delivery.findAll.mockResolvedValue([])
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
       await calculateMetricsForPeriod('all')
-      expect(db.metric.create).not.toHaveBeenCalled()
-      expect(db.metric.update).not.toHaveBeenCalled()
+      expect(saveMetrics).toHaveBeenCalledWith([], 'all', expect.any(String), null, null)
     })
 
-    test('should handle results with string numbers', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '150',
-          printPostCount: '75',
-          printPostCost: '5775',
-          emailCount: '75',
-          failureCount: '5'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          totalStatements: 150,
-          printPostCount: 75,
-          printPostCost: 5775,
-          emailCount: 75,
-          failureCount: 5
-        })
-      )
+    test('should propagate error from saveMetrics', async () => {
+      getDateRangeForAll.mockReturnValue({ startDate: null, endDate: null, useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockRejectedValue(new Error('Save error'))
+      await expect(calculateMetricsForPeriod('all')).rejects.toThrow('Save error')
+    })
+  })
+
+  describe('calculateYearlyMetrics', () => {
+    test('should be a function', () => {
+      expect(typeof calculateYearlyMetrics).toBe('function')
     })
 
-    test('should handle NaN values gracefully', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': 'invalid',
-          receivedYear: 'invalid',
-          receivedMonth: 'invalid',
-          totalStatements: 'invalid',
-          printPostCount: '0',
-          printPostCost: '0',
-          emailCount: '0',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      await calculateMetricsForPeriod('all')
-      expect(db.metric.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          schemeYear: 'invalid',
-          totalStatements: Number.NaN
-        })
-      )
+    test('should call calculateMetricsForPeriod for year and each month (13 save operations)', async () => {
+      // Prepare dependency mocks so calculateMetricsForPeriod can run quickly
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2024, 0, 1), endDate: new Date(2024, 11, 31), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2024, 5, 1), endDate: new Date(2024, 6, 0), useSchemeYear: true })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
+
+      await calculateYearlyMetrics(2024)
+
+      // One save for the year, and one for each month (total 13)
+      expect(saveMetrics).toHaveBeenCalledTimes(13)
+      // First call should have period 'year'
+      expect(saveMetrics.mock.calls[0][1]).toBe('year')
     })
 
-    test('should propagate error from metric.update', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      db.metric.findOne.mockResolvedValue({ id: 1 })
-      db.metric.update.mockRejectedValue(new Error('Update failed'))
-      await expect(calculateMetricsForPeriod('all')).rejects.toThrow('Update failed')
+    test('should propagate error from a failing saveMetrics during yearly calc', async () => {
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2024, 0, 1), endDate: new Date(2024, 11, 31), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2024, 5, 1), endDate: new Date(2024, 6, 0), useSchemeYear: true })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockRejectedValue(new Error('Calc error'))
+
+      await expect(calculateYearlyMetrics(2024)).rejects.toThrow('Calc error')
+    })
+  })
+
+  describe('calculateHistoricalMetrics', () => {
+    test('should be a function', () => {
+      expect(typeof calculateHistoricalMetrics).toBe('function')
     })
 
-    test('should propagate error from metric.create', async () => {
-      const mockResults = [
-        {
-          'statement.schemeName': 'SFI',
-          'statement.schemeYear': '2024',
-          receivedYear: '2024',
-          receivedMonth: '1',
-          totalStatements: '100',
-          printPostCount: '50',
-          printPostCost: '3850',
-          emailCount: '50',
-          failureCount: '0'
-        }
-      ]
-      db.delivery.findAll.mockResolvedValue(mockResults)
-      db.metric.findOne.mockResolvedValue(null)
-      db.metric.create.mockRejectedValue(new Error('Create failed'))
-      await expect(calculateMetricsForPeriod('all')).rejects.toThrow('Create failed')
+    test('should call yearly calculation for each year in range (3 years => 39 saves)', async () => {
+      // Setup dependency mocks used by calculateYearlyMetrics/calculateMetricsForPeriod
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 11, 31), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 0, 31), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
+
+      // currentYear 2026, yearsToCalculate = 2 => 3 years (2026, 2025, 2024)
+      await calculateHistoricalMetrics(2026, 2)
+
+      // 3 years * 13 operations each = 39
+      expect(saveMetrics).toHaveBeenCalledTimes(39)
+    })
+
+    test('should handle yearsToCalculate = 0 (1 year => 13 saves)', async () => {
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 11, 31), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 0, 31), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
+
+      await calculateHistoricalMetrics(2026, 0)
+
+      expect(saveMetrics).toHaveBeenCalledTimes(13)
+    })
+
+    test('should propagate error from failing saveMetrics during historical calc', async () => {
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 11, 31), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(2026, 0, 1), endDate: new Date(2026, 0, 31), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      // Fail on first call
+      saveMetrics.mockRejectedValueOnce(new Error('Yearly error'))
+
+      await expect(calculateHistoricalMetrics(2026, 1)).rejects.toThrow('Yearly error')
     })
   })
 
   describe('calculateAllMetrics', () => {
-    beforeEach(() => {
-      process.env.METRICS_CALCULATION_YEARS = '2'
-    })
-
-    afterEach(() => {
-      delete process.env.METRICS_CALCULATION_YEARS
-    })
-
     test('should be a function', () => {
       expect(typeof calculateAllMetrics).toBe('function')
     })
 
-    test('should log starting message', async () => {
+    test('should log starting message and complete successfully', async () => {
+      // Make the downstream flows no-op and resolvable
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
+
       await calculateAllMetrics()
+
       expect(consoleLogSpy).toHaveBeenCalledWith('Starting metrics calculation...')
-    })
-
-    test('should calculate metrics for all standard periods', async () => {
-      await calculateAllMetrics()
-      expect(db.delivery.findAll).toHaveBeenCalled()
-    })
-
-    test('should calculate metrics for multiple years', async () => {
-      await calculateAllMetrics()
-      expect(db.delivery.findAll.mock.calls.length).toBeGreaterThan(0)
-    })
-
-    test('should log success message on completion', async () => {
-      await calculateAllMetrics()
       expect(consoleLogSpy).toHaveBeenCalledWith('✓ All metrics calculated successfully')
     })
 
     test('should log error and throw on failure', async () => {
-      db.delivery.findAll.mockRejectedValue(new Error('Database error'))
-      await expect(calculateAllMetrics()).rejects.toThrow('Database error')
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockRejectedValue(new Error('Calc error'))
+
+      await expect(calculateAllMetrics()).rejects.toThrow('Calc error')
       expect(consoleErrorSpy).toHaveBeenCalledWith('✗ Error calculating metrics:', expect.any(Error))
     })
 
-    test('should use default value for METRICS_CALCULATION_YEARS if not set', async () => {
-      delete process.env.METRICS_CALCULATION_YEARS
+    test('should run successfully with env METRICS_CALCULATION_YEARS set', async () => {
+      process.env.METRICS_CALCULATION_YEARS = '2'
+      getDateRangeForYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      getDateRangeForMonthInYear.mockReturnValue({ startDate: new Date(), endDate: new Date(), useSchemeYear: false })
+      buildWhereClauseForDateRange.mockReturnValue({})
+      fetchMetricsData.mockResolvedValue([])
+      saveMetrics.mockResolvedValue()
+
       await calculateAllMetrics()
-      expect(db.delivery.findAll).toHaveBeenCalled()
-    })
-  })
 
-  describe('pricing constants integration', () => {
-    test('should use PRINT_POST_PRICING_START_2024 constant in queries', () => {
-      expect(PRINT_POST_PRICING_START_2024).toBe('2024-04-01')
-    })
-
-    test('should use PRINT_POST_PRICING_START_2026 constant in queries', () => {
-      expect(PRINT_POST_PRICING_START_2026).toBe('2026-01-05')
-    })
-
-    test('should use PRINT_POST_UNIT_COST_2024 for pricing', () => {
-      expect(PRINT_POST_UNIT_COST_2024).toBe(77)
-    })
-
-    test('should use PRINT_POST_UNIT_COST_2026 for pricing', () => {
-      expect(PRINT_POST_UNIT_COST_2026).toBe(82)
-    })
-
-    test('should use DEFAULT_PRINT_POST_UNIT_COST as fallback', () => {
-      expect(DEFAULT_PRINT_POST_UNIT_COST).toBe(77)
-    })
-  })
-
-  describe('delivery method constants integration', () => {
-    test('should use METHOD_LETTER constant', () => {
-      expect(METHOD_LETTER).toBe('letter')
-    })
-
-    test('should use METHOD_EMAIL constant', () => {
-      expect(METHOD_EMAIL).toBe('email')
-    })
-  })
-
-  describe('query building', () => {
-    test('should build query that excludes failed deliveries from counts', async () => {
-      await calculateMetricsForPeriod('all')
-      const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      const attributes = findAllCall.attributes
-      const totalStatementsQuery = attributes[2][0]
-      expect(totalStatementsQuery).toContain('completed" IS NOT NULL')
-      expect(totalStatementsQuery).toContain('failureId" IS NULL')
-    })
-
-    test('should build query that only costs successfully delivered letters', async () => {
-      await calculateMetricsForPeriod('all')
-      const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      const attributes = findAllCall.attributes
-      const printPostCostQuery = attributes[4][0]
-      expect(printPostCostQuery).toContain('completed" IS NOT NULL')
-      expect(printPostCostQuery).toContain('failureId" IS NULL')
-    })
-
-    test('should include failure table in query with left join', async () => {
-      await calculateMetricsForPeriod('all')
-      const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      const includes = findAllCall.include
-      const failureInclude = includes.find(inc => inc.as === 'failure')
-      expect(failureInclude).toBeDefined()
-      expect(failureInclude.required).toBe(false)
-    })
-
-    test('should include statement table in query with inner join', async () => {
-      await calculateMetricsForPeriod('all')
-      const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      const includes = findAllCall.include
-      const statementInclude = includes.find(inc => inc.as === 'statement')
-      expect(statementInclude).toBeDefined()
-      expect(statementInclude.required).toBe(true)
-    })
-
-    test('should group results by schemeName and schemeYear', async () => {
-      await calculateMetricsForPeriod('all')
-      const findAllCall = db.delivery.findAll.mock.calls[0][0]
-      expect(findAllCall.group).toEqual([
-        db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
-        db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
-        db.sequelize.literal('statement."schemeName"'),
-        db.sequelize.literal('statement."schemeYear"')
-      ])
+      expect(consoleLogSpy).toHaveBeenCalledWith('Starting metrics calculation...')
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ All metrics calculated successfully')
     })
   })
 
   describe('module exports', () => {
     test('should export calculateAllMetrics function', () => {
-      expect(calculateAllMetrics).toBeDefined()
       expect(typeof calculateAllMetrics).toBe('function')
     })
 
     test('should export calculateMetricsForPeriod function', () => {
-      expect(calculateMetricsForPeriod).toBeDefined()
       expect(typeof calculateMetricsForPeriod).toBe('function')
+    })
+
+    test('should export calculateYearlyMetrics function', () => {
+      expect(typeof calculateYearlyMetrics).toBe('function')
+    })
+
+    test('should export calculateHistoricalMetrics function', () => {
+      expect(typeof calculateHistoricalMetrics).toBe('function')
     })
   })
 })
