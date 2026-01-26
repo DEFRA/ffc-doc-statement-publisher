@@ -1,5 +1,5 @@
 const db = require('../../../../app/data')
-const { calculateMetricsForPeriod } = require('../../../../app/metrics-calculator')
+const { calculateMetricsForPeriod } = require('../../../../app/metrics/metrics-calculator')
 
 jest.mock('../../../../app/data', () => ({
   metric: {
@@ -12,7 +12,7 @@ jest.mock('../../../../app/data', () => ({
   }
 }))
 
-jest.mock('../../../../app/metrics-calculator', () => ({
+jest.mock('../../../../app/metrics/metrics-calculator', () => ({
   calculateMetricsForPeriod: jest.fn()
 }))
 

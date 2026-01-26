@@ -1,14 +1,14 @@
-const { calculateAllMetrics, calculateMetricsForPeriod } = require('../../app/metrics-calculator')
+const { calculateAllMetrics, calculateMetricsForPeriod } = require('../../../app/metrics/metrics-calculator')
 const {
   PRINT_POST_UNIT_COST_2024,
   PRINT_POST_UNIT_COST_2026,
   DEFAULT_PRINT_POST_UNIT_COST,
   PRINT_POST_PRICING_START_2024,
   PRINT_POST_PRICING_START_2026
-} = require('../../app/constants/print-post-pricing')
-const { METHOD_LETTER, METHOD_EMAIL } = require('../../app/constants/delivery-methods')
+} = require('../../../app/constants/print-post-pricing')
+const { METHOD_LETTER, METHOD_EMAIL } = require('../../../app/constants/delivery-methods')
 
-jest.mock('../../app/data', () => ({
+jest.mock('../../../app/data', () => ({
   delivery: {
     findAll: jest.fn()
   },
@@ -27,7 +27,7 @@ jest.mock('../../app/data', () => ({
   }
 }))
 
-const db = require('../../app/data')
+const db = require('../../../app/data')
 
 describe('metrics-calculator', () => {
   let consoleLogSpy
@@ -427,7 +427,7 @@ describe('metrics-calculator', () => {
       expect(db.metric.create).toHaveBeenCalledWith(
         expect.objectContaining({
           schemeYear: 'invalid',
-          totalStatements: NaN
+          totalStatements: Number.NaN
         })
       )
     })

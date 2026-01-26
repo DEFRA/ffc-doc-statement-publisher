@@ -3,7 +3,7 @@ require('log-timestamp')
 const { EventPublisher } = require('ffc-pay-event-publisher')
 const { DATA_PUBLISHING_ERROR } = require('./constants/alerts')
 const { SOURCE } = require('./constants/source')
-const { startMetricsPolling, stopMetricsPolling } = require('./metrics-polling')
+const { startMetricsPolling, stopMetricsPolling } = require('./metrics/metrics-polling')
 const messageConfig = require('./config/message')
 
 try {
