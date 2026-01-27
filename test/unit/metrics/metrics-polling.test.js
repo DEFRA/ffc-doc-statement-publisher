@@ -1,9 +1,9 @@
-const { startMetricsPolling, stopMetricsPolling } = require('../../app/metrics-polling')
+const { startMetricsPolling, stopMetricsPolling } = require('../../../app/metrics/metrics-polling')
 
-jest.mock('../../app/metrics-calculator')
-const { calculateAllMetrics } = require('../../app/metrics-calculator')
+jest.mock('../../../app/metrics/metrics-calculator')
+const { calculateAllMetrics } = require('../../../app/metrics/metrics-calculator')
 
-jest.mock('../../app/config', () => ({
+jest.mock('../../../app/config', () => ({
   isDev: false,
   metricsPollingInterval: 86400000,
   env: 'test',
@@ -18,7 +18,7 @@ jest.mock('../../app/config', () => ({
   }
 }))
 
-const config = require('../../app/config')
+const config = require('../../../app/config')
 
 describe('metrics-polling', () => {
   let consoleLogSpy

@@ -24,7 +24,7 @@ jest.mock('../../app/insights', () => ({
   setup: jest.fn()
 }))
 
-jest.mock('../../app/metrics-polling', () => ({
+jest.mock('../../app/metrics/metrics-polling', () => ({
   startMetricsPolling: jest.fn(),
   stopMetricsPolling: jest.fn()
 }))
@@ -45,7 +45,7 @@ const mockStorage = require('../../app/storage')
 const mockReporting = require('../../app/reporting')
 const mockAlerting = require('ffc-alerting-utils')
 const mockInsights = require('../../app/insights')
-const mockMetricsPolling = require('../../app/metrics-polling')
+const mockMetricsPolling = require('../../app/metrics/metrics-polling')
 const mockServer = require('../../app/server/server')
 
 const messageConfig = require('../../app/config/message')
@@ -179,7 +179,7 @@ describe('app with alerting.init undefined', () => {
     jest.doMock('../../app/insights', () => ({
       setup: jest.fn()
     }))
-    jest.doMock('../../app/metrics-polling', () => ({
+    jest.doMock('../../app/metrics/metrics-polling', () => ({
       startMetricsPolling: jest.fn(),
       stopMetricsPolling: jest.fn()
     }))
@@ -234,7 +234,7 @@ describe('app with alerting utils error', () => {
     jest.doMock('../../app/insights', () => ({
       setup: jest.fn()
     }))
-    jest.doMock('../../app/metrics-polling', () => ({
+    jest.doMock('../../app/metrics/metrics-polling', () => ({
       startMetricsPolling: jest.fn(),
       stopMetricsPolling: jest.fn()
     }))

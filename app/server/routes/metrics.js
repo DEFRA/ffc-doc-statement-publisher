@@ -1,5 +1,5 @@
 const db = require('../../data')
-const { calculateMetricsForPeriod } = require('../../metrics-calculator')
+const { calculateMetricsForPeriod } = require('../../metrics/metrics-calculator')
 const { HTTP_OK, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
 const { PERIOD_ALL, PERIOD_YTD, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../constants/periods')

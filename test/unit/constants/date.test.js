@@ -6,7 +6,9 @@ const {
   END_OF_DAY_SECOND,
   END_OF_DAY_MILLISECOND,
   MONTH_INDEX_OFFSET,
-  MONTHS_PER_YEAR
+  MONTHS_PER_YEAR,
+  DECEMBER_MONTH_INDEX,
+  LAST_DAY_OF_DECEMBER
 } = require('../../../app/constants/date')
 
 describe('date constants', () => {
@@ -122,11 +124,39 @@ describe('date constants', () => {
     })
   })
 
+  describe('DECEMBER_MONTH_INDEX', () => {
+    test('should be defined', () => {
+      expect(DECEMBER_MONTH_INDEX).toBeDefined()
+    })
+
+    test('should be 11', () => {
+      expect(DECEMBER_MONTH_INDEX).toBe(11)
+    })
+
+    test('should be a number', () => {
+      expect(typeof DECEMBER_MONTH_INDEX).toBe('number')
+    })
+  })
+
+  describe('LAST_DAY_OF_DECEMBER', () => {
+    test('should be defined', () => {
+      expect(LAST_DAY_OF_DECEMBER).toBeDefined()
+    })
+
+    test('should be 31', () => {
+      expect(LAST_DAY_OF_DECEMBER).toBe(31)
+    })
+
+    test('should be a number', () => {
+      expect(typeof LAST_DAY_OF_DECEMBER).toBe('number')
+    })
+  })
+
   describe('module exports', () => {
     test('should export all date constants', () => {
       const dateConstants = require('../../../app/constants/date')
 
-      expect(Object.keys(dateConstants)).toHaveLength(8)
+      expect(Object.keys(dateConstants)).toHaveLength(10)
       expect(dateConstants).toHaveProperty('FIRST_DAY_OF_MONTH')
       expect(dateConstants).toHaveProperty('YEAR_START_MONTH')
       expect(dateConstants).toHaveProperty('END_OF_DAY_HOUR')
@@ -135,6 +165,8 @@ describe('date constants', () => {
       expect(dateConstants).toHaveProperty('END_OF_DAY_MILLISECOND')
       expect(dateConstants).toHaveProperty('MONTH_INDEX_OFFSET')
       expect(dateConstants).toHaveProperty('MONTHS_PER_YEAR')
+      expect(dateConstants).toHaveProperty('DECEMBER_MONTH_INDEX')
+      expect(dateConstants).toHaveProperty('LAST_DAY_OF_DECEMBER')
     })
   })
 
@@ -155,6 +187,20 @@ describe('date constants', () => {
 
       expect(date.getMonth()).toBe(0)
       expect(date.getDate()).toBe(1)
+    })
+  })
+
+  describe('year end date', () => {
+    test('should create valid year end date', () => {
+      const date = new Date(2024, DECEMBER_MONTH_INDEX, LAST_DAY_OF_DECEMBER, END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND, END_OF_DAY_MILLISECOND)
+
+      expect(date.getFullYear()).toBe(2024)
+      expect(date.getMonth()).toBe(11)
+      expect(date.getDate()).toBe(31)
+      expect(date.getHours()).toBe(23)
+      expect(date.getMinutes()).toBe(59)
+      expect(date.getSeconds()).toBe(59)
+      expect(date.getMilliseconds()).toBe(999)
     })
   })
 })
