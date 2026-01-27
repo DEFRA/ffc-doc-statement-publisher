@@ -1,4 +1,4 @@
-const { calculateDateRange, calculateAllMetrics, calculateMetricsForPeriod, calculateYearlyMetrics, calculateHistoricalMetrics } = require('../../../app/metrics/metrics-calculator')
+const db = require('../../../app/data')
 
 jest.mock('../../../app/metrics/get-metrics-data', () => ({
   getDateRangeForAll: jest.fn(),
@@ -36,11 +36,10 @@ jest.mock('../../../app/data', () => ({
   }
 }))
 
+const { calculateDateRange, calculateAllMetrics, calculateMetricsForPeriod, calculateYearlyMetrics, calculateHistoricalMetrics } = require('../../../app/metrics/metrics-calculator')
 const { getDateRangeForAll, getDateRangeForYTD, getDateRangeForYear, getDateRangeForMonthInYear, getDateRangeForRelativePeriod } = require('../../../app/metrics/get-metrics-data')
 const { buildWhereClauseForDateRange, fetchMetricsData } = require('../../../app/metrics/build-metrics')
 const { saveMetrics } = require('../../../app/metrics/create-save-metrics')
-
-const db = require('../../../app/data')
 
 describe('metrics-calculator', () => {
   let consoleLogSpy
