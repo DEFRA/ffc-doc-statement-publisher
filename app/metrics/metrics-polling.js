@@ -1,5 +1,5 @@
 const config = require('../config')
-const { calculateAllMetrics } = require('./metrics-calculator')
+const { metricsQueue } = require('./metrics-queue')
 const moment = require('moment')
 
 const MILLISECONDS_PER_SECOND = 1000
@@ -23,7 +23,7 @@ const calculateNextRun = () => {
 const scheduleNextRun = () => {
   if (config.isDev) {
     pollingInterval = setInterval(() => {
-      calculateAllMetrics().catch(err => {
+      metricsQueue.enqueue('all', null, null).catch(err => {
         console.error('Scheduled metrics calculation failed:', err)
       })
     }, config.metricsPollingInterval)
@@ -32,7 +32,7 @@ const scheduleNextRun = () => {
   } else {
     const delay = calculateNextRun()
     pollingInterval = setTimeout(() => {
-      calculateAllMetrics().catch(err => {
+      metricsQueue.enqueue('all', null, null).catch(err => {
         console.error('Scheduled metrics calculation failed:', err)
       }).finally(() => {
         scheduleNextRun()
@@ -47,7 +47,7 @@ const scheduleNextRun = () => {
 const startMetricsPolling = () => {
   console.log('Starting metrics polling')
 
-  calculateAllMetrics().catch(err => {
+  metricsQueue.enqueue('all', null, null).catch(err => {
     console.error('Initial metrics calculation failed:', err)
   })
 
