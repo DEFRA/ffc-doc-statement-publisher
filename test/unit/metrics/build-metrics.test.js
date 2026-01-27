@@ -1,4 +1,3 @@
-const { Op } = require('sequelize')
 const {
   buildWhereClauseForDateRange,
   buildStatementInclude,
@@ -16,18 +15,22 @@ const {
 const { METHOD_LETTER, METHOD_EMAIL } = require('../../../app/constants/delivery-methods')
 const { PERIOD_YEAR, PERIOD_MONTH_IN_YEAR } = require('../../../app/constants/periods')
 
-jest.mock('../../../app/data', () => ({
-  delivery: {
-    findAll: jest.fn()
-  },
-  statement: {},
-  failure: {},
-  sequelize: {
-    fn: jest.fn((fnName, ...args) => `${fnName}(${args.join(',')})`),
-    literal: jest.fn((sql) => sql),
-    col: jest.fn((col) => col)
+jest.mock('../../../app/data', () => {
+  const Sequelize = require('sequelize')
+  return {
+    Sequelize: {
+      Op: Sequelize.Op
+    },
+    delivery: { findAll: jest.fn() },
+    statement: {},
+    failure: {},
+    sequelize: {
+      fn: jest.fn((fnName, ...args) => `${fnName}(${args.join(',')})`),
+      literal: jest.fn((sql) => sql),
+      col: jest.fn((col) => col)
+    }
   }
-}))
+})
 
 const db = require('../../../app/data')
 
@@ -63,8 +66,8 @@ describe('build-metrics', () => {
       const result = buildWhereClauseForDateRange(PERIOD_MONTH_IN_YEAR, startDate, endDate, false)
       expect(result).toEqual({
         completed: {
-          [Op.gte]: startDate,
-          [Op.lte]: endDate
+          [db.Sequelize.Op.gte]: startDate,
+          [db.Sequelize.Op.lte]: endDate
         }
       })
     })
@@ -75,8 +78,8 @@ describe('build-metrics', () => {
       const result = buildWhereClauseForDateRange('ytd', startDate, endDate, false)
       expect(result).toEqual({
         completed: {
-          [Op.gte]: startDate,
-          [Op.lt]: endDate
+          [db.Sequelize.Op.gte]: startDate,
+          [db.Sequelize.Op.lt]: endDate
         }
       })
     })
@@ -87,8 +90,8 @@ describe('build-metrics', () => {
       const result = buildWhereClauseForDateRange(PERIOD_YEAR, startDate, endDate, false)
       expect(result).toEqual({
         completed: {
-          [Op.gte]: startDate,
-          [Op.lte]: endDate
+          [db.Sequelize.Op.gte]: startDate,
+          [db.Sequelize.Op.lte]: endDate
         }
       })
     })
@@ -99,8 +102,8 @@ describe('build-metrics', () => {
       const result = buildWhereClauseForDateRange(PERIOD_MONTH_IN_YEAR, startDate, endDate, true)
       expect(result).toEqual({
         completed: {
-          [Op.gte]: startDate,
-          [Op.lte]: endDate
+          [db.Sequelize.Op.gte]: startDate,
+          [db.Sequelize.Op.lte]: endDate
         }
       })
     })
@@ -184,7 +187,7 @@ describe('build-metrics', () => {
     test('should call db.delivery.findAll with correct parameters', async () => {
       const mockResults = []
       db.delivery.findAll.mockResolvedValue(mockResults)
-      const whereClause = { completed: { [Op.gte]: new Date() } }
+      const whereClause = { completed: { [db.Sequelize.Op.gte]: new Date() } }
       const result = await fetchMetricsData(whereClause, false, null, null)
       expect(db.delivery.findAll).toHaveBeenCalledWith({
         attributes: buildQueryAttributes(),

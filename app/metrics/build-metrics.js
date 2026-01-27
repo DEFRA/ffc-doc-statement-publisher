@@ -1,4 +1,3 @@
-const { Op } = require('sequelize')
 const db = require('../data')
 const {
   PRINT_POST_UNIT_COST_2024,
@@ -18,17 +17,17 @@ const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear)
   const whereClause = {}
 
   if (!useSchemeYear && startDate && endDate) {
-    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR) ? Op.lte : Op.lt
+    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR) ? db.Sequelize.Op.lte : db.Sequelize.Op.lt
     whereClause.completed = {
-      [Op.gte]: startDate,
+      [db.Sequelize.Op.gte]: startDate,
       [op]: endDate
     }
   }
 
   if (period === PERIOD_MONTH_IN_YEAR && startDate && endDate) {
     whereClause.completed = {
-      [Op.gte]: startDate,
-      [Op.lte]: endDate
+      [db.Sequelize.Op.gte]: startDate,
+      [db.Sequelize.Op.lte]: endDate
     }
   }
 
