@@ -1,7 +1,7 @@
 const statement = require('../../data/models/statement')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
-const statementsPayload = async (request, h) => {
+const statementsPayload = async (_request, _h) => {
   return {
     filename: statement.filename ? String(statement.filename) : null,
     schemeId: statement.schemeId ? Number.parseInt(statement.schemeId) : null,
