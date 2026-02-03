@@ -1,12 +1,13 @@
 ---
 environment: production
-environmentCode: test
+environmentCode: snd
+pr: true
 container:
-  messageQueueHost: DEVFFCINFSB1001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish-test
+  messageQueueHost: SNDFFCINFSB2001.servicebus.windows.net
+  publishTopicAddress: queue:ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
-  crmTopicAddress: ffc-doc-statement-crm-test
-  azureStorageAccountName: testffcdocst1001
+  crmTopicAddress: queue:ffc-doc-statement-crm
+  azureStorageAccountName: snd2ffcdocst2001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
   azureStorageCreateContainers: false
@@ -26,17 +27,4 @@ container:
   SfiDurationNumber: 1
   SfiDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting-test
-secretProviderClass:
-  azure:
-    keyvaultName: DEVFFCINFKV1001
-    objects:
-      - objectName: devtest-ffcahwr-appInsights-connectionString
-        objectType: secret
-
-  secretObjects:
-    - secretName: ffc-doc-statement-publisher
-      type: Opaque
-      data:
-        - objectName: devtest-ffcahwr-appInsights-connectionString
-          key: APPLICATIONINSIGHTS_CONNECTION_STRING
+  alertTopicAddress: queue:ffc-doc-alerting

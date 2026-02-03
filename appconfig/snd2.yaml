@@ -1,0 +1,29 @@
+---
+environment: production
+environmentCode: snd2
+container:
+  messageQueueHost: SNDFFCINFSB2001.servicebus.windows.net
+  publishTopicAddress: ffc-doc-statement-publish-snd2
+  publishSubscriptionAddress: ffc-doc-statement-publisher
+  crmTopicAddress: ffc-doc-statement-crm-snd2
+  azureStorageAccountName: snd2ffcdocst2001
+  azureStorageConnectionString: dummy
+  azureStorageUseConnectionString: false
+  azureStorageCreateContainers: false
+  storageContainer: statements
+  storageFolder: outbound
+  storageReportFolder: reports
+  statementReceiverApiVersion: v1
+  statementReceiverEndpoint: https://ffc-doc-statement-receiver
+  DelinkedIntervalNumber: 1
+  DelinkedIntervalType: months
+  DelinkedDayOfMonth: 15
+  DelinkedDurationNumber: 1
+  DelinkedDurationType: months
+  SfiIntervalNumber: 1
+  SfiIntervalType: months
+  SfiDayOfMonth: 15
+  SfiDurationNumber: 1
+  SfiDurationType: months
+  retentionPeriodInWeeks: 78
+  alertTopicAddress: ffc-doc-alerting-snd2

@@ -1,12 +1,12 @@
 ---
 environment: production
-environmentCode: pre
+environmentCode: prd
 container:
-  messageQueueHost: PREFFCINFSB1001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish-pre
+  messageQueueHost: PRDFFCINFSB1001.servicebus.windows.net
+  publishTopicAddress: ffc-doc-statement-publish-prd
   publishSubscriptionAddress: ffc-doc-statement-publiher
-  crmTopicAddress: ffc-doc-statement-crm-pre
-  azureStorageAccountName: preffcdocst1001
+  crmTopicAddress: ffc-doc-statement-crm-prd
+  azureStorageAccountName: prdffcdocst1001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
   azureStorageCreateContainers: false
@@ -26,17 +26,17 @@ container:
   SfiDurationNumber: 1
   SfiDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting-pre
+  alertTopicAddress: ffc-doc-alerting-prd
 secretProviderClass:
   azure:
-    keyvaultName: PREFFCINFKV1001
+    keyvaultName: PRDFFCINFKV1001
     objects:
-      - objectName: pre-ffcahwr-appInsights-connectionString
+      - objectName: prd-ffcahwr-appInsights-connectionString
         objectType: secret
 
   secretObjects:
     - secretName: ffc-doc-statement-publisher
       type: Opaque
       data:
-        - objectName: pre-ffcahwr-appInsights-connectionString
+        - objectName: prd-ffcahwr-appInsights-connectionString
           key: APPLICATIONINSIGHTS_CONNECTION_STRING
