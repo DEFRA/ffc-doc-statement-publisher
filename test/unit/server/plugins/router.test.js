@@ -2,18 +2,21 @@ describe('router plugin', () => {
   let routerPlugin
   let mockHealthyRoute
   let mockHealthzRoute
-  let mockMetricsRoutes
+  let mockMetricsRoute
+  let mockStatementsRoute
 
   beforeEach(() => {
     jest.resetModules()
 
     mockHealthyRoute = { path: '/healthy', method: 'GET' }
     mockHealthzRoute = { path: '/healthz', method: 'GET' }
-    mockMetricsRoutes = [{ path: '/metrics', method: 'GET' }]
+    mockMetricsRoute = [{ path: '/metrics', method: 'GET' }]
+    mockStatementsRoute = [{ path: '/statements', method: 'GET' }]
 
     jest.mock('../../../../app/server/routes/healthy', () => mockHealthyRoute)
     jest.mock('../../../../app/server/routes/healthz', () => mockHealthzRoute)
-    jest.mock('../../../../app/server/routes/metrics', () => mockMetricsRoutes)
+    jest.mock('../../../../app/server/routes/metrics', () => mockMetricsRoute)
+    jest.mock('../../../../app/server/routes/statements', () => mockStatementsRoute)
 
     routerPlugin = require('../../../../app/server/plugins/router')
   })
@@ -46,7 +49,8 @@ describe('router plugin', () => {
       expect(mockServer.route).toHaveBeenCalledWith([
         mockHealthyRoute,
         mockHealthzRoute,
-        ...mockMetricsRoutes
+        ...mockMetricsRoute,
+        ...mockStatementsRoute
       ])
     })
 
@@ -72,7 +76,7 @@ describe('router plugin', () => {
       expect(routes).toContain(mockHealthzRoute)
     })
 
-    test('routes array includes metrics routes', () => {
+    test('routes array includes metrics route', () => {
       const mockServer = {
         route: jest.fn()
       }
@@ -80,7 +84,18 @@ describe('router plugin', () => {
       routerPlugin.plugin.register(mockServer)
 
       const routes = mockServer.route.mock.calls[0][0]
-      expect(routes).toContain(mockMetricsRoutes[0])
+      expect(routes).toContain(mockMetricsRoute[0])
+    })
+
+    test('routes array includes statements route', () => {
+      const mockServer = {
+        route: jest.fn()
+      }
+
+      routerPlugin.plugin.register(mockServer)
+
+      const routes = mockServer.route.mock.calls[0][0]
+      expect(routes).toContain(mockStatementsRoute[0])
     })
   })
 })
