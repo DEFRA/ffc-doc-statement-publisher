@@ -3,9 +3,9 @@ environment: production
 environmentCode: dev
 container:
   messageQueueHost: DEVFFCINFSB1001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish-dev
+  publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
-  crmTopicAddress: ffc-doc-statement-crm-dev
+  crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: devffcdocst1001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
@@ -26,7 +26,7 @@ container:
   SfiDurationNumber: 1
   SfiDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting-dev
+  alertTopicAddress: ffc-doc-alerting
 secretProviderClass:
   azure:
     keyvaultName: DEVFFCINFKV1001

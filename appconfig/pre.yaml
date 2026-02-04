@@ -3,9 +3,9 @@ environment: production
 environmentCode: pre
 container:
   messageQueueHost: PREFFCINFSB1001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish-pre
+  publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publiher
-  crmTopicAddress: ffc-doc-statement-crm-pre
+  crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: preffcdocst1001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
@@ -26,7 +26,7 @@ container:
   SfiDurationNumber: 1
   SfiDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting-pre
+  alertTopicAddress: ffc-doc-alerting
 secretProviderClass:
   azure:
     keyvaultName: PREFFCINFKV1001

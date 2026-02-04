@@ -3,9 +3,9 @@ environment: production
 environmentCode: prd
 container:
   messageQueueHost: PRDFFCINFSB1001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish-prd
+  publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publiher
-  crmTopicAddress: ffc-doc-statement-crm-prd
+  crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: prdffcdocst1001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
@@ -26,7 +26,7 @@ container:
   SfiDurationNumber: 1
   SfiDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting-prd
+  alertTopicAddress: ffc-doc-alerting
 secretProviderClass:
   azure:
     keyvaultName: PRDFFCINFKV1001
