@@ -14,7 +14,7 @@ containerConfigMap:
   name: ffc-doc-statement-publisher-config-map
 
 containerSecret:
-  name: ffc-doc-statement-publisher-container-secret
+  name: ffc-doc-statement-publisher
   type: Opaque
 
 deployment:
@@ -77,3 +77,18 @@ workloadIdentity: true
 azureIdentity:
   clientID: not-a-real-clientID
   resourceID: not-a-real-resourceID
+
+
+secretProviderClass:
+  azure:
+    keyvaultName: SNDFFCINFKV2001
+    objects: # reading the secret from Azure Key Vault
+      - objectName: appInsights-connectionString # secret name in Azure Key Vault
+        objectType: secret
+
+  secretObjects: # creating a Kubernetes secret from the Azure Key Vault secrets
+    - secretName: ffc-doc-statement-publisher
+      type: Opaque
+      data:
+        - objectName: appInsights-connectionString # secret name in Azure Key Vault
+          key: APPLICATIONINSIGHTS_CONNECTION_STRING # the secret key in the Kubernetes secret and use in the application
