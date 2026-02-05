@@ -28,8 +28,13 @@ const buildQueryCriteria = (query, sequelizeDb) => {
   }
 
   if (query.timestamp) {
-    console.info('[STATEMENTS] Adding timestamp criteria to query on filename')
-    criteria.filename = { [sequelizeDb.sequelize.Op.like]: `%${query.timestamp}%` }
+    const op = sequelizeDb.sequelize?.Op || sequelizeDb.Sequelize?.Op
+    if (op?.like) {
+      console.info('[STATEMENTS] Adding timestamp criteria to query on filename')
+      criteria.filename = { [op.like]: `%${query.timestamp}%` }
+    } else {
+      console.info('[STATEMENTS] Sequelize Op not available, skipping timestamp filter')
+    }
   }
 
   console.info('[STATEMENTS] Final criteria:', criteria)
