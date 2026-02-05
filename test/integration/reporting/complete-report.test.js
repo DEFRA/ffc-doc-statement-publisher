@@ -19,7 +19,6 @@ describe('completeReport', () => {
     const transaction = await db.sequelize.transaction()
     const lastDeliveryId = 1234
     await completeReport(mockReport1.reportId, lastDeliveryId, transaction)
-    await transaction.commit()
     const updatedReport = await db.report.findByPk(mockReport1.reportId)
     expect(updatedReport.sent).toEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
   })

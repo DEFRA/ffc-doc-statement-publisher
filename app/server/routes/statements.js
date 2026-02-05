@@ -1,87 +1,95 @@
 const db = require('../../data')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
-const parseTimestamp16 = (timestamp) => {
-  const match = timestamp.match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/)
-  if (!match) return null
-  const [, year, month, day, hour, minute, second, centiseconds] = match
-  const milliseconds = centiseconds + '0'
-  return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}.${milliseconds}Z`)
-}
+const NUMERIC_REGEX = /^\d+$/
+const DEFAULT_LIMIT = 50
+const PADDING_LENGTH = 2
+const PADDING_CHAR = '0'
+const CENTISECONDS_DIVISOR = 10
 
-const buildTimestampCriteria = (timestamp, db) => {
-  if (timestamp?.length !== 16) return undefined
-  const parsedDate = parseTimestamp16(timestamp)
-  if (!parsedDate) return undefined
-
-  if (!db.sequelize?.Op) {
-    return parsedDate
-  }
-
-  return {
-    [db.sequelize.Op.gte]: parsedDate,
-    [db.sequelize.Op.lt]: new Date(parsedDate.getTime() + 10)
-  }
-}
-
-const buildQueryCriteria = (query, db) => {
+const buildQueryCriteria = (query, sequelizeDb) => {
+  console.info('[STATEMENTS] buildQueryCriteria called with:', query)
   const criteria = {}
 
   if (query.frn) {
-    criteria.frn = Number.parseInt(query.frn)
+    const frnValue = Number.parseInt(query.frn)
+    console.info('[STATEMENTS] Parsed FRN:', { input: query.frn, output: frnValue })
+    criteria.frn = frnValue
   }
+
   if (query.schemeshortname) {
+    console.info('[STATEMENTS] Set schemeShortName:', query.schemeshortname)
     criteria.schemeShortName = query.schemeshortname
   }
+
   if (query.schemeyear) {
-    criteria.schemeYear = Number.parseInt(query.schemeyear)
+    console.info('[STATEMENTS] Set schemeYear (keeping as string):', query.schemeyear)
+    criteria.schemeYear = query.schemeyear
   }
 
-  const timestampCriteria = buildTimestampCriteria(query.timestamp, db)
-  if (timestampCriteria) {
-    criteria.received = timestampCriteria
+  if (query.timestamp) {
+    console.info('[STATEMENTS] Adding timestamp criteria to query on filename')
+    criteria.filename = { [sequelizeDb.sequelize.Op.like]: `%${query.timestamp}%` }
   }
 
+  console.info('[STATEMENTS] Final criteria:', criteria)
   return criteria
 }
 
 const getOffset = (continuationToken, offset) => {
-  if (continuationToken && /^\d+$/.test(String(continuationToken))) {
-    return Number.parseInt(continuationToken)
+  console.info('[STATEMENTS] getOffset called with:', { continuationToken, offset })
+
+  if (continuationToken && NUMERIC_REGEX.test(String(continuationToken))) {
+    const parsedToken = Number.parseInt(continuationToken)
+    console.info('[STATEMENTS] Using continuationToken as offset:', parsedToken)
+    return parsedToken
   }
-  if (offset && /^\d+$/.test(String(offset))) {
-    return Number.parseInt(offset)
+
+  if (offset && NUMERIC_REGEX.test(String(offset))) {
+    const parsedOffset = Number.parseInt(offset)
+    console.info('[STATEMENTS] Using offset parameter:', parsedOffset)
+    return parsedOffset
   }
+
+  console.info('[STATEMENTS] No valid offset or continuationToken, using default: 0')
   return 0
 }
 
 const formatStatementTimestamp = (date) => {
   const year = date.getUTCFullYear().toString()
-  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
-  const day = date.getUTCDate().toString().padStart(2, '0')
-  const hour = date.getUTCHours().toString().padStart(2, '0')
-  const minute = date.getUTCMinutes().toString().padStart(2, '0')
-  const second = date.getUTCSeconds().toString().padStart(2, '0')
-  const centiseconds = Math.floor(date.getUTCMilliseconds() / 10).toString().padStart(2, '0')
-  return year + month + day + hour + minute + second + centiseconds
+  const month = (date.getUTCMonth() + 1).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const day = date.getUTCDate().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const hour = date.getUTCHours().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const minute = date.getUTCMinutes().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const second = date.getUTCSeconds().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const centiseconds = Math.floor(date.getUTCMilliseconds() / CENTISECONDS_DIVISOR).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const timestamp16 = year + month + day + hour + minute + second + centiseconds
+  return timestamp16
 }
 
-const formatStatement = (s) => ({
-  filename: s.filename ? String(s.filename) : null,
-  schemeId: s.schemeId ? Number.parseInt(s.schemeId) : null,
-  marketingYear: s.marketingYear ? Number.parseInt(s.marketingYear) : null,
-  frn: s.frn ? Number.parseInt(s.frn) : null,
-  timestamp: formatStatementTimestamp(new Date(s.received))
-})
+const formatStatement = (s) => {
+  const formatted = {
+    filename: s.filename ? String(s.filename) : null,
+    schemeId: s.schemeId ? Number.parseInt(s.schemeId) : null,
+    marketingYear: s.marketingYear ? Number.parseInt(s.marketingYear) : null,
+    frn: s.frn ? Number.parseInt(s.frn) : null,
+    timestamp: formatStatementTimestamp(new Date(s.received))
+  }
+  return formatted
+}
 
 module.exports = [{
   method: 'GET',
   path: '/statements',
   handler: async (request, h) => {
+    console.info('[STATEMENTS] Handler called with query:', request.query)
+
     try {
       const criteria = buildQueryCriteria(request.query, db)
-      const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : 50
+      const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
       const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
+
+      console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
 
       const statements = await db.statement.findAll({
         where: Object.keys(criteria).length > 0 ? criteria : undefined,
@@ -89,15 +97,28 @@ module.exports = [{
         offset: offsetNum
       })
 
+      console.info('[STATEMENTS] Query returned', statements.length, 'results')
+
       const hasMore = statements.length === limitNum
       const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
+
+      console.info('[STATEMENTS] Returning response with:', {
+        statementCount: statements.length,
+        hasMore,
+        nextContinuationToken
+      })
 
       return {
         statements: statements.map(formatStatement),
         continuationToken: nextContinuationToken
       }
     } catch (error) {
-      console.error('[STATEMENTS] Error caught:', error)
+      console.error('[STATEMENTS] Error in handler:', {
+        message: error.message,
+        stack: error.stack,
+        query: request.query
+      })
+
       return h.response({
         error: 'Internal server error',
         message: 'An error occurred while fetching statements'
@@ -105,3 +126,8 @@ module.exports = [{
     }
   }
 }]
+
+module.exports.buildQueryCriteria = buildQueryCriteria
+module.exports.getOffset = getOffset
+module.exports.formatStatementTimestamp = formatStatementTimestamp
+module.exports.formatStatement = formatStatement
