@@ -1,5 +1,7 @@
 const HTTP_INTERNAL_SERVER_ERROR = require('../../../../app/constants/statuses').HTTP_INTERNAL_SERVER_ERROR
 
+const statementsModule = require('../../../../app/server/routes/statements')
+
 describe('statements route', () => {
   let consoleInfoSpy
   let consoleErrorSpy
@@ -28,7 +30,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       expect(Array.isArray(routes)).toBe(true)
       expect(routes).toHaveLength(1)
       expect(routes[0].method).toBe('GET')
@@ -46,11 +48,10 @@ describe('statements route', () => {
         }
       }))
 
-      const module = require('../../../../app/server/routes/statements')
-      expect(typeof module.buildQueryCriteria).toBe('function')
-      expect(typeof module.getOffset).toBe('function')
-      expect(typeof module.formatStatementTimestamp).toBe('function')
-      expect(typeof module.formatStatement).toBe('function')
+      expect(typeof statementsModule.buildQueryCriteria).toBe('function')
+      expect(typeof statementsModule.getOffset).toBe('function')
+      expect(typeof statementsModule.formatStatementTimestamp).toBe('function')
+      expect(typeof statementsModule.formatStatement).toBe('function')
     })
   })
 
@@ -66,8 +67,7 @@ describe('statements route', () => {
           }
         }
       }))
-      const module = require('../../../../app/server/routes/statements')
-      buildQueryCriteria = module.buildQueryCriteria
+      buildQueryCriteria = statementsModule.buildQueryCriteria
     })
 
     test('should build empty criteria when no query provided', () => {
@@ -143,8 +143,7 @@ describe('statements route', () => {
           }
         }
       }))
-      const module = require('../../../../app/server/routes/statements')
-      getOffset = module.getOffset
+      getOffset = statementsModule.getOffset
     })
 
     test('should use continuationToken when valid', () => {
@@ -205,8 +204,7 @@ describe('statements route', () => {
           }
         }
       }))
-      const module = require('../../../../app/server/routes/statements')
-      formatStatementTimestamp = module.formatStatementTimestamp
+      formatStatementTimestamp = statementsModule.formatStatementTimestamp
     })
 
     test('should format Date to 16-digit timestamp', () => {
@@ -252,8 +250,7 @@ describe('statements route', () => {
           }
         }
       }))
-      const module = require('../../../../app/server/routes/statements')
-      formatStatement = module.formatStatement
+      formatStatement = statementsModule.formatStatement
     })
 
     test('should format statement with all fields', () => {
@@ -345,7 +342,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       const result = await handler({ query: {} })
@@ -380,7 +377,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       const result = await handler({ query: {} })
@@ -410,7 +407,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', timestamp: '2026020510450842' } })
@@ -440,7 +437,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { offset: '10' } })
@@ -465,7 +462,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { continuationToken: '20', offset: '10' } })
@@ -490,7 +487,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { limit: '25' } })
@@ -521,7 +518,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       const result = await handler({ query: {} })
@@ -547,7 +544,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       const result = await handler({ query: {} })
@@ -582,7 +579,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: {} }, h)
@@ -606,7 +603,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { frn: '123' } })
@@ -627,7 +624,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { limit: '10', offset: '5' } })
@@ -651,7 +648,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: {} })
@@ -671,7 +668,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: {} })
@@ -696,7 +693,7 @@ describe('statements route', () => {
         }
       }))
 
-      const routes = require('../../../../app/server/routes/statements')
+      const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
       await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } })

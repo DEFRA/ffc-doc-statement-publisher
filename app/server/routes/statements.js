@@ -83,56 +83,57 @@ const formatStatement = (s) => {
   return formatted
 }
 
-module.exports = [{
-  method: 'GET',
-  path: '/statements',
-  handler: async (request, h) => {
-    console.info('[STATEMENTS] Handler called with query:', request.query)
+module.exports = {
+  routes: [{
+    method: 'GET',
+    path: '/statements',
+    handler: async (request, h) => {
+      console.info('[STATEMENTS] Handler called with query:', request.query)
 
-    try {
-      const criteria = buildQueryCriteria(request.query, db)
-      const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
-      const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
+      try {
+        const criteria = buildQueryCriteria(request.query, db)
+        const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
+        const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
 
-      console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
+        console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
 
-      const statements = await db.statement.findAll({
-        where: Object.keys(criteria).length > 0 ? criteria : undefined,
-        limit: limitNum,
-        offset: offsetNum
-      })
+        const statements = await db.statement.findAll({
+          where: Object.keys(criteria).length > 0 ? criteria : undefined,
+          limit: limitNum,
+          offset: offsetNum
+        })
 
-      console.info('[STATEMENTS] Query returned', statements.length, 'results')
+        console.info('[STATEMENTS] Query returned', statements.length, 'results')
 
-      const hasMore = statements.length === limitNum
-      const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
+        const hasMore = statements.length === limitNum
+        const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
 
-      console.info('[STATEMENTS] Returning response with:', {
-        statementCount: statements.length,
-        hasMore,
-        nextContinuationToken
-      })
+        console.info('[STATEMENTS] Returning response with:', {
+          statementCount: statements.length,
+          hasMore,
+          nextContinuationToken
+        })
 
-      return {
-        statements: statements.map(formatStatement),
-        continuationToken: nextContinuationToken
+        return {
+          statements: statements.map(formatStatement),
+          continuationToken: nextContinuationToken
+        }
+      } catch (error) {
+        console.error('[STATEMENTS] Error in handler:', {
+          message: error.message,
+          stack: error.stack,
+          query: request.query
+        })
+
+        return h.response({
+          error: 'Internal server error',
+          message: 'An error occurred while fetching statements'
+        }).code(HTTP_INTERNAL_SERVER_ERROR)
       }
-    } catch (error) {
-      console.error('[STATEMENTS] Error in handler:', {
-        message: error.message,
-        stack: error.stack,
-        query: request.query
-      })
-
-      return h.response({
-        error: 'Internal server error',
-        message: 'An error occurred while fetching statements'
-      }).code(HTTP_INTERNAL_SERVER_ERROR)
     }
-  }
-}]
-
-module.exports.buildQueryCriteria = buildQueryCriteria
-module.exports.getOffset = getOffset
-module.exports.formatStatementTimestamp = formatStatementTimestamp
-module.exports.formatStatement = formatStatement
+  }],
+  buildQueryCriteria,
+  getOffset,
+  formatStatementTimestamp,
+  formatStatement
+}
