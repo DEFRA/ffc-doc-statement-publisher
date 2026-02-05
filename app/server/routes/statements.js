@@ -104,11 +104,4 @@ module.exports = [{
       }).code(HTTP_INTERNAL_SERVER_ERROR)
     }
   }
-}],
-parseTimestamp16,
-buildTimestampCriteria,
-buildQueryCriteria,
-getOffset,
-formatStatementTimestamp,
-formatStatement
-}
+}]
