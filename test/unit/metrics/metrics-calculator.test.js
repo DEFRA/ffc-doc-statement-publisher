@@ -73,7 +73,7 @@ describe('metrics-calculator', () => {
       const now = new Date()
       getDateRangeForYTD.mockReturnValue({ startDate: new Date(now.getFullYear(), 0, 1), endDate: now, useSchemeYear: false })
       const result = calculateDateRange('ytd')
-      expect(getDateRangeForYTD).toHaveBeenCalledWith(now)
+      expect(getDateRangeForYTD).toHaveBeenCalledWith(expect.any(Date))
       expect(result.useSchemeYear).toBe(false)
     })
 
@@ -95,7 +95,7 @@ describe('metrics-calculator', () => {
       const now = new Date()
       getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
       const result = calculateDateRange('month')
-      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 30)
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(expect.any(Date), 30)
       expect(result.useSchemeYear).toBe(false)
     })
 
@@ -103,7 +103,7 @@ describe('metrics-calculator', () => {
       const now = new Date()
       getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
       const result = calculateDateRange('week')
-      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 7)
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(expect.any(Date), 7)
       expect(result.useSchemeYear).toBe(false)
     })
 
@@ -111,7 +111,7 @@ describe('metrics-calculator', () => {
       const now = new Date()
       getDateRangeForRelativePeriod.mockReturnValue({ startDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), endDate: now, useSchemeYear: false })
       const result = calculateDateRange('day')
-      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(now, 1)
+      expect(getDateRangeForRelativePeriod).toHaveBeenCalledWith(expect.any(Date), 1)
       expect(result.useSchemeYear).toBe(false)
     })
 

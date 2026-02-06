@@ -1,8 +1,13 @@
+const healthyRoutes = require('../routes/healthy')
+const healthzRoutes = require('../routes/healthz')
+const metricsRoutes = require('../routes/metrics')
+const statementsModule = require('../routes/statements')
+
 const routes = [].concat(
-  require('../routes/healthy'),
-  require('../routes/healthz'),
-  require('../routes/metrics'),
-  require('../routes/statements')
+  healthyRoutes,
+  healthzRoutes,
+  metricsRoutes,
+  Array.isArray(statementsModule) ? statementsModule : statementsModule.routes
 )
 
 module.exports = {
