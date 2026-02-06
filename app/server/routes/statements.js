@@ -5,7 +5,7 @@ const NUMERIC_REGEX = /^\d+$/
 const DEFAULT_LIMIT = 50
 const PADDING_LENGTH = 2
 const PADDING_CHAR = '0'
-const CENTISECONDS_DIVISOR = 10
+const CENTISECONDS = 10
 
 const buildQueryCriteria = (query, sequelizeDb) => {
   console.info('[STATEMENTS] buildQueryCriteria called with:', query)
@@ -67,7 +67,7 @@ const formatStatementTimestamp = (date) => {
   const hour = date.getUTCHours().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const minute = date.getUTCMinutes().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const second = date.getUTCSeconds().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
-  const centiseconds = Math.floor(date.getUTCMilliseconds() / CENTISECONDS_DIVISOR).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const centiseconds = Math.floor(date.getUTCMilliseconds() / CENTISECONDS).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const timestamp16 = year + month + day + hour + minute + second + centiseconds
   return timestamp16
 }
