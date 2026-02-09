@@ -48,6 +48,7 @@ services:
       ALERT_TOPIC_ADDRESS: ${ALERT_TOPIC_ADDRESS:-ffc-doc-alerting}${MESSAGE_QUEUE_SUFFIX}
     networks:
       - default
+      - docs
 
   ffc-doc-statement-publisher-postgres:
     image: postgres:11.4-alpine
@@ -57,6 +58,7 @@ services:
       POSTGRES_USERNAME: postgres
     networks:
       - default
+      - docs
 
   ffc-doc-statement-azurite:
     image: mcr.microsoft.com/azure-storage/azurite:3.35.0
@@ -65,3 +67,7 @@ services:
       com.docker.compose.pay.role: ffc-doc-statement-azurite
     networks:
       - default
+networks:
+  docs:
+    name: ffc-doc
+    external: true

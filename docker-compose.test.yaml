@@ -80,3 +80,9 @@ services:
 
 volumes:
   postgres_data:
+  
+networks:
+  docs:
+    name: ffc-doc
+    external: false
+
