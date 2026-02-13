@@ -48,42 +48,42 @@ extends:
     pr_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['pr_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(pr_deliveryCheckInterval)
-      container.metricsPollingInterval: $(pr_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(pr_metricsPollingInterval)
       container.notifyApiKey: $(pr_notifyApiKey)
       container.notifyApiKeyLetter: $(pr_notifyApiKeyLetter)
       container.reportingCheckInterval: $(pr_reportingCheckInterval)
     snd2_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['snd2_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(snd2_deliveryCheckInterval)
-      container.metricsPollingInterval: $(snd2_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(snd2_metricsPollingInterval)
       container.notifyApiKey: $(snd2_notifyApiKey)
       container.notifyApiKeyLetter: $(snd2_notifyApiKeyLetter)
       container.reportingCheckInterval: $(snd2_reportingCheckInterval)
     dev_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['dev_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(dev_deliveryCheckInterval)
-      container.metricsPollingInterval: $(dev_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(dev_metricsPollingInterval)
       container.notifyApiKey: $(dev_notifyApiKey)
       container.notifyApiKeyLetter: $(dev_notifyApiKeyLetter)
       container.reportingCheckInterval: $(dev_reportingCheckInterval)
     test_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['test_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(test_deliveryCheckInterval)
-      container.metricsPollingInterval: $(test_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(test_metricsPollingInterval)
       container.notifyApiKey: $(test_notifyApiKey)
       container.notifyApiKeyLetter: $(test_notifyApiKeyLetter)
       container.reportingCheckInterval: $(test_reportingCheckInterval)
     pre_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['pre_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(pre_deliveryCheckInterval)
-      container.metricsPollingInterval: $(pre_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(pre_metricsPollingInterval)
       container.notifyApiKey: $(pre_notifyApiKey)
       container.notifyApiKeyLetter: $(pre_notifyApiKeyLetter)
       container.reportingCheckInterval: $(pre_reportingCheckInterval)
     prd_params:
       container.sendCrmFailureMessageEnabled: ${{ eq(variables['prd_sendCrmFailureMessageEnabled'], 'true') }}
       container.deliveryCheckInterval: $(prd_deliveryCheckInterval)
-      container.metricsPollingInterval: $(prd_pmetricsPollingInterval)
+      container.metricsPollingInterval: $(prd_metricsPollingInterval)
       container.notifyApiKey: $(prd_notifyApiKey)
       container.notifyApiKeyLetter: $(prd_notifyApiKeyLetter)
       container.reportingCheckInterval: $(prd_reportingCheckInterval)
