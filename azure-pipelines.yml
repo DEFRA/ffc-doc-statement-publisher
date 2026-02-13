@@ -46,44 +46,44 @@ extends:
     # failOnThreshold: moderate
     variableGroupName: ffc-doc-statement-publisher-env-var
     pr_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['pr_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(pr_deliveryCheckInterval)
-      metricsPollingInterval: $(pr_pmetricsPollingInterval)
-      notifyApiKey: $(pr_notifyApiKey)
-      notifyApiKeyLetter: $(pr_notifyApiKeyLetter)
-      reportingCheckInterval: $(pr_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['pr_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(pr_deliveryCheckInterval)
+      container.metricsPollingInterval: $(pr_pmetricsPollingInterval)
+      container.notifyApiKey: $(pr_notifyApiKey)
+      container.notifyApiKeyLetter: $(pr_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(pr_reportingCheckInterval)
     snd2_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['snd2_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(snd2_deliveryCheckInterval)
-      metricsPollingInterval: $(snd2_pmetricsPollingInterval)
-      notifyApiKey: $(snd2_notifyApiKey)
-      notifyApiKeyLetter: $(snd2_notifyApiKeyLetter)
-      reportingCheckInterval: $(snd2_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['snd2_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(snd2_deliveryCheckInterval)
+      container.metricsPollingInterval: $(snd2_pmetricsPollingInterval)
+      container.notifyApiKey: $(snd2_notifyApiKey)
+      container.notifyApiKeyLetter: $(snd2_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(snd2_reportingCheckInterval)
     dev_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['dev_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(dev_deliveryCheckInterval)
-      metricsPollingInterval: $(dev_pmetricsPollingInterval)
-      notifyApiKey: $(dev_notifyApiKey)
-      notifyApiKeyLetter: $(dev_notifyApiKeyLetter)
-      reportingCheckInterval: $(dev_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['dev_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(dev_deliveryCheckInterval)
+      container.metricsPollingInterval: $(dev_pmetricsPollingInterval)
+      container.notifyApiKey: $(dev_notifyApiKey)
+      container.notifyApiKeyLetter: $(dev_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(dev_reportingCheckInterval)
     test_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['test_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(test_deliveryCheckInterval)
-      metricsPollingInterval: $(test_pmetricsPollingInterval)
-      notifyApiKey: $(test_notifyApiKey)
-      notifyApiKeyLetter: $(test_notifyApiKeyLetter)
-      reportingCheckInterval: $(test_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['test_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(test_deliveryCheckInterval)
+      container.metricsPollingInterval: $(test_pmetricsPollingInterval)
+      container.notifyApiKey: $(test_notifyApiKey)
+      container.notifyApiKeyLetter: $(test_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(test_reportingCheckInterval)
     pre_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['pre_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(pre_deliveryCheckInterval)
-      metricsPollingInterval: $(pre_pmetricsPollingInterval)
-      notifyApiKey: $(pre_notifyApiKey)
-      notifyApiKeyLetter: $(pre_notifyApiKeyLetter)
-      reportingCheckInterval: $(pre_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['pre_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(pre_deliveryCheckInterval)
+      container.metricsPollingInterval: $(pre_pmetricsPollingInterval)
+      container.notifyApiKey: $(pre_notifyApiKey)
+      container.notifyApiKeyLetter: $(pre_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(pre_reportingCheckInterval)
     prd_params:
-      sendCrmFailureMessageEnabled: ${{ eq(variables['prd_sendCrmFailureMessageEnabled'], 'true') }}
-      deliveryCheckInterval: $(prd_deliveryCheckInterval)
-      metricsPollingInterval: $(prd_pmetricsPollingInterval)
-      notifyApiKey: $(prd_notifyApiKey)
-      notifyApiKeyLetter: $(prd_notifyApiKeyLetter)
-      reportingCheckInterval: $(prd_reportingCheckInterval)
+      container.sendCrmFailureMessageEnabled: ${{ eq(variables['prd_sendCrmFailureMessageEnabled'], 'true') }}
+      container.deliveryCheckInterval: $(prd_deliveryCheckInterval)
+      container.metricsPollingInterval: $(prd_pmetricsPollingInterval)
+      container.notifyApiKey: $(prd_notifyApiKey)
+      container.notifyApiKeyLetter: $(prd_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(prd_reportingCheckInterval)
