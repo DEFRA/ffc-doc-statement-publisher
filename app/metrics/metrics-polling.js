@@ -1,5 +1,6 @@
 const config = require('../config')
 const { metricsQueue } = require('./metrics-queue')
+const { calculateAllMetrics } = require('./metrics-calculator')
 const moment = require('moment')
 
 const MILLISECONDS_PER_SECOND = 1000
@@ -47,7 +48,7 @@ const scheduleNextRun = () => {
 const startMetricsPolling = () => {
   console.log('Starting metrics polling')
 
-  metricsQueue.enqueue('all', null, null).catch(err => {
+  calculateAllMetrics().catch(err => {
     console.error('Initial metrics calculation failed:', err)
   })
 
