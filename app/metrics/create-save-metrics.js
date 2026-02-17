@@ -10,7 +10,6 @@ const createMetricRecord = (result, period, snapshotDate, startDate, endDate) =>
 
   if (period === PERIOD_ALL) {
     yearToStore = result['statement.schemeYear']
-    monthToStore = null
   } else {
     yearToStore = result.receivedYear ? Number.parseInt(result.receivedYear) : null
     monthToStore = result.receivedMonth ? Number.parseInt(result.receivedMonth) : null
