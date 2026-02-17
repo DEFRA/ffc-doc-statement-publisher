@@ -1,7 +1,8 @@
 const db = require('../data')
 const { DEFAULT_PRINT_POST_UNIT_COST } = require('../constants/print-post-pricing')
 const {
-  PERIOD_ALL
+  PERIOD_ALL,
+  PERIOD_MONTH_IN_YEAR
 } = require('../constants/periods')
 
 const createMetricRecord = (result, period, snapshotDate, startDate, endDate) => {
@@ -10,9 +11,11 @@ const createMetricRecord = (result, period, snapshotDate, startDate, endDate) =>
 
   if (period === PERIOD_ALL) {
     yearToStore = result['statement.schemeYear']
-  } else {
+  } else if (period === PERIOD_MONTH_IN_YEAR) {
     yearToStore = result.receivedYear ? Number.parseInt(result.receivedYear) : null
     monthToStore = result.receivedMonth ? Number.parseInt(result.receivedMonth) : null
+  } else {
+    yearToStore = result.receivedYear ? Number.parseInt(result.receivedYear) : null
   }
 
   return {
