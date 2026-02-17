@@ -36,7 +36,7 @@ const getDateRangeForMonthInYear = (schemeYear, month) => {
   return {
     startDate: new Date(schemeYear, month - MONTH_INDEX_OFFSET, FIRST_DAY_OF_MONTH),
     endDate: new Date(schemeYear, month, 0, END_OF_DAY_HOUR, END_OF_DAY_MINUTE, END_OF_DAY_SECOND, END_OF_DAY_MILLISECOND),
-    useSchemeYear: true
+    useSchemeYear: false
   }
 }
 

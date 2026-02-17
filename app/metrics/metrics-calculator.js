@@ -2,9 +2,7 @@ const { getDateRangeForAll, getDateRangeForYTD, getDateRangeForYear, getDateRang
 const { buildWhereClauseForDateRange, fetchMetricsData } = require('./build-metrics')
 const { saveMetrics } = require('./create-save-metrics')
 const { DAYS_PER_WEEK, DAYS_PER_MONTH } = require('../constants/time')
-const {
-  MONTHS_PER_YEAR
-} = require('../constants/date')
+
 const {
   PERIOD_ALL,
   PERIOD_YTD,
@@ -14,6 +12,8 @@ const {
   PERIOD_WEEK,
   PERIOD_DAY
 } = require('../constants/periods')
+
+const { MONTHS_PER_YEAR } = require('../constants/date')
 
 const DEFAULT_YEARS_TO_CALCULATE = 3
 
@@ -45,23 +45,41 @@ const calculateMetricsForPeriod = async (period, schemeYear = null, month = null
   const snapshotDate = new Date().toISOString().split('T')[0]
 
   const whereClause = buildWhereClauseForDateRange(period, startDate, endDate, useSchemeYear)
-  const results = await fetchMetricsData(whereClause, useSchemeYear, schemeYear, month)
-  await saveMetrics(results, period, snapshotDate, startDate, endDate)
+  const results = await fetchMetricsData(whereClause, useSchemeYear, schemeYear, month, period)
+
+  const counts = await saveMetrics(results, period, snapshotDate, startDate, endDate)
+  return counts
 }
 
 const calculateYearlyMetrics = async (year) => {
-  await calculateMetricsForPeriod(PERIOD_YEAR, year)
+  let totalInserted = 0
+  let totalUpdated = 0
+
+  const yearCounts = await calculateMetricsForPeriod(PERIOD_YEAR, year)
+  totalInserted += yearCounts.inserted
+  totalUpdated += yearCounts.updated
 
   for (let month = 1; month <= MONTHS_PER_YEAR; month++) {
-    await calculateMetricsForPeriod(PERIOD_MONTH_IN_YEAR, year, month)
+    const monthCounts = await calculateMetricsForPeriod(PERIOD_MONTH_IN_YEAR, year, month)
+    totalInserted += monthCounts.inserted
+    totalUpdated += monthCounts.updated
   }
+
+  return { inserted: totalInserted, updated: totalUpdated }
 }
 
 const calculateHistoricalMetrics = async (currentYear, yearsToCalculate) => {
+  let totalInserted = 0
+  let totalUpdated = 0
+
   for (let i = 0; i <= yearsToCalculate; i++) {
     const year = currentYear - i
-    await calculateYearlyMetrics(year)
+    const counts = await calculateYearlyMetrics(year)
+    totalInserted += counts.inserted
+    totalUpdated += counts.updated
   }
+
+  return { inserted: totalInserted, updated: totalUpdated }
 }
 
 const calculateAllMetrics = async () => {
@@ -71,8 +89,18 @@ const calculateAllMetrics = async () => {
   const yearsToCalculate = Number.parseInt(process.env.METRICS_CALCULATION_YEARS || String(DEFAULT_YEARS_TO_CALCULATE))
 
   try {
-    await calculateHistoricalMetrics(currentYear, yearsToCalculate)
-    console.log('✓ All metrics calculated successfully')
+    let totalInserted = 0
+    let totalUpdated = 0
+
+    const allCounts = await calculateMetricsForPeriod(PERIOD_ALL)
+    totalInserted += allCounts.inserted
+    totalUpdated += allCounts.updated
+
+    const historicalCounts = await calculateHistoricalMetrics(currentYear, yearsToCalculate)
+    totalInserted += historicalCounts.inserted
+    totalUpdated += historicalCounts.updated
+
+    console.log(`✓ Metrics calculated: ${totalInserted} created, ${totalUpdated} updated`)
   } catch (error) {
     console.error('✗ Error calculating metrics:', error)
     throw error

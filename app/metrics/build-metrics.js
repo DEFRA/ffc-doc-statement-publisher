@@ -8,6 +8,7 @@ const {
 } = require('../constants/print-post-pricing')
 
 const {
+  PERIOD_ALL,
   PERIOD_YEAR,
   PERIOD_MONTH_IN_YEAR
 } = require('../constants/periods')
@@ -34,10 +35,12 @@ const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear)
   return whereClause
 }
 
-const buildStatementInclude = (useSchemeYear, schemeYear) => ({
+const buildStatementInclude = (useSchemeYear, schemeYear, includeSchemeYearInSelect = true) => ({
   model: db.statement,
   as: 'statement',
-  attributes: ['schemeName', 'schemeYear'],
+  attributes: includeSchemeYearInSelect
+    ? ['schemeName', 'schemeYear']
+    : ['schemeName'],
   required: true,
   where: useSchemeYear && schemeYear ? { schemeYear: String(schemeYear) } : {}
 })
@@ -66,17 +69,23 @@ const buildQueryAttributes = () => [
   [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
 ]
 
-const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month) => {
+const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, period) => {
+  const isSchemeBased = period === PERIOD_ALL  // ONLY period=all groups by statement.schemeYear
+
   const groupFields = [
     db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
     db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
-    db.sequelize.literal('statement."schemeName"'),
-    db.sequelize.literal('statement."schemeYear"')
+    db.sequelize.literal('statement."schemeName"')
   ]
+
+  if (isSchemeBased) {
+    groupFields.push(db.sequelize.literal('statement."schemeYear"'))
+  }
+
   return db.delivery.findAll({
     attributes: buildQueryAttributes(),
     include: [
-      buildStatementInclude(useSchemeYear, schemeYear),
+      buildStatementInclude(useSchemeYear, schemeYear, isSchemeBased),
       buildFailureInclude()
     ],
     where: whereClause,

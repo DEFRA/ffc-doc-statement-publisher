@@ -56,21 +56,6 @@ const validateYearParams = (period, schemeYear) => {
   return null
 }
 
-const handleMonthInYearCalculation = async (schemeYear, month) => {
-  try {
-    await calculateMetricsForPeriod('monthInYear', schemeYear, month)
-  } catch (err) {
-    console.error('Error calculating monthInYear metrics:', err)
-    const error = new Error('Metrics calculation failed')
-    error.statusCode = HTTP_INTERNAL_SERVER_ERROR
-    error.details = {
-      error: 'Metrics calculation failed',
-      message: err.message
-    }
-    throw error
-  }
-}
-
 const calculateTotals = (schemeMetrics) => {
   return schemeMetrics.reduce((acc, m) => ({
     totalStatements: acc.totalStatements + m.totalStatements,
@@ -157,9 +142,21 @@ const handleMetricsRequest = async (request, h) => {
     }
 
     try {
-      await handleMonthInYearCalculation(schemeYear, month)
+      await calculateMetricsForPeriod('monthInYear', schemeYear, month)
     } catch (error) {
-      return h.response(error.details).code(error.statusCode)
+      return h.response({
+        error: 'Metrics calculation failed',
+        message: error.message
+      }).code(HTTP_INTERNAL_SERVER_ERROR)
+    }
+  } else if (period === 'week' || period === 'day' || period === 'month' || period === 'ytd') {
+    try {
+      await calculateMetricsForPeriod(period)
+    } catch (error) {
+      return h.response({
+        error: 'Metrics calculation failed',
+        message: error.message
+      }).code(HTTP_INTERNAL_SERVER_ERROR)
     }
   }
 
@@ -168,7 +165,10 @@ const handleMetricsRequest = async (request, h) => {
     return h.response(validationError).code(HTTP_BAD_REQUEST)
   }
 
-  const metrics = await fetchMetrics(period, schemeYear, month)
+  const querySchemeYear = (period === 'week' || period === 'day' || period === 'month' || period === 'ytd') ? null : schemeYear
+  const queryMonth = (period === 'week' || period === 'day' || period === 'month' || period === 'ytd') ? null : month
+
+  const metrics = await fetchMetrics(period, querySchemeYear, queryMonth)
   const response = processMetrics(metrics)
   return h.response(response).code(HTTP_OK)
 }

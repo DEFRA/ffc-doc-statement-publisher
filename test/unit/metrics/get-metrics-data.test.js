@@ -42,7 +42,7 @@ describe('get-metrics-data', () => {
       const result = getDateRangeForMonthInYear(2024, 6)
       expect(result.startDate).toEqual(new Date(2024, 5, 1))
       expect(result.endDate).toEqual(new Date(2024, 6, 0, 23, 59, 59, 999))
-      expect(result.useSchemeYear).toBe(true)
+      expect(result.useSchemeYear).toBe(false)
     })
 
     test('should throw error if schemeYear is not provided', () => {
