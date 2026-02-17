@@ -12,6 +12,7 @@ const {
   PRINT_POST_PRICING_START_2024,
   PRINT_POST_PRICING_START_2026
 } = require('../../../app/constants/print-post-pricing')
+
 const { METHOD_LETTER, METHOD_EMAIL } = require('../../../app/constants/delivery-methods')
 const { PERIOD_ALL, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_YTD, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../../app/constants/periods')
 
@@ -296,8 +297,22 @@ describe('build-metrics', () => {
   })
 
   describe('buildQueryAttributes', () => {
-    test('should return array of 7 query attributes', () => {
+    test('should return array of 6 query attributes when includeMonth is false', () => {
+      const attrs = buildQueryAttributes(false)
+
+      expect(Array.isArray(attrs)).toBe(true)
+      expect(attrs).toHaveLength(6)
+    })
+
+    test('should return array of 6 query attributes by default', () => {
       const attrs = buildQueryAttributes()
+
+      expect(Array.isArray(attrs)).toBe(true)
+      expect(attrs).toHaveLength(6)
+    })
+
+    test('should return array of 7 query attributes when includeMonth is true', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(Array.isArray(attrs)).toBe(true)
       expect(attrs).toHaveLength(7)
@@ -311,16 +326,32 @@ describe('build-metrics', () => {
       expect(attrs[0][1]).toBe('receivedYear')
     })
 
-    test('should include receivedMonth extraction', () => {
-      const attrs = buildQueryAttributes()
+    test('should include receivedMonth extraction when includeMonth is true', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(attrs[1][0]).toContain('EXTRACT(MONTH')
       expect(attrs[1][0]).toContain('"delivery"."completed"')
       expect(attrs[1][1]).toBe('receivedMonth')
     })
 
-    test('should include totalStatements count', () => {
-      const attrs = buildQueryAttributes()
+    test('should not include receivedMonth extraction when includeMonth is false', () => {
+      const attrs = buildQueryAttributes(false)
+
+      const hasMonth = attrs.some(attr => attr[1] === 'receivedMonth')
+      expect(hasMonth).toBe(false)
+    })
+
+    test('should include totalStatements count without month', () => {
+      const attrs = buildQueryAttributes(false)
+
+      expect(attrs[1][0]).toContain('COUNT(DISTINCT')
+      expect(attrs[1][0]).toContain('"delivery"."deliveryId"')
+      expect(attrs[1][0]).toContain('"failure"."failureId" IS NULL')
+      expect(attrs[1][1]).toBe('totalStatements')
+    })
+
+    test('should include totalStatements count with month', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(attrs[2][0]).toContain('COUNT(DISTINCT')
       expect(attrs[2][0]).toContain('"delivery"."deliveryId"')
@@ -328,16 +359,39 @@ describe('build-metrics', () => {
       expect(attrs[2][1]).toBe('totalStatements')
     })
 
-    test('should include printPostCount with METHOD_LETTER', () => {
-      const attrs = buildQueryAttributes()
+    test('should include printPostCount with METHOD_LETTER without month', () => {
+      const attrs = buildQueryAttributes(false)
+
+      expect(attrs[2][0]).toContain(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}'`)
+      expect(attrs[2][0]).toContain('"failure"."failureId" IS NULL')
+      expect(attrs[2][1]).toBe('printPostCount')
+    })
+
+    test('should include printPostCount with METHOD_LETTER with month', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(attrs[3][0]).toContain(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}'`)
       expect(attrs[3][0]).toContain('"failure"."failureId" IS NULL')
       expect(attrs[3][1]).toBe('printPostCount')
     })
 
-    test('should include printPostCost with tiered pricing', () => {
-      const attrs = buildQueryAttributes()
+    test('should include printPostCost with tiered pricing without month', () => {
+      const attrs = buildQueryAttributes(false)
+      const costAttr = attrs[3][0]
+
+      expect(costAttr).toContain('SUM(')
+      expect(costAttr).toContain(`WHEN "delivery"."method" = '${METHOD_LETTER}'`)
+      expect(costAttr).toContain('"failure"."failureId" IS NULL')
+      expect(costAttr).toContain(PRINT_POST_PRICING_START_2026)
+      expect(costAttr).toContain(String(PRINT_POST_UNIT_COST_2026))
+      expect(costAttr).toContain(PRINT_POST_PRICING_START_2024)
+      expect(costAttr).toContain(String(PRINT_POST_UNIT_COST_2024))
+      expect(costAttr).toContain(String(DEFAULT_PRINT_POST_UNIT_COST))
+      expect(attrs[3][1]).toBe('printPostCost')
+    })
+
+    test('should include printPostCost with tiered pricing with month', () => {
+      const attrs = buildQueryAttributes(true)
       const costAttr = attrs[4][0]
 
       expect(costAttr).toContain('SUM(')
@@ -351,27 +405,34 @@ describe('build-metrics', () => {
       expect(attrs[4][1]).toBe('printPostCost')
     })
 
-    test('should include emailCount with METHOD_EMAIL', () => {
-      const attrs = buildQueryAttributes()
+    test('should include emailCount with METHOD_EMAIL without month', () => {
+      const attrs = buildQueryAttributes(false)
+
+      expect(attrs[4][0]).toContain(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}'`)
+      expect(attrs[4][0]).toContain('"failure"."failureId" IS NULL')
+      expect(attrs[4][1]).toBe('emailCount')
+    })
+
+    test('should include emailCount with METHOD_EMAIL with month', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(attrs[5][0]).toContain(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}'`)
       expect(attrs[5][0]).toContain('"failure"."failureId" IS NULL')
       expect(attrs[5][1]).toBe('emailCount')
     })
 
-    test('should include failureCount', () => {
-      const attrs = buildQueryAttributes()
+    test('should include failureCount without month', () => {
+      const attrs = buildQueryAttributes(false)
+
+      expect(attrs[5][0]).toContain('COUNT(failure.failureId)')
+      expect(attrs[5][1]).toBe('failureCount')
+    })
+
+    test('should include failureCount with month', () => {
+      const attrs = buildQueryAttributes(true)
 
       expect(attrs[6][0]).toContain('COUNT(failure.failureId)')
       expect(attrs[6][1]).toBe('failureCount')
-    })
-
-    test('should always return same structure', () => {
-      const attrs1 = buildQueryAttributes()
-      const attrs2 = buildQueryAttributes()
-
-      expect(attrs1).toHaveLength(attrs2.length)
-      expect(attrs1[0][1]).toBe(attrs2[0][1])
     })
   })
 
@@ -384,15 +445,14 @@ describe('build-metrics', () => {
       const result = await fetchMetricsData(whereClause, false, null, null, PERIOD_ALL)
 
       expect(db.delivery.findAll).toHaveBeenCalledWith({
-        attributes: buildQueryAttributes(),
+        attributes: buildQueryAttributes(false),
         include: [
-          buildStatementInclude(false, null, true), // includeSchemeYearInSelect = true
+          buildStatementInclude(false, null, true),
           buildFailureInclude()
         ],
         where: whereClause,
         group: expect.arrayContaining([
           expect.stringContaining('EXTRACT(YEAR FROM "delivery"."completed")'),
-          expect.stringContaining('EXTRACT(MONTH FROM "delivery"."completed")'),
           expect.stringContaining('statement."schemeName"'),
           expect.stringContaining('statement."schemeYear"')
         ]),
@@ -409,9 +469,9 @@ describe('build-metrics', () => {
       const result = await fetchMetricsData(whereClause, false, 2024, null, PERIOD_YEAR)
 
       expect(db.delivery.findAll).toHaveBeenCalledWith({
-        attributes: buildQueryAttributes(),
+        attributes: buildQueryAttributes(false),
         include: [
-          buildStatementInclude(false, 2024, false), // includeSchemeYearInSelect = false
+          buildStatementInclude(false, 2024, false),
           buildFailureInclude()
         ],
         where: whereClause,
@@ -423,7 +483,7 @@ describe('build-metrics', () => {
       expect(result).toBe(mockResults)
     })
 
-    test('should fetch metrics data for PERIOD_MONTH_IN_YEAR without schemeYear in group', async () => {
+    test('should fetch metrics data for PERIOD_MONTH_IN_YEAR with month in group', async () => {
       const mockResults = []
       db.delivery.findAll.mockResolvedValue(mockResults)
       const whereClause = {}
@@ -431,8 +491,10 @@ describe('build-metrics', () => {
       const result = await fetchMetricsData(whereClause, true, 2024, 6, PERIOD_MONTH_IN_YEAR)
 
       const call = db.delivery.findAll.mock.calls[0][0]
+      expect(call.attributes).toEqual(buildQueryAttributes(true))
       expect(call.include[0]).toEqual(buildStatementInclude(true, 2024, false))
-      expect(call.group).toHaveLength(3) // Only year, month, schemeName - no schemeYear
+      expect(call.group).toHaveLength(3)
+      expect(call.group).toContain('EXTRACT(MONTH FROM "delivery"."completed")')
       expect(result).toBe(mockResults)
     })
 
@@ -460,7 +522,7 @@ describe('build-metrics', () => {
       await fetchMetricsData(whereClause, false, null, null, PERIOD_YTD)
 
       const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(3)
+      expect(call.group).toHaveLength(2)
       expect(call.include[0].attributes).toEqual(['schemeName'])
     })
 
@@ -471,7 +533,7 @@ describe('build-metrics', () => {
       await fetchMetricsData(whereClause, false, null, null, PERIOD_MONTH)
 
       const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(3)
+      expect(call.group).toHaveLength(2)
       expect(call.include[0].attributes).toEqual(['schemeName'])
     })
 
@@ -482,7 +544,7 @@ describe('build-metrics', () => {
       await fetchMetricsData(whereClause, false, null, null, PERIOD_WEEK)
 
       const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(3)
+      expect(call.group).toHaveLength(2)
     })
 
     test('should handle PERIOD_DAY without schemeYear in group', async () => {
@@ -492,7 +554,7 @@ describe('build-metrics', () => {
       await fetchMetricsData(whereClause, false, null, null, PERIOD_DAY)
 
       const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(3)
+      expect(call.group).toHaveLength(2)
     })
 
     test('should always include failure in query', async () => {
@@ -554,10 +616,33 @@ describe('build-metrics', () => {
       )
     })
 
-    test('should group by receivedYear, receivedMonth, and schemeName for non-ALL periods', async () => {
+    test('should group by receivedYear and schemeName for non-ALL, non-MONTH_IN_YEAR periods', async () => {
       db.delivery.findAll.mockResolvedValue([])
 
       await fetchMetricsData({}, false, null, null, PERIOD_YEAR)
+
+      const call = db.delivery.findAll.mock.calls[0][0]
+      expect(call.group).toContain('EXTRACT(YEAR FROM "delivery"."completed")')
+      expect(call.group).toContain('statement."schemeName"')
+      expect(call.group).toHaveLength(2)
+    })
+
+    test('should group by receivedYear, schemeName, and schemeYear for PERIOD_ALL', async () => {
+      db.delivery.findAll.mockResolvedValue([])
+
+      await fetchMetricsData({}, false, null, null, PERIOD_ALL)
+
+      const call = db.delivery.findAll.mock.calls[0][0]
+      expect(call.group).toContain('EXTRACT(YEAR FROM "delivery"."completed")')
+      expect(call.group).toContain('statement."schemeName"')
+      expect(call.group).toContain('statement."schemeYear"')
+      expect(call.group).toHaveLength(3)
+    })
+
+    test('should group by receivedYear, receivedMonth, and schemeName for PERIOD_MONTH_IN_YEAR', async () => {
+      db.delivery.findAll.mockResolvedValue([])
+
+      await fetchMetricsData({}, false, null, null, PERIOD_MONTH_IN_YEAR)
 
       const call = db.delivery.findAll.mock.calls[0][0]
       expect(call.group).toContain('EXTRACT(YEAR FROM "delivery"."completed")')
@@ -565,65 +650,53 @@ describe('build-metrics', () => {
       expect(call.group).toContain('statement."schemeName"')
       expect(call.group).toHaveLength(3)
     })
-
-    test('should group by receivedYear, receivedMonth, schemeName, and schemeYear for PERIOD_ALL', async () => {
-      db.delivery.findAll.mockResolvedValue([])
-
-      await fetchMetricsData({}, false, null, null, PERIOD_ALL)
-
-      const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toContain('EXTRACT(YEAR FROM "delivery"."completed")')
-      expect(call.group).toContain('EXTRACT(MONTH FROM "delivery"."completed")')
-      expect(call.group).toContain('statement."schemeName"')
-      expect(call.group).toContain('statement."schemeYear"')
-      expect(call.group).toHaveLength(4)
-    })
   })
 
   describe('pricing constants integration', () => {
     test('should use PRINT_POST_PRICING_START_2024 constant in queries', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(PRINT_POST_PRICING_START_2024)
     })
 
     test('should use PRINT_POST_PRICING_START_2026 constant in queries', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(PRINT_POST_PRICING_START_2026)
     })
 
     test('should use PRINT_POST_UNIT_COST_2024 for pricing tier', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(String(PRINT_POST_UNIT_COST_2024))
     })
 
     test('should use PRINT_POST_UNIT_COST_2026 for pricing tier', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(String(PRINT_POST_UNIT_COST_2026))
     })
 
     test('should use DEFAULT_PRINT_POST_UNIT_COST as fallback', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(String(DEFAULT_PRINT_POST_UNIT_COST))
     })
 
     test('should apply pricing in correct chronological order', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
-      // 2026 pricing should appear before 2024 pricing in CASE statement
       const index2026 = costAttr.indexOf(PRINT_POST_PRICING_START_2026)
       const index2024 = costAttr.indexOf(PRINT_POST_PRICING_START_2024)
 
+      expect(index2026).toBeGreaterThan(-1)
+      expect(index2024).toBeGreaterThan(-1)
       expect(index2026).toBeLessThan(index2024)
     })
   })
@@ -631,21 +704,21 @@ describe('build-metrics', () => {
   describe('delivery method constants integration', () => {
     test('should use METHOD_LETTER constant for print post count', () => {
       const attrs = buildQueryAttributes()
-      const printPostAttr = attrs[3][0]
+      const printPostCount = attrs[2][0]
 
-      expect(printPostAttr).toContain(METHOD_LETTER)
+      expect(printPostCount).toContain(METHOD_LETTER)
     })
 
     test('should use METHOD_LETTER constant for cost calculation', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const costAttr = attrs[3][0]
 
       expect(costAttr).toContain(METHOD_LETTER)
     })
 
     test('should use METHOD_EMAIL constant for email count', () => {
       const attrs = buildQueryAttributes()
-      const emailAttr = attrs[5][0]
+      const emailAttr = attrs[4][0]
 
       expect(emailAttr).toContain(METHOD_EMAIL)
     })
@@ -654,7 +727,7 @@ describe('build-metrics', () => {
   describe('query building - failure exclusion logic', () => {
     test('should exclude failed deliveries from totalStatements count', () => {
       const attrs = buildQueryAttributes()
-      const totalStatements = attrs[2][0]
+      const totalStatements = attrs[1][0]
 
       expect(totalStatements).toContain('"failure"."failureId" IS NULL')
       expect(totalStatements).toContain('"delivery"."completed" IS NOT NULL')
@@ -662,7 +735,7 @@ describe('build-metrics', () => {
 
     test('should exclude failed deliveries from printPostCount', () => {
       const attrs = buildQueryAttributes()
-      const printPostCount = attrs[3][0]
+      const printPostCount = attrs[2][0]
 
       expect(printPostCount).toContain('"failure"."failureId" IS NULL')
       expect(printPostCount).toContain('"delivery"."completed" IS NOT NULL')
@@ -670,7 +743,7 @@ describe('build-metrics', () => {
 
     test('should exclude failed deliveries from emailCount', () => {
       const attrs = buildQueryAttributes()
-      const emailCount = attrs[5][0]
+      const emailCount = attrs[4][0]
 
       expect(emailCount).toContain('"failure"."failureId" IS NULL')
       expect(emailCount).toContain('"delivery"."completed" IS NOT NULL')
@@ -678,15 +751,15 @@ describe('build-metrics', () => {
 
     test('should only cost successfully delivered letters', () => {
       const attrs = buildQueryAttributes()
-      const costAttr = attrs[4][0]
+      const printPostCost = attrs[3][0]
 
-      expect(costAttr).toContain('"failure"."failureId" IS NULL')
-      expect(costAttr).toContain('"delivery"."completed" IS NOT NULL')
+      expect(printPostCost).toContain('"failure"."failureId" IS NULL')
+      expect(printPostCost).toContain('"delivery"."completed" IS NOT NULL')
     })
 
     test('should include all failures in failureCount regardless of delivery status', () => {
       const attrs = buildQueryAttributes()
-      const failureCount = attrs[6][0]
+      const failureCount = attrs[5][0]
 
       expect(failureCount).toContain('COUNT(failure.failureId)')
       expect(failureCount).not.toContain('IS NULL')
@@ -697,8 +770,8 @@ describe('build-metrics', () => {
     test('should handle null month parameter in fetchMetricsData', async () => {
       db.delivery.findAll.mockResolvedValue([])
 
-      await expect(fetchMetricsData({}, false, null, null, PERIOD_ALL))
-        .resolves.not.toThrow()
+      await expect(fetchMetricsData({}, false, null, null, PERIOD_YEAR))
+        .resolves.toEqual([])
     })
 
     test('should handle undefined period parameter gracefully', async () => {
@@ -706,9 +779,8 @@ describe('build-metrics', () => {
 
       await fetchMetricsData({}, false, null, null, undefined)
 
-      // Should default to non-scheme-based (not PERIOD_ALL)
       const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(3)
+      expect(call.group).toHaveLength(2)
     })
 
     test('should handle empty where clause', async () => {

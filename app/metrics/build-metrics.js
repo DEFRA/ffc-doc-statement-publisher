@@ -12,6 +12,7 @@ const {
   PERIOD_YEAR,
   PERIOD_MONTH_IN_YEAR
 } = require('../constants/periods')
+
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
 
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
@@ -52,38 +53,53 @@ const buildFailureInclude = () => ({
   required: false
 })
 
-const buildQueryAttributes = () => [
-  [db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear'],
-  [db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'), 'receivedMonth'],
-  [db.sequelize.literal('COUNT(DISTINCT CASE WHEN "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)'), 'totalStatements'],
-  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
-  [db.sequelize.literal(`SUM(
-    CASE 
-      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
-      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
-      WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
-      ELSE 0 
-    END
-  )`), 'printPostCost'],
-  [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount'],
-  [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
-]
+const buildQueryAttributes = (includeMonth = false) => {
+  const attributes = [
+    [db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear']
+  ]
+
+  // Only extract month if we're grouping by month
+  if (includeMonth) {
+    attributes.push([db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'), 'receivedMonth'])
+  }
+
+  attributes.push(
+    [db.sequelize.literal('COUNT(DISTINCT CASE WHEN "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)'), 'totalStatements'],
+    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
+    [db.sequelize.literal(`SUM(
+      CASE 
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
+        ELSE 0 
+      END
+    )`), 'printPostCost'],
+    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount'],
+    [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
+  )
+
+  return attributes
+}
 
 const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, period) => {
-  const isSchemeBased = period === PERIOD_ALL  // ONLY period=all groups by statement.schemeYear
+  const isSchemeBased = period === PERIOD_ALL
+  const shouldGroupByMonth = period === PERIOD_MONTH_IN_YEAR
 
   const groupFields = [
     db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
-    db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'),
     db.sequelize.literal('statement."schemeName"')
   ]
+
+  if (shouldGroupByMonth) {
+    groupFields.splice(1, 0, db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'))
+  }
 
   if (isSchemeBased) {
     groupFields.push(db.sequelize.literal('statement."schemeYear"'))
   }
 
   return db.delivery.findAll({
-    attributes: buildQueryAttributes(),
+    attributes: buildQueryAttributes(shouldGroupByMonth),
     include: [
       buildStatementInclude(useSchemeYear, schemeYear, isSchemeBased),
       buildFailureInclude()
