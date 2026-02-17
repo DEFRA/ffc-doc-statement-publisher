@@ -1,6 +1,6 @@
 const { saveMetrics, createMetricRecord } = require('../../../app/metrics/create-save-metrics')
 const { DEFAULT_PRINT_POST_UNIT_COST } = require('../../../app/constants/print-post-pricing')
-const { PERIOD_ALL, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH } = require('../../../app/constants/periods')
+const { PERIOD_ALL, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../../app/constants/periods')
 
 jest.mock('../../../app/data', () => ({
   metric: {
@@ -41,7 +41,7 @@ describe('create-save-metrics', () => {
         periodType: PERIOD_ALL,
         schemeName: 'SFI',
         schemeYear: '2024', // Uses statement.schemeYear, not receivedYear
-        monthInYear: null,
+        monthInYear: null, // PERIOD_ALL never has month
         totalStatements: 100,
         printPostCount: 50,
         printPostCost: 3850,
@@ -69,7 +69,7 @@ describe('create-save-metrics', () => {
 
       expect(record.schemeName).toBe('DP')
       expect(record.schemeYear).toBe(2024) // receivedYear parsed as integer
-      expect(record.monthInYear).toBe(6)
+      expect(record.monthInYear).toBe(null) // PERIOD_YEAR doesn't store month
       expect(record.periodType).toBe(PERIOD_YEAR)
       expect(record.dataStartDate).toEqual(startDate)
       expect(record.dataEndDate).toEqual(endDate)
@@ -90,13 +90,13 @@ describe('create-save-metrics', () => {
       const record = createMetricRecord(result, PERIOD_MONTH_IN_YEAR, snapshotDate, startDate, endDate)
 
       expect(record.schemeYear).toBe(2024)
-      expect(record.monthInYear).toBe(6)
+      expect(record.monthInYear).toBe(6) // Only PERIOD_MONTH_IN_YEAR has month
       expect(record.periodType).toBe(PERIOD_MONTH_IN_YEAR)
       expect(record.dataStartDate).toEqual(startDate)
       expect(record.dataEndDate).toEqual(endDate)
     })
 
-    test('should create metric record for PERIOD_MONTH', () => {
+    test('should create metric record for PERIOD_MONTH with null monthInYear', () => {
       const result = {
         'statement.schemeName': 'BPS',
         'statement.schemeYear': '2024',
@@ -111,8 +111,46 @@ describe('create-save-metrics', () => {
       const record = createMetricRecord(result, PERIOD_MONTH, snapshotDate, startDate, endDate)
 
       expect(record.schemeYear).toBe(2024)
-      expect(record.monthInYear).toBe(3)
+      expect(record.monthInYear).toBe(null) // PERIOD_MONTH doesn't store month
       expect(record.periodType).toBe(PERIOD_MONTH)
+    })
+
+    test('should create metric record for PERIOD_WEEK with null monthInYear', () => {
+      const result = {
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': '2024',
+        receivedYear: '2024',
+        receivedMonth: '3',
+        totalStatements: '50',
+        printPostCount: '25',
+        printPostCost: '1925',
+        emailCount: '25',
+        failureCount: '0'
+      }
+      const record = createMetricRecord(result, PERIOD_WEEK, snapshotDate, startDate, endDate)
+
+      expect(record.schemeYear).toBe(2024)
+      expect(record.monthInYear).toBe(null) // PERIOD_WEEK doesn't store month
+      expect(record.periodType).toBe(PERIOD_WEEK)
+    })
+
+    test('should create metric record for PERIOD_DAY with null monthInYear', () => {
+      const result = {
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': '2024',
+        receivedYear: '2024',
+        receivedMonth: '3',
+        totalStatements: '20',
+        printPostCount: '10',
+        printPostCost: '770',
+        emailCount: '10',
+        failureCount: '0'
+      }
+      const record = createMetricRecord(result, PERIOD_DAY, snapshotDate, startDate, endDate)
+
+      expect(record.schemeYear).toBe(2024)
+      expect(record.monthInYear).toBe(null) // PERIOD_DAY doesn't store month
+      expect(record.periodType).toBe(PERIOD_DAY)
     })
 
     test('should handle null receivedMonth for non-PERIOD_ALL', () => {
@@ -129,11 +167,11 @@ describe('create-save-metrics', () => {
       }
       const record = createMetricRecord(result, PERIOD_YEAR, snapshotDate, null, null)
 
-      expect(record.monthInYear).toBe(null)
+      expect(record.monthInYear).toBe(null) // Always null for PERIOD_YEAR
       expect(record.schemeYear).toBe(2024)
     })
 
-    test('should handle null receivedYear for non-PERIOD_ALL', () => {
+    test('should handle null receivedYear for PERIOD_YEAR', () => {
       const result = {
         'statement.schemeName': 'SFI',
         'statement.schemeYear': '2024',
@@ -148,10 +186,55 @@ describe('create-save-metrics', () => {
       const record = createMetricRecord(result, PERIOD_YEAR, snapshotDate, null, null)
 
       expect(record.schemeYear).toBe(null)
-      expect(record.monthInYear).toBe(1)
+      expect(record.monthInYear).toBe(null) // Always null for PERIOD_YEAR
     })
 
-    test('should parse all string numbers to integers', () => {
+    test('should handle null receivedMonth for PERIOD_MONTH_IN_YEAR', () => {
+      const result = {
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': '2024',
+        receivedYear: '2024',
+        receivedMonth: null,
+        totalStatements: '100',
+        printPostCount: '50',
+        printPostCost: '3850',
+        emailCount: '50',
+        failureCount: '0'
+      }
+      const record = createMetricRecord(result, PERIOD_MONTH_IN_YEAR, snapshotDate, null, null)
+
+      expect(record.schemeYear).toBe(2024)
+      expect(record.monthInYear).toBe(null) // null when receivedMonth is null
+    })
+
+    test('should parse all string numbers to integers for PERIOD_MONTH_IN_YEAR', () => {
+      const result = {
+        'statement.schemeName': 'SFI',
+        'statement.schemeYear': '2024',
+        receivedYear: '2024',
+        receivedMonth: '6',
+        totalStatements: '100',
+        printPostCount: '50',
+        printPostCost: '3850',
+        emailCount: '50',
+        failureCount: '0'
+      }
+      const record = createMetricRecord(result, PERIOD_MONTH_IN_YEAR, snapshotDate, null, null)
+
+      expect(typeof record.totalStatements).toBe('number')
+      expect(typeof record.printPostCount).toBe('number')
+      expect(typeof record.printPostCost).toBe('number')
+      expect(typeof record.emailCount).toBe('number')
+      expect(typeof record.failureCount).toBe('number')
+      expect(typeof record.schemeYear).toBe('number')
+      expect(typeof record.monthInYear).toBe('number')
+      expect(record.totalStatements).toBe(100)
+      expect(record.printPostCount).toBe(50)
+      expect(record.printPostCost).toBe(3850)
+      expect(record.monthInYear).toBe(6)
+    })
+
+    test('should parse all string numbers to integers for PERIOD_YEAR', () => {
       const result = {
         'statement.schemeName': 'SFI',
         'statement.schemeYear': '2024',
@@ -163,7 +246,7 @@ describe('create-save-metrics', () => {
         emailCount: '50',
         failureCount: '0'
       }
-      const record = createMetricRecord(result, PERIOD_MONTH, snapshotDate, null, null)
+      const record = createMetricRecord(result, PERIOD_YEAR, snapshotDate, null, null)
 
       expect(typeof record.totalStatements).toBe('number')
       expect(typeof record.printPostCount).toBe('number')
@@ -171,7 +254,7 @@ describe('create-save-metrics', () => {
       expect(typeof record.emailCount).toBe('number')
       expect(typeof record.failureCount).toBe('number')
       expect(typeof record.schemeYear).toBe('number')
-      expect(typeof record.monthInYear).toBe('number')
+      expect(record.monthInYear).toBe(null) // null for PERIOD_YEAR
       expect(record.totalStatements).toBe(100)
       expect(record.printPostCount).toBe(50)
       expect(record.printPostCost).toBe(3850)
@@ -573,7 +656,7 @@ describe('create-save-metrics', () => {
       })
     })
 
-    test('should handle records with null schemeYear in composite key', async () => {
+    test('should handle records with null schemeYear in composite key for PERIOD_MONTH', async () => {
       const results = [
         {
           'statement.schemeName': 'SFI',
@@ -592,7 +675,7 @@ describe('create-save-metrics', () => {
         id: 1,
         schemeName: 'SFI',
         schemeYear: null,
-        monthInYear: 1
+        monthInYear: null
       }
 
       db.metric.findAll.mockResolvedValue([existingRecord])
@@ -605,7 +688,8 @@ describe('create-save-metrics', () => {
         expect.objectContaining({
           id: 1,
           schemeName: 'SFI',
-          schemeYear: null
+          schemeYear: null,
+          monthInYear: null
         }),
         { where: { id: 1 } }
       )
