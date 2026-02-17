@@ -135,6 +135,8 @@ const calculateMetricsIfNeeded = async (period, schemeYear, month) => {
     await calculateMetricsForPeriod(PERIOD_MONTH_IN_YEAR, schemeYear, month)
   } else if (isRelativePeriod(period)) {
     await calculateMetricsForPeriod(period)
+  } else {
+    await calculateMetricsForPeriod(period, schemeYear)
   }
 }
 
