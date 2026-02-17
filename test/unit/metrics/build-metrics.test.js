@@ -12,6 +12,7 @@ const {
   PRINT_POST_PRICING_START_2024,
   PRINT_POST_PRICING_START_2026
 } = require('../../../app/constants/print-post-pricing')
+
 const { METHOD_LETTER, METHOD_EMAIL } = require('../../../app/constants/delivery-methods')
 const { PERIOD_ALL, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_YTD, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../../app/constants/periods')
 

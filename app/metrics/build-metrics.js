@@ -12,6 +12,7 @@ const {
   PERIOD_YEAR,
   PERIOD_MONTH_IN_YEAR
 } = require('../constants/periods')
+
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
 
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {

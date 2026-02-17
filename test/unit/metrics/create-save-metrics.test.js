@@ -254,7 +254,7 @@ describe('create-save-metrics', () => {
       expect(typeof record.emailCount).toBe('number')
       expect(typeof record.failureCount).toBe('number')
       expect(typeof record.schemeYear).toBe('number')
-      expect(record.monthInYear).toBe(null) // null for PERIOD_YEAR
+      expect(record.monthInYear).toBe(null)
       expect(record.totalStatements).toBe(100)
       expect(record.printPostCount).toBe(50)
       expect(record.printPostCost).toBe(3850)
