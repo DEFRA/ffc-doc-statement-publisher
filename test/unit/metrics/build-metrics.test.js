@@ -301,28 +301,28 @@ describe('build-metrics', () => {
       const attrs = buildQueryAttributes(false, false)
 
       expect(Array.isArray(attrs)).toBe(true)
-      expect(attrs).toHaveLength(5)
+      expect(attrs).toHaveLength(4)
     })
 
     test('should return array of 6 query attributes when includeYear is true by default', () => {
       const attrs = buildQueryAttributes()
 
       expect(Array.isArray(attrs)).toBe(true)
-      expect(attrs).toHaveLength(6)
+      expect(attrs).toHaveLength(5)
     })
 
     test('should return array of 6 query attributes when includeMonth is false and includeYear is true', () => {
       const attrs = buildQueryAttributes(false, true)
 
       expect(Array.isArray(attrs)).toBe(true)
-      expect(attrs).toHaveLength(6)
+      expect(attrs).toHaveLength(5)
     })
 
     test('should return array of 7 query attributes when both includeMonth and includeYear are true', () => {
       const attrs = buildQueryAttributes(true, true)
 
       expect(Array.isArray(attrs)).toBe(true)
-      expect(attrs).toHaveLength(7)
+      expect(attrs).toHaveLength(6)
     })
 
     test('should include receivedYear extraction when includeYear is true', () => {
@@ -413,13 +413,6 @@ describe('build-metrics', () => {
       expect(attrs[4][1]).toBe('emailCount')
     })
 
-    test('should include failureCount', () => {
-      const attrs = buildQueryAttributes(false, true)
-
-      expect(attrs[5][0]).toContain('COUNT(failure.failureId)')
-      expect(attrs[5][1]).toBe('failureCount')
-    })
-
     test('should maintain correct attribute order without year', () => {
       const attrs = buildQueryAttributes(false, false)
 
@@ -427,7 +420,6 @@ describe('build-metrics', () => {
       expect(attrs[1][1]).toBe('printPostCount')
       expect(attrs[2][1]).toBe('printPostCost')
       expect(attrs[3][1]).toBe('emailCount')
-      expect(attrs[4][1]).toBe('failureCount')
     })
   })
 
@@ -759,42 +751,34 @@ describe('build-metrics', () => {
       expect(printPostCost).toContain('"delivery"."completed" IS NOT NULL')
     })
 
-    test('should include all failures in failureCount regardless of delivery status', () => {
-      const attrs = buildQueryAttributes(false, true)
-      const failureCount = attrs[5][0]
+    describe('edge cases and defensive programming', () => {
+      test('should handle null month parameter in fetchMetricsData', async () => {
+        db.delivery.findAll.mockResolvedValue([])
 
-      expect(failureCount).toContain('COUNT(failure.failureId)')
-      expect(failureCount).not.toContain('IS NULL')
-    })
-  })
+        await expect(fetchMetricsData({}, false, null, null, PERIOD_YEAR))
+          .resolves.toEqual([])
+      })
 
-  describe('edge cases and defensive programming', () => {
-    test('should handle null month parameter in fetchMetricsData', async () => {
-      db.delivery.findAll.mockResolvedValue([])
+      test('should handle undefined period parameter gracefully', async () => {
+        db.delivery.findAll.mockResolvedValue([])
 
-      await expect(fetchMetricsData({}, false, null, null, PERIOD_YEAR))
-        .resolves.toEqual([])
-    })
+        await fetchMetricsData({}, false, null, null, undefined)
 
-    test('should handle undefined period parameter gracefully', async () => {
-      db.delivery.findAll.mockResolvedValue([])
+        const call = db.delivery.findAll.mock.calls[0][0]
+        expect(call.group).toHaveLength(2)
+      })
 
-      await fetchMetricsData({}, false, null, null, undefined)
+      test('should handle empty where clause', async () => {
+        db.delivery.findAll.mockResolvedValue([])
 
-      const call = db.delivery.findAll.mock.calls[0][0]
-      expect(call.group).toHaveLength(2)
-    })
+        await fetchMetricsData({}, false, null, null, PERIOD_ALL)
 
-    test('should handle empty where clause', async () => {
-      db.delivery.findAll.mockResolvedValue([])
-
-      await fetchMetricsData({}, false, null, null, PERIOD_ALL)
-
-      expect(db.delivery.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {}
-        })
-      )
+        expect(db.delivery.findAll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: {}
+          })
+        )
+      })
     })
   })
 })

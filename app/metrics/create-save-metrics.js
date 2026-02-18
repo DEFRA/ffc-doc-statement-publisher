@@ -30,7 +30,6 @@ const createMetricRecord = (result, period, snapshotDate, startDate, endDate) =>
     printPostCost: Number.parseInt(result.printPostCost),
     printPostUnitCost: DEFAULT_PRINT_POST_UNIT_COST,
     emailCount: Number.parseInt(result.emailCount),
-    failureCount: Number.parseInt(result.failureCount),
     dataStartDate: startDate,
     dataEndDate: endDate
   }
