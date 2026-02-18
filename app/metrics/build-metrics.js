@@ -53,12 +53,13 @@ const buildFailureInclude = () => ({
   required: false
 })
 
-const buildQueryAttributes = (includeMonth = false) => {
-  const attributes = [
-    [db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear']
-  ]
+const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
+  const attributes = []
 
-  // Only extract month if we're grouping by month
+  if (includeYear) {
+    attributes.push([db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear'])
+  }
+
   if (includeMonth) {
     attributes.push([db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'), 'receivedMonth'])
   }
@@ -84,14 +85,19 @@ const buildQueryAttributes = (includeMonth = false) => {
 const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, period) => {
   const isSchemeBased = period === PERIOD_ALL
   const shouldGroupByMonth = period === PERIOD_MONTH_IN_YEAR
+  const shouldIncludeYear = !isSchemeBased
 
   const groupFields = [
-    db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
     db.sequelize.literal('statement."schemeName"')
   ]
 
   if (shouldGroupByMonth) {
-    groupFields.splice(1, 0, db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'))
+    groupFields.unshift(
+      db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
+      db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")')
+    )
+  } else if (!isSchemeBased) {
+    groupFields.unshift(db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'))
   }
 
   if (isSchemeBased) {
@@ -99,7 +105,7 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, 
   }
 
   return db.delivery.findAll({
-    attributes: buildQueryAttributes(shouldGroupByMonth),
+    attributes: buildQueryAttributes(shouldGroupByMonth, shouldIncludeYear),
     include: [
       buildStatementInclude(useSchemeYear, schemeYear, isSchemeBased),
       buildFailureInclude()
