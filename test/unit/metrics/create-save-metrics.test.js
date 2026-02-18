@@ -47,7 +47,6 @@ describe('create-save-metrics', () => {
         printPostCost: 3850,
         printPostUnitCost: DEFAULT_PRINT_POST_UNIT_COST,
         emailCount: 50,
-        failureCount: 0,
         dataStartDate: null,
         dataEndDate: null
       })
@@ -225,7 +224,6 @@ describe('create-save-metrics', () => {
       expect(typeof record.printPostCount).toBe('number')
       expect(typeof record.printPostCost).toBe('number')
       expect(typeof record.emailCount).toBe('number')
-      expect(typeof record.failureCount).toBe('number')
       expect(typeof record.schemeYear).toBe('number')
       expect(typeof record.monthInYear).toBe('number')
       expect(record.totalStatements).toBe(100)
@@ -252,7 +250,6 @@ describe('create-save-metrics', () => {
       expect(typeof record.printPostCount).toBe('number')
       expect(typeof record.printPostCost).toBe('number')
       expect(typeof record.emailCount).toBe('number')
-      expect(typeof record.failureCount).toBe('number')
       expect(typeof record.schemeYear).toBe('number')
       expect(record.monthInYear).toBe(null)
       expect(record.totalStatements).toBe(100)

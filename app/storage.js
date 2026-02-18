@@ -1,9 +1,6 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('./config').storageConfig
-
-process.env.AZURE_LOG_LEVEL = 'error'
-
 const BUFFER_SIZE = 4 * 1024 * 1024 // 4MB buffer size for uploadStream
 const MAX_CONCURRENCY = 5
 

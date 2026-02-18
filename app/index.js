@@ -25,8 +25,6 @@ try {
   console.warn('Failed to initialize alerting utils:', err.message)
 }
 
-process.env.AZURE_LOG_LEVEL = 'error'
-
 const { createServer } = require('./server/server')
 const messaging = require('./messaging')
 const monitoring = require('./monitoring')

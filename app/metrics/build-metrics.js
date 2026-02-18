@@ -77,8 +77,7 @@ const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
         ELSE 0 
       END
     )`), 'printPostCost'],
-    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount'],
-    [db.sequelize.fn('COUNT', db.sequelize.col('failure.failureId')), 'failureCount']
+    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount']
   )
 
   return attributes
