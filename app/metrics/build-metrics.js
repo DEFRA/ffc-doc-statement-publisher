@@ -14,6 +14,8 @@ const {
 } = require('../constants/periods')
 
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
+const extractMonthFromCompletedDelivery = db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")')
+const extractYearFromCompletedDelivery = db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")')
 
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
   const whereClause = {}
@@ -57,11 +59,11 @@ const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
   const attributes = []
 
   if (includeYear) {
-    attributes.push([db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'), 'receivedYear'])
+    attributes.push([extractYearFromCompletedDelivery, 'receivedYear'])
   }
 
   if (includeMonth) {
-    attributes.push([db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")'), 'receivedMonth'])
+    attributes.push([extractMonthFromCompletedDelivery, 'receivedMonth'])
   }
 
   attributes.push(
@@ -91,13 +93,11 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, 
     db.sequelize.literal('statement."schemeName"')
   ]
 
-  if (shouldGroupByMonth) {
-    groupFields.unshift(
-      db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'),
-      db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")')
-    )
-  } else if (!isSchemeBased) {
-    groupFields.unshift(db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")'))
+  if (!isSchemeBased) {
+    groupFields.unshift(extractYearFromCompletedDelivery)
+    if (shouldGroupByMonth) {
+      groupFields.unshift(extractMonthFromCompletedDelivery)
+    }
   }
 
   if (isSchemeBased) {
