@@ -319,7 +319,9 @@ describe('build-metrics', () => {
 
       expect(cost[0]).toContain('SUM(')
       expect(cost[0]).toContain(`WHEN "delivery"."method" = '${METHOD_LETTER}'`)
-      expect(cost[0]).toContain(`"delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}'`)
+      expect(cost[0]).toContain('COALESCE')
+      expect(cost[0]).toContain('"delivery"."completed", "delivery"."requested"')
+      expect(cost[0]).toContain(`>= '${PRINT_POST_PRICING_START_2026}'`)
       expect(cost[0]).toContain(`THEN ${PRINT_POST_UNIT_COST_2026}`)
     })
 
@@ -327,7 +329,9 @@ describe('build-metrics', () => {
       const attrs = buildQueryAttributes(false, true)
       const cost = attrs[3]
 
-      expect(cost[0]).toContain(`"delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}'`)
+      expect(cost[0]).toContain('COALESCE')
+      expect(cost[0]).toContain('"delivery"."completed", "delivery"."requested"')
+      expect(cost[0]).toContain(`>= '${PRINT_POST_PRICING_START_2024}'`)
       expect(cost[0]).toContain(`THEN ${PRINT_POST_UNIT_COST_2024}`)
     })
 
@@ -335,6 +339,8 @@ describe('build-metrics', () => {
       const attrs = buildQueryAttributes(false, true)
       const cost = attrs[3]
 
+      expect(cost[0]).toContain(`WHEN "delivery"."method" = '${METHOD_LETTER}'`)
+      expect(cost[0]).toContain('"failure"."failureId" IS NULL')
       expect(cost[0]).toContain(`THEN ${DEFAULT_PRINT_POST_UNIT_COST}`)
     })
 

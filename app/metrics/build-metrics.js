@@ -90,8 +90,8 @@ const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
     [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
     [db.sequelize.literal(`SUM(
       CASE
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
         WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
         ELSE 0
       END
