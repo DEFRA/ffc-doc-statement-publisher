@@ -1,8 +1,7 @@
 const { DefaultAzureCredential } = require('@azure/identity')
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('./config').storageConfig
-
-const BUFFER_SIZE = 4 * 1024 * 1024 // 4 MB
+const BUFFER_SIZE = 4 * 1024 * 1024 // 4MB buffer size for uploadStream
 const MAX_CONCURRENCY = 5
 
 let blobServiceClient
@@ -13,8 +12,11 @@ if (config.useConnectionStr) {
   blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionStr)
 } else {
   console.log('Using DefaultAzureCredential for BlobServiceClient')
+  const credential = new DefaultAzureCredential({
+    managedIdentityClientId: config.managedIdentityClientId
+  })
   const uri = `https://${config.storageAccount}.blob.core.windows.net`
-  blobServiceClient = new BlobServiceClient(uri, new DefaultAzureCredential({ managedIdentityClientId: config.managedIdentityClientId }))
+  blobServiceClient = new BlobServiceClient(uri, credential)
 }
 
 const container = blobServiceClient.getContainerClient(config.container)
