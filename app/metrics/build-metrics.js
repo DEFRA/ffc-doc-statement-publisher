@@ -14,25 +14,44 @@ const {
 } = require('../constants/periods')
 
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
-const extractMonthFromCompletedDelivery = db.sequelize.literal('EXTRACT(MONTH FROM "delivery"."completed")')
-const extractYearFromCompletedDelivery = db.sequelize.literal('EXTRACT(YEAR FROM "delivery"."completed")')
+const extractMonthFromCompletedDelivery = db.sequelize.literal(
+  'COALESCE(EXTRACT(MONTH FROM "delivery"."completed"), EXTRACT(MONTH FROM "delivery"."requested"))'
+)
+const extractYearFromCompletedDelivery = db.sequelize.literal(
+  'COALESCE(EXTRACT(YEAR FROM "delivery"."completed"), EXTRACT(YEAR FROM "delivery"."requested"))'
+)
 
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
   const whereClause = {}
 
   if (!useSchemeYear && startDate && endDate) {
-    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR) ? db.Sequelize.Op.lte : db.Sequelize.Op.lt
-    whereClause.completed = {
-      [db.Sequelize.Op.gte]: startDate,
-      [op]: endDate
+    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR)
+      ? db.Sequelize.Op.lte
+      : db.Sequelize.Op.lt
+
+    const completedRange = {
+      completed: {
+        [db.Sequelize.Op.gte]: startDate,
+        [op]: endDate
+      }
     }
+
+    const requestedRange = {
+      method: METHOD_LETTER,
+      requested: {
+        [db.Sequelize.Op.gte]: startDate,
+        [op]: endDate
+      }
+    }
+
+    whereClause[db.Sequelize.Op.or] = [completedRange, requestedRange]
   }
 
   if (period === PERIOD_MONTH_IN_YEAR && startDate && endDate) {
-    whereClause.completed = {
-      [db.Sequelize.Op.gte]: startDate,
-      [db.Sequelize.Op.lte]: endDate
-    }
+    whereClause[db.Sequelize.Op.or] = [
+      { completed: { [db.Sequelize.Op.gte]: startDate, [db.Sequelize.Op.lte]: endDate } },
+      { method: METHOD_LETTER, requested: { [db.Sequelize.Op.gte]: startDate, [db.Sequelize.Op.lte]: endDate } }
+    ]
   }
 
   return whereClause
@@ -67,14 +86,14 @@ const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
   }
 
   attributes.push(
-    [db.sequelize.literal('COUNT(DISTINCT CASE WHEN "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)'), 'totalStatements'],
-    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
+    [db.sequelize.literal(`COUNT(DISTINCT CASE WHEN ("delivery"."completed" IS NOT NULL OR "delivery"."method" = '${METHOD_LETTER}') AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)`), 'totalStatements'],
+    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
     [db.sequelize.literal(`SUM(
-      CASE 
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL AND "delivery"."completed" >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
-        ELSE 0 
+      CASE
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
+        ELSE 0
       END
     )`), 'printPostCost'],
     [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount']
