@@ -14,7 +14,7 @@ containerConfigMap:
   name: ffc-doc-statement-publisher-config-map
 
 containerSecret:
-  name: ffc-doc-statement-publisher-container-secret
+  name: ffc-doc-statement-publisher
   type: Opaque
 
 deployment:
@@ -44,17 +44,12 @@ container:
   notifyApiKeyLetter: dummy
   statementReceiverApiVersion: v1
   statementReceiverEndpoint: https://ffc-doc-statement-receiver
-  DelinkedIntervalNumber: 1
-  DelinkedIntervalType: months
-  DelinkedDayOfMonth: 15
-  DelinkedDurationNumber: 1
-  DelinkedDurationType: months
+  reportIntervalNumber: 1
+  reportIntervalType: months
+  reportDayOfMonth: 15
+  reportDurationNumber: 1
+  reportDurationType: months
   metricsPollingInterval: 86400000
-  SfiIntervalNumber: 1
-  SfiIntervalType: months
-  SfiDayOfMonth: 15
-  SfiDurationNumber: 1
-  SfiDurationType: months
   deliveryCheckInterval: 30000
   reportingCheckInterval: 30000
   retentionPeriodInWeeks: 78
@@ -77,3 +72,18 @@ workloadIdentity: true
 azureIdentity:
   clientID: not-a-real-clientID
   resourceID: not-a-real-resourceID
+
+
+secretProviderClass:
+  azure:
+    keyvaultName: SNDFFCINFKV2001
+    objects: # reading the secret from Azure Key Vault
+      - objectName: appInsights-connectionString # secret name in Azure Key Vault
+        objectType: secret
+
+  secretObjects: # creating a Kubernetes secret from the Azure Key Vault secrets
+    - secretName: ffc-doc-statement-publisher
+      type: Opaque
+      data:
+        - objectName: appInsights-connectionString # secret name in Azure Key Vault
+          key: APPLICATIONINSIGHTS_CONNECTION_STRING # the secret key in the Kubernetes secret and use in the application

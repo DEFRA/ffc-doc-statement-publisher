@@ -1,11 +1,11 @@
 ---
 environment: production
-environmentCode: snd2
+environmentCode: snd
 container:
   messageQueueHost: SNDFFCINFSB2001.servicebus.windows.net
-  publishTopicAddress: ffc-doc-statement-publish
+  publishTopicAddress: queue:ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
-  crmTopicAddress: ffc-doc-statement-crm
+  crmTopicAddress: queue:ffc-doc-statement-crm
   azureStorageAccountName: snd2ffcdocst2001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
@@ -21,4 +21,4 @@ container:
   reportDurationNumber: 1
   reportDurationType: months
   retentionPeriodInWeeks: 78
-  alertTopicAddress: ffc-doc-alerting
+  alertTopicAddress: queue:ffc-doc-alerting

@@ -1,0 +1,37 @@
+---
+environment: production
+environmentCode: test
+container:
+  messageQueueHost: DEVFFCINFSB1001.servicebus.windows.net
+  publishTopicAddress: ffc-doc-statement-publish
+  publishSubscriptionAddress: ffc-doc-statement-publisher
+  crmTopicAddress: ffc-doc-statement-crm
+  azureStorageAccountName: testffcdocst1001
+  azureStorageConnectionString: dummy
+  azureStorageUseConnectionString: false
+  azureStorageCreateContainers: false
+  storageContainer: statements
+  storageFolder: outbound
+  storageReportFolder: reports
+  statementReceiverApiVersion: v1
+  statementReceiverEndpoint: https://ffc-doc-statement-receiver
+  reportIntervalNumber: 1
+  reportIntervalType: months
+  reportDayOfMonth: 15
+  reportDurationNumber: 1
+  reportDurationType: months
+  retentionPeriodInWeeks: 78
+  alertTopicAddress: ffc-doc-alerting
+secretProviderClass:
+  azure:
+    keyvaultName: DEVFFCINFKV1001
+    objects:
+      - objectName: devtest-ffcahwr-appInsights-connectionString
+        objectType: secret
+
+  secretObjects:
+    - secretName: ffc-doc-statement-publisher
+      type: Opaque
+      data:
+        - objectName: devtest-ffcahwr-appInsights-connectionString
+          key: APPLICATIONINSIGHTS_CONNECTION_STRING

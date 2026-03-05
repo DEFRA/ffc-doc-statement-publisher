@@ -2,12 +2,33 @@ resources:
   identity: doc-statement-publisher
   postgreSql:
     name: ffc-doc-statement-publisher
-  topics:
-    - name: ffc-doc-statement-crm
-      role: sender
-    - name: ffc-doc-alerting
-      role: sender
-    - name: ffc-doc-statement-publish
-      role: receiver
-      subscriptions:
+  service_bus:
+    topics:
+      - name: ffc-doc-statement-publish
+        defaultMessageTimeToLive: P3650D
+        duplicateDetectionHistoryTimeWindow: PT10M30S
+        requiresDuplicateDetection: true
+        roles: 
+        - name: receiver
+        subscriptions:
           - name: ffc-doc-statement-publisher
+      - name: ffc-doc-statement-crm
+        defaultMessageTimeToLive: P3650D
+        duplicateDetectionHistoryTimeWindow: PT10M30S
+        requiresDuplicateDetection: true
+        roles: 
+        - name: sender
+      - name: ffc-doc-alerting
+        defaultMessageTimeToLive: P3650D
+        duplicateDetectionHistoryTimeWindow: PT10M30S
+        requiresDuplicateDetection: true
+        roles: 
+        - name: sender
+  storage_accounts:
+    - name: doc
+      containers:
+        - name: statements
+          roles:
+            - name: blobContributor
+      roles:
+        - name: storageAccountContributor
