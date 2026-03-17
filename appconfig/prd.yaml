@@ -4,7 +4,7 @@ environmentCode: prd
 container:
   messageQueueHost: PRDFFCINFSB1001.servicebus.windows.net
   publishTopicAddress: ffc-doc-statement-publish
-  publishSubscriptionAddress: ffc-doc-statement-publiher
+  publishSubscriptionAddress: ffc-doc-statement-publisher
   crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: prdffcdocst1001
   azureStorageConnectionString: dummy

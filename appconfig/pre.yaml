@@ -4,7 +4,7 @@ environmentCode: pre
 container:
   messageQueueHost: PREFFCINFSB1001.servicebus.windows.net
   publishTopicAddress: ffc-doc-statement-publish
-  publishSubscriptionAddress: ffc-doc-statement-publiher
+  publishSubscriptionAddress: ffc-doc-statement-publisher
   crmTopicAddress: ffc-doc-statement-crm
   azureStorageAccountName: preffcdocst1001
   azureStorageConnectionString: dummy
