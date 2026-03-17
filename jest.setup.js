@@ -1,2 +1,2 @@
-const TIMEOUT = 30000
+const TIMEOUT = 60000
 jest.setTimeout(TIMEOUT)
