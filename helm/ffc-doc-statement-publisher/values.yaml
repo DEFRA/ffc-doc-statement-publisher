@@ -58,7 +58,7 @@ container:
   port: 3010
 
 ingress:
-  server: example.com
+  server: azure.defra.cloud
 
 postgresService:
   postgresDb: ffc_doc_statement_publisher
