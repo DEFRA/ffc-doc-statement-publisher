@@ -32,7 +32,7 @@
     "@azure/monitor-opentelemetry": "1.16.0",
     "@azure/storage-blob": "12.29.1",
     "@fast-csv/format": "5.0.5",
-    "@hapi/hapi": "^21.4.8",
+    "@hapi/hapi": "21.4.8",
     "axios": "1.13.5",
     "blipp": "4.0.2",
     "ffc-alerting-utils": "1.0.9",
