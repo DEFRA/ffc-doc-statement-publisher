@@ -1,4 +1,3 @@
-const util = require('node:util')
 const { VALIDATION } = require('../constants/errors')
 const { publishStatement } = require('../publishing')
 const validateRequest = require('./validate-request')
@@ -10,7 +9,7 @@ const processPublishMessage = async (message, receiver) => {
   const request = message.body
   const type = message.applicationProperties?.type || request.type
   try {
-    console.log('Statement publishing request received:', util.inspect(request, false, null, true))
+    console.log(`${request.scheme?.name} Statement publishing request received: sbi: ${request.sbi}, frn: ${request.frn}`)
 
     validateRequest(request)
     const emailTemplate = getRequestEmailTemplateByType(type, documentTypes)
