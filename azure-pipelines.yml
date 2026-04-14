@@ -19,7 +19,10 @@ parameters:
   - name: branchDeployment
     type: boolean
     default: true
-  - name: sndDeployment
+  - name: snd2Deployment
+    type: boolean
+    default: true
+  - name: snd1Deployment
     type: boolean
     default: true
 
@@ -43,7 +46,8 @@ extends:
     failOnThreshold: moderate  # Optional: moderate (default), low, high, critical
     prDeployment: ${{ parameters.prDeployment }}
     branchDeployment: ${{ parameters.branchDeployment }}
-    sndDeployment: ${{ parameters.sndDeployment }}
+    sndDeployment: ${{ parameters.snd2Deployment }}
+    snd1Deployment: ${{ parameters.snd1Deployment }}
     variableGroupName: ffc-doc-statement-publisher-env-var
     pr_params:
       container.sendCrmFailureMessageEnabled: $(pr_sendCrmFailureMessageEnabled)
@@ -52,6 +56,13 @@ extends:
       container.notifyApiKey: $(pr_notifyApiKey)
       container.notifyApiKeyLetter: $(pr_notifyApiKeyLetter)
       container.reportingCheckInterval: $(pr_reportingCheckInterval)
+    snd1_params:
+      container.sendCrmFailureMessageEnabled: $(snd1_sendCrmFailureMessageEnabled)
+      container.deliveryCheckInterval: $(snd1_deliveryCheckInterval)
+      container.metricsPollingInterval: $(snd1_metricsPollingInterval)
+      container.notifyApiKey: $(snd1_notifyApiKey)
+      container.notifyApiKeyLetter: $(snd1_notifyApiKeyLetter)
+      container.reportingCheckInterval: $(snd1_reportingCheckInterval)
     snd2_params:
       container.sendCrmFailureMessageEnabled: $(snd2_sendCrmFailureMessageEnabled)
       container.deliveryCheckInterval: $(snd2_deliveryCheckInterval)
