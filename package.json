@@ -33,7 +33,7 @@
     "@azure/storage-blob": "12.29.1",
     "@fast-csv/format": "5.0.5",
     "@hapi/hapi": "21.4.8",
-    "axios": "1.13.5",
+    "axios": "1.15.0",
     "blipp": "4.0.2",
     "ffc-alerting-utils": "1.0.9",
     "ffc-database": "1.0.24",
