@@ -6,7 +6,7 @@ container:
   publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
   crmTopicAddress: ffc-doc-statement-crm
-  azureStorageAccountName: snd2ffcdocst1001
+  azureStorageAccountName: snd1ffcdocst1001
   azureStorageConnectionString: dummy
   azureStorageUseConnectionString: false
   azureStorageCreateContainers: false
