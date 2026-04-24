@@ -12,6 +12,18 @@ resources:
         - name: receiver
         subscriptions:
           - name: ffc-doc-statement-publisher
+      - name: ffc-doc-statement-retention
+        defaultMessageTimeToLive: P3650D
+        duplicateDetectionHistoryTimeWindow: PT10M30S
+        requiresDuplicateDetection: true
+        roles: 
+        - name: receiver
+        subscriptions:
+          - name: ffc-doc-statement-publisher
+            deadLetteringOnMessageExpiration: true
+            defaultMessageTimeToLive: P3650D
+            lockDuration: PT5M
+            maxDeliveryCount: 2000
       - name: ffc-doc-statement-crm
         defaultMessageTimeToLive: P3650D
         duplicateDetectionHistoryTimeWindow: PT10M30S

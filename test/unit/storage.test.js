@@ -47,9 +47,10 @@ describe('storage', () => {
       storageConfig: mockStorageConfig
     }))
 
-    jest.spyOn(console, 'log').mockImplementation(() => {})
-    jest.spyOn(console, 'debug').mockImplementation(() => {})
-    jest.spyOn(console, 'error').mockImplementation(() => {})
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+    jest.spyOn(console, 'debug').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => { })
+    jest.spyOn(console, 'warn').mockImplementation(() => { })
 
     storage = require('../../app/storage')
   })
@@ -58,6 +59,7 @@ describe('storage', () => {
     console.log.mockRestore()
     console.debug.mockRestore()
     console.error.mockRestore()
+    console.warn.mockRestore()
   })
 
   test('uses connection string when config.useConnectionStr is true', async () => {
@@ -296,6 +298,98 @@ describe('storage', () => {
       expect(mockContainer.getBlockBlobClient).toHaveBeenCalledWith('test-report-folder/report.csv')
       expect(mockstorage.downloadToBuffer).toHaveBeenCalled()
       expect(result).toEqual(Buffer.from('report content'))
+    })
+  })
+
+  describe('deleteStatement', () => {
+    const filename = 'test-statement.pdf'
+    let storageModule
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      storageModule = require('../../app/storage')
+    })
+
+    test('initializes containers if not initialized and deletes the blob successfully', async () => {
+      jest.resetModules()
+      const mockBlobClient = {
+        deleteIfExists: jest.fn().mockResolvedValue({ succeeded: true })
+      }
+      const mockContainerLocal = {
+        createIfNotExists: jest.fn().mockResolvedValue(),
+        getBlockBlobClient: jest.fn().mockReturnValue(mockBlobClient)
+      }
+      const mockBlobServiceClientLocal = {
+        getContainerClient: jest.fn().mockReturnValue(mockContainerLocal)
+      }
+      require('@azure/storage-blob').BlobServiceClient.fromConnectionString = jest
+        .fn()
+        .mockReturnValue(mockBlobServiceClientLocal)
+      jest.mock('../../app/config', () => ({
+        storageConfig: {
+          useConnectionStr: true,
+          connectionStr: 'connection-string',
+          createContainers: true,
+          storageAccount: 'fakestorageaccount',
+          managedIdentityClientId: 'fake-client-id',
+          container: 'test-container',
+          folder: 'test-folder',
+          reportFolder: 'test-report-folder'
+        }
+      }))
+      storageModule = require('../../app/storage')
+
+      await storageModule.deleteStatement(filename)
+
+      expect(mockContainerLocal.createIfNotExists).toHaveBeenCalled()
+      expect(mockContainerLocal.getBlockBlobClient).toHaveBeenCalledWith(`test-folder/${filename}`)
+      expect(mockBlobClient.deleteIfExists).toHaveBeenCalled()
+      expect(console.log).toHaveBeenCalledWith(
+        `[STORAGE] Successfully deleted file: ${filename} from folder: test-folder`
+      )
+    })
+
+    test('does not log success if file was not found to delete', async () => {
+      const mockBlobClient = {
+        deleteIfExists: jest.fn().mockResolvedValue({ succeeded: false })
+      }
+      const mockContainerLocal = {
+        getBlockBlobClient: jest.fn().mockReturnValue(mockBlobClient)
+      }
+      storageModule = require('../../app/storage')
+      storageModule.container = mockContainerLocal
+
+      await storageModule.deleteStatement(filename)
+
+      expect(mockContainerLocal.getBlockBlobClient).toHaveBeenCalledWith(`test-folder/${filename}`)
+      expect(mockBlobClient.deleteIfExists).toHaveBeenCalled()
+      expect(console.warn).toHaveBeenCalledWith(
+        `[STORAGE] File to delete not found: ${filename} in folder: test-folder`
+      )
+      expect(console.log).not.toHaveBeenCalledWith(
+        `[STORAGE] Successfully deleted file: ${filename} from folder: test-folder`
+      )
+    })
+
+    test('logs error and rethrows if deleteIfExists throws', async () => {
+      const mockError = new Error('Delete failed')
+      const mockBlobClient = {
+        deleteIfExists: jest.fn().mockRejectedValue(mockError)
+      }
+      const mockContainerLocal = {
+        getBlockBlobClient: jest.fn().mockReturnValue(mockBlobClient)
+      }
+      storageModule = require('../../app/storage')
+      storageModule.container = mockContainerLocal
+
+      await expect(storageModule.deleteStatement(filename)).rejects.toThrow('Delete failed')
+
+      expect(mockContainerLocal.getBlockBlobClient).toHaveBeenCalledWith(`test-folder/${filename}`)
+      expect(mockBlobClient.deleteIfExists).toHaveBeenCalled()
+      expect(console.error).toHaveBeenCalledWith(
+        `[STORAGE] Error deleting file: ${filename}`,
+        mockError
+      )
     })
   })
 })

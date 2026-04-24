@@ -13,6 +13,11 @@ const mqSchema = Joi.object({
     topic: Joi.string(),
     type: Joi.string().default('subscription')
   },
+  retentionSubscription: {
+    address: Joi.string().required(),
+    topic: Joi.string().required(),
+    type: Joi.string().default('subscription')
+  },
   crmTopic: {
     address: Joi.string()
   },
@@ -34,6 +39,11 @@ const mqConfig = {
     topic: process.env.PUBLISH_TOPIC_ADDRESS,
     type: 'subscription'
   },
+  retentionSubscription: {
+    address: process.env.STATEMENT_RETENTION_SUBSCRIPTION_ADDRESS,
+    topic: process.env.STATEMENT_RETENTION_TOPIC_ADDRESS,
+    type: 'subscription'
+  },
   crmTopic: {
     address: process.env.CRM_TOPIC_ADDRESS
   },
@@ -51,11 +61,13 @@ if (mqResult.error) {
 }
 
 const publishSubscription = { ...mqResult.value.messageQueue, ...mqResult.value.publishSubscription }
+const retentionSubscription = { ...mqResult.value.messageQueue, ...mqResult.value.retentionSubscription }
 const crmTopic = { ...mqResult.value.messageQueue, ...mqResult.value.crmTopic }
 const alertTopic = { ...mqResult.value.messageQueue, ...mqResult.value.alertTopic }
 
 module.exports = {
   publishSubscription,
+  retentionSubscription,
   crmTopic,
   alertTopic
 }

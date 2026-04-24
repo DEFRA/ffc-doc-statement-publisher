@@ -38,10 +38,12 @@ services:
       MESSAGE_QUEUE_HOST: servicebus-emulator
       MESSAGE_QUEUE_USER: RootManageSharedAccessKey
       MESSAGE_QUEUE_PASSWORD: SAS_KEY_VALUE
-      PUBLISH_TOPIC_ADDRESS: ffc-pay-submit-test
-      PUBLISH_SUBSCRIPTION_ADDRESS: ffc-pay-submission
-      CRM_TOPIC_ADDRESS: ffc-pay-events-test
-      ALERT_TOPIC_ADDRESS: ffc-pay-file-send-test
+      PUBLISH_TOPIC_ADDRESS: ffc-doc-statement-publish
+      PUBLISH_SUBSCRIPTION_ADDRESS: ffc-doc-statement-publisher
+      STATEMENT_RETENTION_TOPIC_ADDRESS: ffc-doc-statement-retention
+      STATEMENT_RETENTION_SUBSCRIPTION_ADDRESS: ffc-doc-statement-publisher
+      CRM_TOPIC_ADDRESS: ffc-doc-statement-crm
+      ALERT_TOPIC_ADDRESS: ffc-doc-alerting
   ffc-doc-statement-publisher-postgres:
     volumes:
       - postgres_data:/var/lib/postgresql/data
