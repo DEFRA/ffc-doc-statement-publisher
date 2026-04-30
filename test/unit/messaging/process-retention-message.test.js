@@ -11,8 +11,8 @@ describe('processRetentionMessage', () => {
   beforeEach(() => {
     message = {
       body: {
-        agreementNumber: 'AG123',
-        frn: 456789
+        documentReference: 'AG123',
+        filename: 'Statement.pdf'
       }
     }
     receiver = {
@@ -32,7 +32,7 @@ describe('processRetentionMessage', () => {
     await processRetentionMessage(message, receiver)
 
     expect(console.log).toHaveBeenCalledWith(
-      `Agreement ${message.body.agreementNumber} for FRN ${message.body.frn} has passed retention period`
+      `Document reference ${message.body.documentReference} has passed retention period`
     )
     expect(removeAgreementData).toHaveBeenCalledWith(message.body)
     expect(receiver.completeMessage).toHaveBeenCalledWith(message)
@@ -48,7 +48,7 @@ describe('processRetentionMessage', () => {
     await processRetentionMessage(message, receiver)
 
     expect(console.log).toHaveBeenCalledWith(
-      `Agreement ${message.body.agreementNumber} for FRN ${message.body.frn} has passed retention period`
+      `Document reference ${message.body.documentReference} has passed retention period`
     )
     expect(removeAgreementData).toHaveBeenCalledWith(message.body)
     expect(receiver.completeMessage).not.toHaveBeenCalled()
