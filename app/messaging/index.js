@@ -1,7 +1,9 @@
-const config = require('../config')
-const processPublishMessage = require('./process-publish-message')
 const { MessageReceiver } = require('ffc-messaging')
+const config = require('../config')
 const { sendAlert } = require('../alert')
+const processPublishMessage = require('./process-publish-message')
+const { processRetentionMessage } = require('./process-retention-message')
+
 let receivers = []
 const CONNECTION_COUNT = 3
 const MAX_CONCURRENT_MESSAGES = 10
@@ -35,6 +37,12 @@ const start = async () => {
     }
 
     console.info(`Ready to publish payment statements (max throughput: ${CONNECTION_COUNT * MAX_CONCURRENT_MESSAGES} concurrent messages)`)
+
+    const retentionAction = message => processRetentionMessage(message, retentionReceiver)
+    const retentionReceiver = new MessageReceiver(config.retentionSubscription, retentionAction)
+    await retentionReceiver.subscribe()
+    receivers.push(retentionReceiver)
+    console.info('Retention receiver ready')
   } catch (error) {
     console.error('Failed to start messaging service:', error)
     sendAlert('messaging', error, `Messaging service failed to start: ${error.message}`)

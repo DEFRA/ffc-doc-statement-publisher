@@ -114,10 +114,28 @@ const getReportFile = async (filename) => {
   return client.downloadToBuffer()
 }
 
+const deleteStatement = async (filename) => {
+  containersInitialised ?? await initialiseContainers()
+  const blobClient = container.getBlockBlobClient(`${config.folder}/${filename}`)
+
+  try {
+    const deleteResponse = await blobClient.deleteIfExists()
+    if (deleteResponse.succeeded) {
+      console.log(`[STORAGE] Successfully deleted file: ${filename} from folder: ${config.folder}`)
+    } else {
+      console.warn(`[STORAGE] File to delete not found: ${filename} in folder: ${config.folder}`)
+    }
+  } catch (error) {
+    console.error(`[STORAGE] Error deleting file: ${filename}`, error)
+    throw error
+  }
+}
+
 module.exports = {
   initialiseContainers,
   getOutboundBlobClient,
   getFile,
   saveReportFile,
-  getReportFile
+  getReportFile,
+  deleteStatement
 }
