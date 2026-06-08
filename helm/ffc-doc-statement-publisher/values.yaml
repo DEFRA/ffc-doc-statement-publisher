@@ -58,6 +58,7 @@ container:
   sendCrmFailureMessageEnabled: false
   alertTopicAddress: ffc-doc-alerting
   port: 3010
+  azureLogLevel: error
 
 ingress:
   server: azure.defra.cloud
