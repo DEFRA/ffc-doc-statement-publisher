@@ -30,6 +30,7 @@ data:
   AZURE_STORAGE_CONTAINER: {{ quote .Values.container.storageContainer }}
   AZURE_STORAGE_FOLDER: {{ quote .Values.container.storageFolder }}
   AZURE_STORAGE_REPORT_FOLDER: {{ quote .Values.container.storageReportFolder }}
+  AZURE_LOG_LEVEL: {{ quote .Values.container.azureLogLevel }}
   NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
