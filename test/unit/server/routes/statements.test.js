@@ -1,5 +1,10 @@
 const HTTP_INTERNAL_SERVER_ERROR = require('../../../../app/constants/statuses').HTTP_INTERNAL_SERVER_ERROR
 
+jest.mock('../../../../app/data', () => ({
+  statement: {},
+  sequelize: { Op: { like: Symbol('like') } }
+}))
+
 const statementsModule = require('../../../../app/server/routes/statements')
 
 describe('statements route', () => {
@@ -327,13 +332,16 @@ describe('statements route', () => {
     test('returns payload with parsed values', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([{
-            filename: 'file.csv',
-            schemeId: '1',
-            marketingYear: '2023',
-            frn: '123',
-            received: '2020-01-01T00:00:00.000Z'
-          }])
+          findAndCountAll: jest.fn().mockResolvedValue({
+            count: 1,
+            rows: [{
+              filename: 'file.csv',
+              schemeId: '1',
+              marketingYear: '2023',
+              frn: '123',
+              received: '2020-01-01T00:00:00.000Z'
+            }]
+          })
         },
         sequelize: {
           Op: {
@@ -355,20 +363,25 @@ describe('statements route', () => {
           frn: 123,
           timestamp: '2020010100000000'
         }],
-        continuationToken: null
+        continuationToken: null,
+        total: 1,
+        totalPages: 1
       })
     })
 
     test('returns payload with null values when properties are missing', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([{
-            filename: null,
-            schemeId: null,
-            marketingYear: null,
-            frn: null,
-            received: '2020-01-01T00:00:00.000Z'
-          }])
+          findAndCountAll: jest.fn().mockResolvedValue({
+            count: 1,
+            rows: [{
+              filename: null,
+              schemeId: null,
+              marketingYear: null,
+              frn: null,
+              received: '2020-01-01T00:00:00.000Z'
+            }]
+          })
         },
         sequelize: {
           Op: {
@@ -390,15 +403,17 @@ describe('statements route', () => {
           frn: null,
           timestamp: '2020010100000000'
         }],
-        continuationToken: null
+        continuationToken: null,
+        total: 1,
+        totalPages: 1
       })
     })
 
     test('applies query filters correctly', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {
@@ -419,16 +434,16 @@ describe('statements route', () => {
           schemeYear: '2023',
           filename: expect.any(Object)
         },
-        limit: 50,
+        limit: 100,
         offset: 0
       })
     })
 
     test('uses offset parameter when provided', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {
@@ -444,16 +459,16 @@ describe('statements route', () => {
 
       expect(mockFindAll).toHaveBeenCalledWith({
         where: undefined,
-        limit: 50,
+        limit: 100,
         offset: 10
       })
     })
 
     test('prioritizes continuationToken over offset', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {
@@ -469,16 +484,16 @@ describe('statements route', () => {
 
       expect(mockFindAll).toHaveBeenCalledWith({
         where: undefined,
-        limit: 50,
+        limit: 100,
         offset: 20
       })
     })
 
     test('uses custom limit when provided', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {
@@ -500,7 +515,7 @@ describe('statements route', () => {
     })
 
     test('returns continuation token when more results available', async () => {
-      const mockResults = new Array(50).fill({
+      const mockResults = new Array(100).fill({
         filename: 'file.pdf',
         schemeId: '1',
         marketingYear: '2023',
@@ -509,7 +524,7 @@ describe('statements route', () => {
       })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue(mockResults)
+          findAndCountAll: jest.fn().mockResolvedValue({ count: 150, rows: mockResults })
         },
         sequelize: {
           Op: {
@@ -523,19 +538,22 @@ describe('statements route', () => {
 
       const result = await handler({ query: {} })
 
-      expect(result.continuationToken).toBe('50')
+      expect(result.continuationToken).toBe('100')
     })
 
     test('returns null continuation token when no more results', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([{
-            filename: 'file.pdf',
-            schemeId: '1',
-            marketingYear: '2023',
-            frn: '123',
-            received: '2020-01-01T00:00:00.000Z'
-          }])
+          findAndCountAll: jest.fn().mockResolvedValue({
+            count: 1,
+            rows: [{
+              filename: 'file.pdf',
+              schemeId: '1',
+              marketingYear: '2023',
+              frn: '123',
+              received: '2020-01-01T00:00:00.000Z'
+            }]
+          })
         },
         sequelize: {
           Op: {
@@ -570,7 +588,7 @@ describe('statements route', () => {
 
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockRejectedValue(new Error('DB error'))
+          findAndCountAll: jest.fn().mockRejectedValue(new Error('DB error'))
         },
         sequelize: {
           Op: {
@@ -594,7 +612,7 @@ describe('statements route', () => {
     test('logs handler invocation with query parameters', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([])
+          findAndCountAll: jest.fn().mockResolvedValue({ count: 0, rows: [] })
         },
         sequelize: {
           Op: {
@@ -612,10 +630,10 @@ describe('statements route', () => {
     })
 
     test('logs query execution details', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {
@@ -639,7 +657,7 @@ describe('statements route', () => {
     test('logs result count', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([{}, {}])
+          findAndCountAll: jest.fn().mockResolvedValue({ count: 2, rows: [{}, {}] })
         },
         sequelize: {
           Op: {
@@ -659,7 +677,7 @@ describe('statements route', () => {
     test('logs response details', async () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: jest.fn().mockResolvedValue([{}])
+          findAndCountAll: jest.fn().mockResolvedValue({ count: 1, rows: [{}] })
         },
         sequelize: {
           Op: {
@@ -675,16 +693,18 @@ describe('statements route', () => {
 
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Returning response with:', {
         statementCount: 1,
+        total: 1,
+        totalPages: 1,
         hasMore: false,
         nextContinuationToken: null
       })
     })
 
     test('applies combined filters with pagination', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue([])
+      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
       jest.doMock('../../../../app/data', () => ({
         statement: {
-          findAll: mockFindAll
+          findAndCountAll: mockFindAll
         },
         sequelize: {
           Op: {

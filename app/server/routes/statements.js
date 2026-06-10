@@ -2,7 +2,7 @@ const db = require('../../data')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
 const NUMERIC_REGEX = /^\d+$/
-const DEFAULT_LIMIT = 50
+const DEFAULT_LIMIT = 100
 const PADDING_LENGTH = 2
 const PADDING_CHAR = '0'
 const CENTISECONDS = 10
@@ -97,26 +97,31 @@ module.exports = {
 
         console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
 
-        const statements = await db.statement.findAll({
+        const { count, rows } = await db.statement.findAndCountAll({
           where: Object.keys(criteria).length > 0 ? criteria : undefined,
           limit: limitNum,
           offset: offsetNum
         })
 
-        console.info('[STATEMENTS] Query returned', statements.length, 'results')
+        console.info('[STATEMENTS] Query returned', rows.length, 'results')
 
-        const hasMore = statements.length === limitNum
+        const hasMore = offsetNum + rows.length < count
         const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
+        const totalPages = Math.ceil(count / limitNum)
 
         console.info('[STATEMENTS] Returning response with:', {
-          statementCount: statements.length,
+          statementCount: rows.length,
+          total: count,
+          totalPages,
           hasMore,
           nextContinuationToken
         })
 
         return {
-          statements: statements.map(formatStatement),
-          continuationToken: nextContinuationToken
+          statements: rows.map(formatStatement),
+          continuationToken: nextContinuationToken,
+          total: count,
+          totalPages
         }
       } catch (error) {
         console.error('[STATEMENTS] Error in handler:', {
