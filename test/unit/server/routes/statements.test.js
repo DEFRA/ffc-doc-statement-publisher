@@ -111,6 +111,13 @@ describe('statements route', () => {
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set schemeYear (keeping as string):', '2023')
     })
 
+    test('should set filename', () => {
+      const db = require('../../../../app/data')
+      const filename = 'FFC_PaymentDelinkedStatement_DP_2024_1234000541_2026061108582129.pdf'
+      const result = buildQueryCriteria({ filename }, db)
+      expect(result.filename).toBe(filename)
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set filename:', filename)
+    })
     test('should add received between criteria for 16-digit timestamp', () => {
       const db = require('../../../../app/data')
       const result = buildQueryCriteria({ timestamp: '2026020510450842' }, db)
@@ -469,13 +476,14 @@ describe('statements route', () => {
       const { routes } = require('../../../../app/server/routes/statements')
       const handler = routes[0].handler
 
-      await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', timestamp: '2026020510450842' } })
+      await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', filename: 'my-file.pdf', timestamp: '2026020510450842' } })
 
       expect(mockFindAll).toHaveBeenCalledWith({
         where: {
           frn: 123,
           schemeShortName: 'SFI',
           schemeYear: '2023',
+          filename: 'my-file.pdf',
           received: expect.any(Object)
         },
         limit: 100,

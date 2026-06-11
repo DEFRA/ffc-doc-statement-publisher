@@ -9,37 +9,79 @@ const CENTISECONDS = 10
 const TIMESTAMP_WINDOW_MINUTES = 5
 const MS_PER_MINUTE = 60000
 
+const ZERO = 0
+const ONE = 1
+const YEAR_START_END = 4
+const MONTH_START_END = 6
+const DAY_START_END = 8
+const MINUTE_START_END = 10
+const SECOND_START_END = 12
+const SECOND_END = 14
+
+const END_OF_SECOND_MS = 999
+const END_OF_DAY_HOUR = 23
+const END_OF_DAY_MINUTE = 59
+const END_OF_DAY_SECOND = 59
+
+const TIMESTAMP_EXACT_MINUTE_OFFSET_MS = MS_PER_MINUTE - ONE
+const TIMESTAMP_WINDOW_OFFSET_MS = TIMESTAMP_WINDOW_MINUTES * MS_PER_MINUTE
+const DECIMAL = 10
+
 const TIMESTAMP_16_REGEX = /^\d{16}$/
 const DATE_TIME_REGEX = /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})$/
 const DATE_ONLY_REGEX = /^(\d{2})-(\d{2})-(\d{4})$/
 
 const parseTimestampToRange = (timestamp) => {
   if (TIMESTAMP_16_REGEX.test(timestamp)) {
-    const year = parseInt(timestamp.slice(0, 4), 10)
-    const month = parseInt(timestamp.slice(4, 6), 10) - 1
-    const day = parseInt(timestamp.slice(6, 8), 10)
-    const hour = parseInt(timestamp.slice(8, 10), 10)
-    const minute = parseInt(timestamp.slice(10, 12), 10)
-    const second = parseInt(timestamp.slice(12, 14), 10)
-    const from = new Date(Date.UTC(year, month, day, hour, minute, second, 0))
-    const to = new Date(Date.UTC(year, month, day, hour, minute, second, 999))
+    const year = Number.parseInt(timestamp.slice(ZERO, YEAR_START_END), DECIMAL)
+    const month = Number.parseInt(timestamp.slice(YEAR_START_END, MONTH_START_END), DECIMAL) - ONE
+    const day = Number.parseInt(timestamp.slice(MONTH_START_END, DAY_START_END), DECIMAL)
+    const hour = Number.parseInt(timestamp.slice(DAY_START_END, MINUTE_START_END), DECIMAL)
+    const minute = Number.parseInt(timestamp.slice(MINUTE_START_END, SECOND_START_END), DECIMAL)
+    const second = Number.parseInt(timestamp.slice(SECOND_START_END, SECOND_END), DECIMAL)
+    const from = new Date(Date.UTC(year, month, day, hour, minute, second, ZERO))
+    const to = new Date(Date.UTC(year, month, day, hour, minute, second, END_OF_SECOND_MS))
     return { from, to }
   }
 
   const dateTimeMatch = DATE_TIME_REGEX.exec(timestamp)
   if (dateTimeMatch) {
     const [, dd, mm, yyyy, hh, min] = dateTimeMatch
-    const centerTime = new Date(Date.UTC(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10), parseInt(hh, 10), parseInt(min, 10), 0, 0))
-    const from = new Date(centerTime.getTime() - TIMESTAMP_WINDOW_MINUTES * MS_PER_MINUTE)
-    const to = new Date(centerTime.getTime() + TIMESTAMP_WINDOW_MINUTES * MS_PER_MINUTE + 999)
+    const centerTime = new Date(Date.UTC(
+      Number.parseInt(yyyy, DECIMAL),
+      Number.parseInt(mm, DECIMAL) - ONE,
+      Number.parseInt(dd, DECIMAL),
+      Number.parseInt(hh, DECIMAL),
+      Number.parseInt(min, DECIMAL),
+      ZERO,
+      ZERO
+    ))
+    const from = new Date(centerTime.getTime() - TIMESTAMP_WINDOW_OFFSET_MS)
+    const to = new Date(centerTime.getTime() + TIMESTAMP_WINDOW_OFFSET_MS + END_OF_SECOND_MS)
     return { from, to }
   }
 
   const dateOnlyMatch = DATE_ONLY_REGEX.exec(timestamp)
   if (dateOnlyMatch) {
     const [, dd, mm, yyyy] = dateOnlyMatch
-    const from = new Date(Date.UTC(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10), 0, 0, 0, 0))
-    const to = new Date(Date.UTC(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10), 23, 59, 59, 999))
+    const from = new Date(Date.UTC(
+      Number.parseInt(yyyy, DECIMAL),
+      Number.parseInt(mm, DECIMAL) - ONE,
+      Number.parseInt(dd, DECIMAL),
+      ZERO,
+      ZERO,
+      ZERO,
+      ZERO
+    ))
+    const to = new Date(Date.UTC(
+      Number.parseInt(yyyy, DECIMAL),
+      Number.parseInt(mm, DECIMAL) - ONE,
+      Number.parseInt(dd, DECIMAL),
+      END_OF_DAY_HOUR,
+      END_OF_DAY_MINUTE,
+      END_OF_DAY_SECOND,
+      END_OF_SECOND_MS
+    ))
     return { from, to }
   }
 
@@ -48,14 +90,46 @@ const parseTimestampToRange = (timestamp) => {
 
 const parseDateTimeToExactRange = (timestamp) => {
   const dateTimeMatch = DATE_TIME_REGEX.exec(timestamp)
-  if (!dateTimeMatch) {
-    return null
+  if (dateTimeMatch) {
+    const [, dd, mm, yyyy, hh, min] = dateTimeMatch
+    const from = new Date(Date.UTC(
+      Number.parseInt(yyyy, DECIMAL),
+      Number.parseInt(mm, DECIMAL) - ONE,
+      Number.parseInt(dd, DECIMAL),
+      Number.parseInt(hh, DECIMAL),
+      Number.parseInt(min, DECIMAL),
+      ZERO,
+      ZERO
+    ))
+    const to = new Date(from.getTime() + TIMESTAMP_EXACT_MINUTE_OFFSET_MS)
+    return { from, to }
   }
 
-  const [, dd, mm, yyyy, hh, min] = dateTimeMatch
-  const from = new Date(Date.UTC(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10), parseInt(hh, 10), parseInt(min, 10), 0, 0))
-  const to = new Date(from.getTime() + MS_PER_MINUTE - 1)
-  return { from, to }
+  return null
+}
+
+const getBetweenOperator = (sequelizeDb) => {
+  return sequelizeDb.sequelize?.Op || sequelizeDb.Sequelize?.Op
+}
+
+const addTimestampCriteria = (query, criteria, sequelizeDb) => {
+  if (query.timestamp) {
+    const op = getBetweenOperator(sequelizeDb)
+    const range = parseTimestampToRange(query.timestamp)
+
+    if (range && op?.between) {
+      console.info('[STATEMENTS] Adding timestamp range criteria to query on received:', range)
+      criteria.received = { [op.between]: [range.from, range.to] }
+    }
+
+    if (range === null) {
+      console.info('[STATEMENTS] Timestamp format not recognised, skipping filter:', query.timestamp)
+    }
+
+    if (range && op?.between === undefined) {
+      console.info('[STATEMENTS] Sequelize Op not available, skipping timestamp filter')
+    }
+  }
 }
 
 const buildQueryCriteria = (query, sequelizeDb) => {
@@ -63,7 +137,7 @@ const buildQueryCriteria = (query, sequelizeDb) => {
   const criteria = {}
 
   if (query.frn) {
-    const frnValue = Number.parseInt(query.frn)
+    const frnValue = Number.parseInt(query.frn, DECIMAL)
     console.info('[STATEMENTS] Parsed FRN:', { input: query.frn, output: frnValue })
     criteria.frn = frnValue
   }
@@ -78,18 +152,12 @@ const buildQueryCriteria = (query, sequelizeDb) => {
     criteria.schemeYear = query.schemeyear
   }
 
-  if (query.timestamp) {
-    const op = sequelizeDb.sequelize?.Op || sequelizeDb.Sequelize?.Op
-    const range = parseTimestampToRange(query.timestamp)
-    if (range && op?.between) {
-      console.info('[STATEMENTS] Adding timestamp range criteria to query on received:', range)
-      criteria.received = { [op.between]: [range.from, range.to] }
-    } else if (!range) {
-      console.info('[STATEMENTS] Timestamp format not recognised, skipping filter:', query.timestamp)
-    } else {
-      console.info('[STATEMENTS] Sequelize Op not available, skipping timestamp filter')
-    }
+  if (query.filename) {
+    console.info('[STATEMENTS] Set filename:', query.filename)
+    criteria.filename = query.filename
   }
+
+  addTimestampCriteria(query, criteria, sequelizeDb)
 
   console.info('[STATEMENTS] Final criteria:', criteria)
   return criteria
@@ -99,24 +167,24 @@ const getOffset = (continuationToken, offset) => {
   console.info('[STATEMENTS] getOffset called with:', { continuationToken, offset })
 
   if (continuationToken && NUMERIC_REGEX.test(String(continuationToken))) {
-    const parsedToken = Number.parseInt(continuationToken)
+    const parsedToken = Number.parseInt(continuationToken, DECIMAL)
     console.info('[STATEMENTS] Using continuationToken as offset:', parsedToken)
     return parsedToken
   }
 
   if (offset && NUMERIC_REGEX.test(String(offset))) {
-    const parsedOffset = Number.parseInt(offset)
+    const parsedOffset = Number.parseInt(offset, DECIMAL)
     console.info('[STATEMENTS] Using offset parameter:', parsedOffset)
     return parsedOffset
   }
 
   console.info('[STATEMENTS] No valid offset or continuationToken, using default: 0')
-  return 0
+  return ZERO
 }
 
 const formatStatementTimestamp = (date) => {
   const year = date.getUTCFullYear().toString()
-  const month = (date.getUTCMonth() + 1).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
+  const month = (date.getUTCMonth() + ONE).toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const day = date.getUTCDate().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const hour = date.getUTCHours().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
   const minute = date.getUTCMinutes().toString().padStart(PADDING_LENGTH, PADDING_CHAR)
@@ -129,12 +197,57 @@ const formatStatementTimestamp = (date) => {
 const formatStatement = (s) => {
   const formatted = {
     filename: s.filename ? String(s.filename) : null,
-    schemeId: s.schemeId ? Number.parseInt(s.schemeId) : null,
-    marketingYear: s.marketingYear ? Number.parseInt(s.marketingYear) : null,
-    frn: s.frn ? Number.parseInt(s.frn) : null,
+    schemeId: s.schemeId ? Number.parseInt(s.schemeId, DECIMAL) : null,
+    marketingYear: s.marketingYear ? Number.parseInt(s.marketingYear, DECIMAL) : null,
+    frn: s.frn ? Number.parseInt(s.frn, DECIMAL) : null,
     timestamp: formatStatementTimestamp(new Date(s.received))
   }
   return formatted
+}
+
+const executeQuery = async (criteria, limitNum, offsetNum) => {
+  const where = Object.keys(criteria).length > ZERO ? criteria : undefined
+  return db.statement.findAndCountAll({
+    where,
+    limit: limitNum,
+    offset: offsetNum
+  })
+}
+
+const executeQueryForDateTimeTimestamp = async (request, criteria, limitNum, offsetNum) => {
+  const timestamp = request.query.timestamp
+  const shouldUseExactMinute = Boolean(timestamp && DATE_TIME_REGEX.test(timestamp))
+  if (shouldUseExactMinute === false) {
+    return null
+  }
+
+  const op = getBetweenOperator(db)
+  const exactRange = parseDateTimeToExactRange(timestamp)
+  if (Boolean(op?.between && exactRange) === false) {
+    return null
+  }
+
+  const exactCriteria = { ...criteria, received: { [op.between]: [exactRange.from, exactRange.to] } }
+  console.info('[STATEMENTS] Executing exact timestamp query with:', { criteria: exactCriteria, limit: limitNum, offset: offsetNum })
+  const exactResult = await executeQuery(exactCriteria, limitNum, offsetNum)
+
+  if (exactResult.count > ZERO) {
+    console.info('[STATEMENTS] Exact timestamp query returned', exactResult.rows.length, 'results')
+    return exactResult
+  }
+
+  console.info('[STATEMENTS] No exact timestamp matches found, falling back to widened window')
+  return null
+}
+
+const queryStatements = async (request, criteria, limitNum, offsetNum) => {
+  const exactResult = await executeQueryForDateTimeTimestamp(request, criteria, limitNum, offsetNum)
+  if (exactResult) {
+    return exactResult
+  }
+
+  console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
+  return executeQuery(criteria, limitNum, offsetNum)
 }
 
 module.exports = {
@@ -146,41 +259,9 @@ module.exports = {
 
       try {
         const criteria = buildQueryCriteria(request.query, db)
-        const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
+        const limitNum = request.query.limit ? Number.parseInt(request.query.limit, DECIMAL) : DEFAULT_LIMIT
         const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
-        const runQuery = async (queryCriteria) => {
-          return db.statement.findAndCountAll({
-            where: Object.keys(queryCriteria).length > 0 ? queryCriteria : undefined,
-            limit: limitNum,
-            offset: offsetNum
-          })
-        }
-
-        let result
-
-        if (request.query.timestamp && DATE_TIME_REGEX.test(request.query.timestamp)) {
-          const op = db.sequelize?.Op || db.Sequelize?.Op
-          const exactRange = parseDateTimeToExactRange(request.query.timestamp)
-          if (exactRange && op?.between) {
-            const exactCriteria = { ...criteria, received: { [op.between]: [exactRange.from, exactRange.to] } }
-            console.info('[STATEMENTS] Executing exact timestamp query with:', { criteria: exactCriteria, limit: limitNum, offset: offsetNum })
-            const exactResult = await runQuery(exactCriteria)
-
-            if (exactResult.count > 0) {
-              console.info('[STATEMENTS] Exact timestamp query returned', exactResult.rows.length, 'results')
-              result = exactResult
-            } else {
-              console.info('[STATEMENTS] No exact timestamp matches found, falling back to widened window')
-            }
-          }
-        }
-
-        if (!result) {
-          console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
-          result = await runQuery(criteria)
-        }
-
-        const { count, rows } = result
+        const { count, rows } = await queryStatements(request, criteria, limitNum, offsetNum)
 
         console.info('[STATEMENTS] Query returned', rows.length, 'results')
 
