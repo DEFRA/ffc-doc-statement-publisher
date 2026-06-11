@@ -2,7 +2,7 @@ const HTTP_INTERNAL_SERVER_ERROR = require('../../../../app/constants/statuses')
 
 jest.mock('../../../../app/data', () => ({
   statement: {},
-  sequelize: { Op: { like: Symbol('like') } }
+  sequelize: { Op: { like: Symbol('like'), between: Symbol('between') } }
 }))
 
 const statementsModule = require('../../../../app/server/routes/statements')
@@ -30,7 +30,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -48,7 +49,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -57,6 +59,7 @@ describe('statements route', () => {
       expect(typeof statementsModule.getOffset).toBe('function')
       expect(typeof statementsModule.formatStatementTimestamp).toBe('function')
       expect(typeof statementsModule.formatStatement).toBe('function')
+      expect(typeof statementsModule.parseTimestampToRange).toBe('function')
     })
   })
 
@@ -68,7 +71,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -107,11 +111,45 @@ describe('statements route', () => {
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set schemeYear (keeping as string):', '2023')
     })
 
-    test('should add filename LIKE criteria for timestamp', () => {
+    test('should add received between criteria for 16-digit timestamp', () => {
       const db = require('../../../../app/data')
       const result = buildQueryCriteria({ timestamp: '2026020510450842' }, db)
-      expect(result.filename).toEqual({ [db.sequelize.Op.like]: '%2026020510450842%' })
-      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Adding timestamp criteria to query on filename')
+      expect(result.received).toEqual({
+        [db.sequelize.Op.between]: [
+          new Date('2026-02-05T10:45:08.000Z'),
+          new Date('2026-02-05T10:45:08.999Z')
+        ]
+      })
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Adding timestamp range criteria to query on received:', expect.any(Object))
+    })
+
+    test('should add received between criteria for DD-MM-YYYY HH:MM timestamp', () => {
+      const db = require('../../../../app/data')
+      const result = buildQueryCriteria({ timestamp: '04-06-2026 11:45' }, db)
+      expect(result.received).toEqual({
+        [db.sequelize.Op.between]: [
+          new Date('2026-06-04T11:40:00.000Z'),
+          new Date('2026-06-04T11:50:00.999Z')
+        ]
+      })
+    })
+
+    test('should add received between criteria for DD-MM-YYYY date-only timestamp', () => {
+      const db = require('../../../../app/data')
+      const result = buildQueryCriteria({ timestamp: '04-06-2026' }, db)
+      expect(result.received).toEqual({
+        [db.sequelize.Op.between]: [
+          new Date('2026-06-04T00:00:00.000Z'),
+          new Date('2026-06-04T23:59:59.999Z')
+        ]
+      })
+    })
+
+    test('should skip timestamp filter for unrecognised format', () => {
+      const db = require('../../../../app/data')
+      const result = buildQueryCriteria({ timestamp: 'not-a-date' }, db)
+      expect(result.received).toBeUndefined()
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Timestamp format not recognised, skipping filter:', 'not-a-date')
     })
 
     test('should build complete criteria with all filters', () => {
@@ -126,7 +164,7 @@ describe('statements route', () => {
       expect(result.frn).toBe(1234567890)
       expect(result.schemeShortName).toBe('SFI')
       expect(result.schemeYear).toBe('2023')
-      expect(result.filename).toEqual({ [db.sequelize.Op.like]: '%2026020510450842%' })
+      expect(result.received).toEqual({ [db.sequelize.Op.between]: expect.any(Array) })
     })
 
     test('should log final criteria', () => {
@@ -144,7 +182,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -205,7 +244,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -251,7 +291,8 @@ describe('statements route', () => {
         statement: {},
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -345,7 +386,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -385,7 +427,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -417,7 +460,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -432,11 +476,95 @@ describe('statements route', () => {
           frn: 123,
           schemeShortName: 'SFI',
           schemeYear: '2023',
-          filename: expect.any(Object)
+          received: expect.any(Object)
         },
         limit: 100,
         offset: 0
       })
+    })
+
+    test('uses exact minute results when timestamp includes time and exact matches exist', async () => {
+      const mockFindAll = jest.fn().mockResolvedValue({
+        count: 1,
+        rows: [{
+          filename: 'file.pdf',
+          schemeId: '1',
+          marketingYear: '2023',
+          frn: '123',
+          received: '2026-06-04T11:45:20.000Z'
+        }]
+      })
+      jest.doMock('../../../../app/data', () => ({
+        statement: {
+          findAndCountAll: mockFindAll
+        },
+        sequelize: {
+          Op: {
+            like: Symbol('like'),
+            between: Symbol('between')
+          }
+        }
+      }))
+
+      const { routes } = require('../../../../app/server/routes/statements')
+      const handler = routes[0].handler
+
+      await handler({ query: { timestamp: '04-06-2026 11:45' } })
+
+      expect(mockFindAll).toHaveBeenCalledTimes(1)
+      const where = mockFindAll.mock.calls[0][0].where
+      const receivedOpSymbol = Object.getOwnPropertySymbols(where.received)[0]
+      expect(where.received[receivedOpSymbol]).toEqual([
+        new Date('2026-06-04T11:45:00.000Z'),
+        new Date('2026-06-04T11:45:59.999Z')
+      ])
+    })
+
+    test('falls back to widened window when exact minute has no matches', async () => {
+      const mockFindAll = jest.fn()
+        .mockResolvedValueOnce({ count: 0, rows: [] })
+        .mockResolvedValueOnce({
+          count: 1,
+          rows: [{
+            filename: 'file.pdf',
+            schemeId: '1',
+            marketingYear: '2023',
+            frn: '123',
+            received: '2026-06-04T11:46:00.000Z'
+          }]
+        })
+      jest.doMock('../../../../app/data', () => ({
+        statement: {
+          findAndCountAll: mockFindAll
+        },
+        sequelize: {
+          Op: {
+            like: Symbol('like'),
+            between: Symbol('between')
+          }
+        }
+      }))
+
+      const { routes } = require('../../../../app/server/routes/statements')
+      const handler = routes[0].handler
+
+      await handler({ query: { timestamp: '04-06-2026 11:45' } })
+
+      expect(mockFindAll).toHaveBeenCalledTimes(2)
+
+      const exactWhere = mockFindAll.mock.calls[0][0].where
+      const exactReceivedOpSymbol = Object.getOwnPropertySymbols(exactWhere.received)[0]
+      expect(exactWhere.received[exactReceivedOpSymbol]).toEqual([
+        new Date('2026-06-04T11:45:00.000Z'),
+        new Date('2026-06-04T11:45:59.999Z')
+      ])
+
+      const fallbackWhere = mockFindAll.mock.calls[1][0].where
+      const fallbackReceivedOpSymbol = Object.getOwnPropertySymbols(fallbackWhere.received)[0]
+      expect(fallbackWhere.received[fallbackReceivedOpSymbol]).toEqual([
+        new Date('2026-06-04T11:40:00.000Z'),
+        new Date('2026-06-04T11:50:00.999Z')
+      ])
     })
 
     test('uses offset parameter when provided', async () => {
@@ -447,7 +575,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -472,7 +601,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -497,7 +627,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -528,7 +659,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -557,7 +689,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -592,7 +725,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -616,7 +750,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -637,7 +772,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -661,7 +797,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -681,7 +818,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
@@ -708,7 +846,8 @@ describe('statements route', () => {
         },
         sequelize: {
           Op: {
-            like: Symbol('like')
+            like: Symbol('like'),
+            between: Symbol('between')
           }
         }
       }))
