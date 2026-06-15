@@ -108,13 +108,13 @@ const parseDateTimeToExactRange = (timestamp) => {
   return null
 }
 
-const getBetweenOperator = (sequelizeDb) => {
+const getSequelizeOperator = (sequelizeDb) => {
   return sequelizeDb.sequelize?.Op || sequelizeDb.Sequelize?.Op
 }
 
 const addTimestampCriteria = (query, criteria, sequelizeDb) => {
   if (query.timestamp) {
-    const op = getBetweenOperator(sequelizeDb)
+    const op = getSequelizeOperator(sequelizeDb)
     const range = parseTimestampToRange(query.timestamp)
 
     if (range && op?.between) {
@@ -221,7 +221,7 @@ const executeQueryForDateTimeTimestamp = async (request, criteria, limitNum, off
     return null
   }
 
-  const op = getBetweenOperator(db)
+  const op = getSequelizeOperator(db)
   const exactRange = parseDateTimeToExactRange(timestamp)
   if (Boolean(op?.between && exactRange) === false) {
     return null
