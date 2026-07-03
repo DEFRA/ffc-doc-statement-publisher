@@ -32,10 +32,13 @@ describe('statements route', () => {
 
       const { routes } = require('../../../../app/server/routes/statements')
       expect(Array.isArray(routes)).toBe(true)
-      expect(routes).toHaveLength(1)
-      expect(routes[0].method).toBe('GET')
-      expect(routes[0].path).toBe('/statements')
+      expect(routes).toHaveLength(2)
+      expect(routes[0].method).toBe('POST')
+      expect(routes[0].path).toBe('/requests')
       expect(typeof routes[0].handler).toBe('function')
+      expect(routes[1].method).toBe('GET')
+      expect(routes[1].path).toBe('/statements')
+      expect(typeof routes[1].handler).toBe('function')
     })
 
     test('should export helper functions for testing', () => {
@@ -343,7 +346,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -378,7 +381,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -408,7 +411,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', timestamp: '2026020510450842' } })
 
@@ -438,7 +441,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { offset: '10' } })
 
@@ -463,7 +466,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { continuationToken: '20', offset: '10' } })
 
@@ -488,7 +491,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { limit: '25' } })
 
@@ -519,7 +522,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -545,7 +548,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -580,7 +583,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} }, h)
 
@@ -604,7 +607,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123' } })
 
@@ -625,7 +628,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { limit: '10', offset: '5' } })
 
@@ -649,7 +652,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} })
 
@@ -669,7 +672,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} })
 
@@ -694,7 +697,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } })
 
