@@ -84,54 +84,86 @@ const formatStatement = (s) => {
 }
 
 module.exports = {
-  routes: [{
-    method: 'GET',
-    path: '/statements',
-    handler: async (request, h) => {
-      console.info('[STATEMENTS] Handler called with query:', request.query)
+  routes: [
+    // -----------------------------
+    // POST /requests  (request logging)
+    // -----------------------------
+    {
+      method: 'POST',
+      path: '/requests',
+      handler: async (request, h) => {
+        try {
+          const { username, filename, type, timestamp } = request.payload
 
-      try {
-        const criteria = buildQueryCriteria(request.query, db)
-        const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
-        const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
+          console.log('[REQUESTS] Handler called with payload:', request.payload)
 
-        console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
+          const entry = await db.requests.create({
+            username,
+            filename,
+            type,
+            timestamp
+          })
 
-        const statements = await db.statement.findAll({
-          where: Object.keys(criteria).length > 0 ? criteria : undefined,
-          limit: limitNum,
-          offset: offsetNum
-        })
-
-        console.info('[STATEMENTS] Query returned', statements.length, 'results')
-
-        const hasMore = statements.length === limitNum
-        const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
-
-        console.info('[STATEMENTS] Returning response with:', {
-          statementCount: statements.length,
-          hasMore,
-          nextContinuationToken
-        })
-
-        return {
-          statements: statements.map(formatStatement),
-          continuationToken: nextContinuationToken
+          return h.response({ success: true, id: entry.id }).code(201)
+        } catch (error) {
+          console.error('[REQUESTS] Error creating audit log:', error)
+          return h.response({
+            error: 'Internal server error',
+            message: 'Failed to write requests log'
+          }).code(HTTP_INTERNAL_SERVER_ERROR)
         }
-      } catch (error) {
-        console.error('[STATEMENTS] Error in handler:', {
-          message: error.message,
-          stack: error.stack,
-          query: request.query
-        })
+      }
+    },
 
-        return h.response({
-          error: 'Internal server error',
-          message: 'An error occurred while fetching statements'
-        }).code(HTTP_INTERNAL_SERVER_ERROR)
+    {
+      method: 'GET',
+      path: '/statements',
+      handler: async (request, h) => {
+        console.info('[STATEMENTS] Handler called with query:', request.query)
+
+        try {
+          const criteria = buildQueryCriteria(request.query, db)
+          const limitNum = request.query.limit ? Number.parseInt(request.query.limit) : DEFAULT_LIMIT
+          const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
+
+          console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
+
+          const statements = await db.statement.findAll({
+            where: Object.keys(criteria).length > 0 ? criteria : undefined,
+            limit: limitNum,
+            offset: offsetNum
+          })
+
+          console.info('[STATEMENTS] Query returned', statements.length, 'results')
+
+          const hasMore = statements.length === limitNum
+          const nextContinuationToken = hasMore ? (offsetNum + limitNum).toString() : null
+
+          console.info('[STATEMENTS] Returning response with:', {
+            statementCount: statements.length,
+            hasMore,
+            nextContinuationToken
+          })
+
+          return {
+            statements: statements.map(formatStatement),
+            continuationToken: nextContinuationToken
+          }
+        } catch (error) {
+          console.error('[STATEMENTS] Error in handler:', {
+            message: error.message,
+            stack: error.stack,
+            query: request.query
+          })
+
+          return h.response({
+            error: 'Internal server error',
+            message: 'An error occurred while fetching statements'
+          }).code(HTTP_INTERNAL_SERVER_ERROR)
+        }
       }
     }
-  }],
+  ],
   buildQueryCriteria,
   getOffset,
   formatStatementTimestamp,
