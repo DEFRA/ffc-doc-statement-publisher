@@ -6,6 +6,7 @@ const DEFAULT_LIMIT = 50
 const PADDING_LENGTH = 2
 const PADDING_CHAR = '0'
 const CENTISECONDS = 10
+const SUCCESS_CODE = 201
 
 const buildQueryCriteria = (query, sequelizeDb) => {
   console.info('[STATEMENTS] buildQueryCriteria called with:', query)
@@ -104,7 +105,7 @@ module.exports = {
             timestamp
           })
 
-          return h.response({ success: true, id: entry.id }).code(201)
+          return h.response({ success: true, id: entry.id }).code(SUCCESS_CODE)
         } catch (error) {
           console.error('[REQUESTS] Error creating audit log:', error)
           return h.response({

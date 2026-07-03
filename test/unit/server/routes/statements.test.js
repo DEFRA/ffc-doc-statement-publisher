@@ -41,6 +41,79 @@ describe('statements route', () => {
       expect(typeof routes[1].handler).toBe('function')
     })
 
+    describe('POST /requests route', () => {
+      let handler
+      let mockCreate
+
+      beforeEach(() => {
+        mockCreate = jest.fn().mockResolvedValue({ id: 123 })
+
+        jest.doMock('../../../../app/data', () => ({
+          requests: { create: mockCreate }
+        }))
+
+        const routesModule = require('../../../../app/server/routes/statements')
+        handler = routesModule.routes.find(r => r.path === '/requests').handler
+      })
+
+      test('should return 201 and success true when log entry is created', async () => {
+        const request = {
+          payload: {
+            username: 'bob',
+            filename: 'file.txt',
+            type: 'UPLOAD',
+            timestamp: '2024-01-01T00:00:00Z'
+          }
+        }
+
+        const h = {
+          response: (obj) => ({
+            code: (status) => ({ status, obj })
+          })
+        }
+
+        const result = await handler(request, h)
+
+        expect(mockCreate).toHaveBeenCalledWith({
+          username: 'bob',
+          filename: 'file.txt',
+          type: 'UPLOAD',
+          timestamp: '2024-01-01T00:00:00Z'
+        })
+
+        expect(result.status).toBe(201)
+        expect(result.obj).toEqual({ success: true, id: 123 })
+      })
+
+      test('should return 500 when db create throws', async () => {
+        const error = new Error('DB failed')
+        mockCreate.mockRejectedValue(error)
+
+        const request = {
+          payload: {
+            username: 'bob',
+            filename: 'file.txt',
+            type: 'UPLOAD',
+            timestamp: '2024-01-01T00:00:00Z'
+          }
+        }
+
+        const h = {
+          response: (obj) => ({
+            code: (status) => ({ status, obj })
+          })
+        }
+
+        const result = await handler(request, h)
+
+        expect(result.status).toBe(HTTP_INTERNAL_SERVER_ERROR)
+        expect(result.obj).toEqual({
+          error: 'Internal server error',
+          message: 'Failed to write requests log'
+        })
+      })
+    })
+
     test('should export helper functions for testing', () => {
       jest.doMock('../../../../app/data', () => ({
         statement: {},
