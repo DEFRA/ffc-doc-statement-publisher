@@ -26,7 +26,7 @@ deployment:
 
 container:
   requestMemory: 350Mi
-  requestCpu: 2340m
+  requestCpu: 340m
   limitMemory: 350Mi
   limitCpu: 340m
   messageQueueHost: namespace.servicebus.windows.net
