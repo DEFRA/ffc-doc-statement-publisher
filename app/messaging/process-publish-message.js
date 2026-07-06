@@ -14,7 +14,6 @@ const processPublishMessage = async (message, receiver) => {
 
   if (!claimed) {
     console.info(`Message already claimed, skipping duplicate: ${messageId}`)
-    await receiver.completeMessage(message)
     return
   }
 

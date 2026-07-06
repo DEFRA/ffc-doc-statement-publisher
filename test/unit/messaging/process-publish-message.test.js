@@ -66,14 +66,16 @@ describe('processPublishMessage', () => {
     expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
   })
 
-  test('completes the message without publishing when it has already been claimed', async () => {
+  test('does not publish or settle the message when it has already been claimed', async () => {
     claimMessage.mockResolvedValue(false)
 
     await processPublishMessage(message, receiver)
 
     expect(publishStatement).not.toHaveBeenCalled()
     expect(markClaimStatus).not.toHaveBeenCalled()
-    expect(receiver.completeMessage).toHaveBeenCalledWith(message)
+    expect(receiver.completeMessage).not.toHaveBeenCalled()
+    expect(receiver.abandonMessage).not.toHaveBeenCalled()
+    expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
   })
 
   test('marks the claim as failed and abandons the message for non-validation errors', async () => {
