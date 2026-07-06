@@ -1,7 +1,7 @@
 const comment = 'Example Output: Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify'
 const commentDate = 'Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used by ffc-doc-statement-publisher to communicate with Notify'
 
-module.exports = (sequelize, DataTypes) => {
+const deliveryModel = (sequelize, DataTypes) => {
   const delivery = sequelize.define('delivery', {
     deliveryId: {
       type: DataTypes.INTEGER,
@@ -67,3 +67,5 @@ module.exports = (sequelize, DataTypes) => {
 
   return delivery
 }
+
+module.exports = deliveryModel

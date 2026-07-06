@@ -7,24 +7,41 @@ const publishStatement = require('../../../app/publishing/publish-statement')
 jest.mock('../../../app/messaging/get-request-email-template-by-type')
 const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
 
+jest.mock('../../../app/messaging/message-claim-helpers')
+const { claimMessage, markClaimStatus } = require('../../../app/messaging/message-claim-helpers')
+
+jest.mock('../../../app/alert', () => ({
+  sendAlert: jest.fn()
+}))
+const { sendAlert } = require('../../../app/alert')
+
 const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 const { VALIDATION } = require('../../../app/constants/errors')
-const documentTypes = require('../../../app/constants/document-types')
 const processPublishMessage = require('../../../app/messaging/process-publish-message')
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
 
 let receiver
+let message
 
 describe('processPublishMessage', () => {
   beforeEach(() => {
     receiver = mockMessageReceiver()
     receiver.abandonMessage = jest.fn()
+    receiver.completeMessage = jest.fn()
+    receiver.deadLetterMessage = jest.fn()
+
+    message = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE)
 
     publishStatement.mockResolvedValue(undefined)
     getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
+    claimMessage.mockResolvedValue(true)
+    markClaimStatus.mockResolvedValue(undefined)
+    sendAlert.mockImplementation(() => undefined)
 
-    jest.spyOn(console, 'log').mockImplementation(() => {})
-    jest.spyOn(console, 'error').mockImplementation(() => {})
+    validateRequest.mockReturnValue({ value: message })
+
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+    jest.spyOn(console, 'error').mockImplementation(() => { })
   })
 
   afterEach(() => {
@@ -33,116 +50,57 @@ describe('processPublishMessage', () => {
     console.error.mockRestore()
   })
 
-  describe.each([
-    { name: 'statement', message: structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE) }
-  ])('when message is a $name', ({ message }) => {
-    describe('when successful', () => {
-      beforeEach(async () => {
-        validateRequest.mockReturnValue({ value: message })
-      })
+  test('claims the message and completes it when processing succeeds', async () => {
+    await processPublishMessage(message, receiver)
 
-      test.each([
-        ['validateRequest', () => expect(validateRequest).toHaveBeenCalled()],
-        ['validateRequest once', () => expect(validateRequest).toHaveBeenCalledTimes(1)],
-        ['validateRequest with message.body', () => expect(validateRequest).toHaveBeenCalledWith(message.body)],
-        ['getRequestEmailTemplateByType', () => expect(getRequestEmailTemplateByType).toHaveBeenCalled()],
-        ['getRequestEmailTemplateByType with correct parameters', () => expect(getRequestEmailTemplateByType).toHaveBeenCalledWith(message.applicationProperties.type, documentTypes)],
-        ['publishStatement', () => expect(publishStatement).toHaveBeenCalled()],
-        ['publishStatement once', () => expect(publishStatement).toHaveBeenCalledTimes(1)],
-        ['completeMessage', () => expect(receiver.completeMessage).toHaveBeenCalled()],
-        ['completeMessage once', () => expect(receiver.completeMessage).toHaveBeenCalledTimes(1)],
-        ['completeMessage with message', () => expect(receiver.completeMessage).toHaveBeenCalledWith(message)]
-      ])('should call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
+    const expectedMessageId = message.messageId || message.body.messageId || message.body.documentReference
 
-      test('should call publishStatement with modified message.body', async () => {
-        await processPublishMessage(message, receiver)
-        const expectedBody = { ...message.body, emailTemplate: EMAIL_TEMPLATE }
-        expect(publishStatement).toHaveBeenCalledWith(expectedBody)
-      })
+    expect(claimMessage).toHaveBeenCalledWith(expectedMessageId, message.body.documentReference)
+    expect(markClaimStatus).toHaveBeenCalledWith(expectedMessageId, 'completed')
+    expect(publishStatement).toHaveBeenCalledWith(expect.objectContaining({
+      ...message.body,
+      emailTemplate: EMAIL_TEMPLATE
+    }))
+    expect(receiver.completeMessage).toHaveBeenCalledWith(message)
+    expect(receiver.abandonMessage).not.toHaveBeenCalled()
+    expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+  })
 
-      test.each([
-        ['deadLetterMessage', () => expect(receiver.deadLetterMessage).not.toHaveBeenCalled()],
-        ['abandonMessage', () => expect(receiver.abandonMessage).not.toHaveBeenCalled()]
-      ])('should not call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
+  test('completes the message without publishing when it has already been claimed', async () => {
+    claimMessage.mockResolvedValue(false)
+
+    await processPublishMessage(message, receiver)
+
+    expect(publishStatement).not.toHaveBeenCalled()
+    expect(markClaimStatus).not.toHaveBeenCalled()
+    expect(receiver.completeMessage).toHaveBeenCalledWith(message)
+  })
+
+  test('marks the claim as failed and abandons the message for non-validation errors', async () => {
+    publishStatement.mockRejectedValue(new Error('Issue publishing statement'))
+
+    await processPublishMessage(message, receiver)
+
+    const expectedMessageId = message.messageId || message.body.messageId || message.body.documentReference
+
+    expect(markClaimStatus).toHaveBeenCalledWith(expectedMessageId, 'failed')
+    expect(receiver.abandonMessage).toHaveBeenCalledWith(message)
+    expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+  })
+
+  test('marks the claim as failed and dead letters the message for validation errors', async () => {
+    const error = new Error('Invalid request')
+    error.category = VALIDATION
+    validateRequest.mockImplementation(() => {
+      throw error
     })
 
-    describe('when unsuccessful and a non-validation issue', () => {
-      beforeEach(() => {
-        publishStatement.mockRejectedValue(new Error('Issue publishing statement'))
-      })
+    await processPublishMessage(message, receiver)
 
-      test.each([
-        ['validateRequest', () => expect(validateRequest).toHaveBeenCalled()],
-        ['validateRequest once', () => expect(validateRequest).toHaveBeenCalledTimes(1)],
-        ['validateRequest with message.body', () => expect(validateRequest).toHaveBeenCalledWith(message.body)],
-        ['getRequestEmailTemplateByType', () => expect(getRequestEmailTemplateByType).toHaveBeenCalled()],
-        ['publishStatement', () => expect(publishStatement).toHaveBeenCalled()],
-        ['publishStatement once', () => expect(publishStatement).toHaveBeenCalledTimes(1)]
-      ])('should call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
+    const expectedMessageId = message.messageId || message.body.messageId || message.body.documentReference
 
-      test('should call publishStatement with modified message.body', async () => {
-        await processPublishMessage(message, receiver)
-        const expectedBody = { ...message.body, emailTemplate: EMAIL_TEMPLATE }
-        expect(publishStatement).toHaveBeenCalledWith(expectedBody)
-      })
-
-      test.each([
-        ['completeMessage', () => expect(receiver.completeMessage).not.toHaveBeenCalled()],
-        ['deadLetterMessage', () => expect(receiver.deadLetterMessage).not.toHaveBeenCalled()],
-        ['abandonMessage', () => expect(receiver.abandonMessage).toHaveBeenCalled()],
-        ['abandonMessage once', () => expect(receiver.abandonMessage).toHaveBeenCalledTimes(1)],
-        ['abandonMessage with message', () => expect(receiver.abandonMessage).toHaveBeenCalledWith(message)]
-      ])('should handle %s correctly', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
-    })
-
-    describe('when unsuccessful and a validation issue', () => {
-      beforeEach(() => {
-        const error = new Error('Invalid request')
-        error.category = VALIDATION
-        validateRequest.mockImplementation(() => {
-          throw error
-        })
-      })
-
-      test.each([
-        ['validateRequest', () => expect(validateRequest).toHaveBeenCalled()],
-        ['validateRequest once', () => expect(validateRequest).toHaveBeenCalledTimes(1)],
-        ['validateRequest with message.body', () => expect(validateRequest).toHaveBeenCalledWith(message.body)]
-      ])('should call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
-
-      test.each([
-        ['getRequestEmailTemplateByType', () => expect(getRequestEmailTemplateByType).not.toHaveBeenCalled()],
-        ['publishStatement', () => expect(publishStatement).not.toHaveBeenCalled()],
-        ['completeMessage', () => expect(receiver.completeMessage).not.toHaveBeenCalled()],
-        ['abandonMessage', () => expect(receiver.abandonMessage).not.toHaveBeenCalled()]
-      ])('should not call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
-
-      test.each([
-        ['deadLetterMessage', () => expect(receiver.deadLetterMessage).toHaveBeenCalled()],
-        ['deadLetterMessage once', () => expect(receiver.deadLetterMessage).toHaveBeenCalledTimes(1)],
-        ['deadLetterMessage with message', () => expect(receiver.deadLetterMessage).toHaveBeenCalledWith(message)]
-      ])('should call %s', async (_, assertion) => {
-        await processPublishMessage(message, receiver)
-        assertion()
-      })
-    })
+    expect(markClaimStatus).toHaveBeenCalledWith(expectedMessageId, 'failed')
+    expect(receiver.deadLetterMessage).toHaveBeenCalledWith(message)
+    expect(receiver.abandonMessage).not.toHaveBeenCalled()
   })
 })

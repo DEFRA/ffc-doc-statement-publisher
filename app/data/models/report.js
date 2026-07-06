@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataTypes) => {
+const reportModel = (sequelize, DataTypes) => {
   const report = sequelize.define('report', {
     reportId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, comment: 'Status report' },
     lastDeliveryId: DataTypes.INTEGER,
@@ -15,3 +15,5 @@ module.exports = (sequelize, DataTypes) => {
   })
   return report
 }
+
+module.exports = reportModel
