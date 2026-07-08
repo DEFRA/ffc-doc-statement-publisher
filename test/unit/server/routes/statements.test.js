@@ -72,7 +72,7 @@ describe('statements route', () => {
         const request = {
           payload: {
             username: 'bob',
-            filename: 'file.txt',
+            searchTerms: { filename: 'FFC_Statement.pdf' },
             type: 'UPLOAD',
             timestamp: '2024-01-01T00:00:00Z'
           }
@@ -88,7 +88,7 @@ describe('statements route', () => {
 
         expect(mockCreate).toHaveBeenCalledWith({
           username: 'bob',
-          filename: 'file.txt',
+          searchTerms: { filename: 'FFC_Statement.pdf' },
           type: 'UPLOAD',
           timestamp: '2024-01-01T00:00:00Z'
         })

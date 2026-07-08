@@ -258,13 +258,13 @@ module.exports = {
     path: '/requests',
     handler: async (request, h) => {
       try {
-        const { username, filename, type, timestamp } = request.payload
+        const { username, searchTerms, type, timestamp } = request.payload
 
         console.log('[REQUESTS] Handler called with payload:', request.payload)
 
         const entry = await db.requests.create({
           username,
-          filename,
+          searchTerms,
           type,
           timestamp
         })

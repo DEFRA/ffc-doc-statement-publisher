@@ -8,7 +8,7 @@
       <column autoIncrement="true" name="id" type="bigserial">
         <constraints primaryKey="true" primaryKeyName="id_pkey" nullable="false"/>
       </column>
-      <column name="filename" type="varchar(255)">
+      <column name="searchTerms" type="JSON">
         <constraints nullable="false"/>
       </column>
       <column name="type" type="varchar(50)">
