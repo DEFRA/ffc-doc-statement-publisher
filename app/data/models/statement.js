@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataTypes) => {
+const statementModel = (sequelize, DataTypes) => {
   const statement = sequelize.define('statement', {
     statementId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, comment: 'History of statements and related customer data' },
     businessName: DataTypes.STRING,
@@ -34,3 +34,5 @@ module.exports = (sequelize, DataTypes) => {
   }
   return statement
 }
+
+module.exports = statementModel
