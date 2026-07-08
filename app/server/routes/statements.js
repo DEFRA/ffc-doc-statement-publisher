@@ -1,6 +1,8 @@
 const db = require('../../data')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
+const SUCCESS_CODE = 201
+
 const NUMERIC_REGEX = /^\d+$/
 const DEFAULT_LIMIT = 100
 const PADDING_LENGTH = 2
@@ -252,6 +254,32 @@ const queryStatements = async (request, criteria, limitNum, offsetNum) => {
 
 module.exports = {
   routes: [{
+    method: 'POST',
+    path: '/requests',
+    handler: async (request, h) => {
+      try {
+        const { username, filename, type, timestamp } = request.payload
+
+        console.log('[REQUESTS] Handler called with payload:', request.payload)
+
+        const entry = await db.requests.create({
+          username,
+          filename,
+          type,
+          timestamp
+        })
+
+        return h.response({ success: true, id: entry.id }).code(SUCCESS_CODE)
+      } catch (error) {
+        console.error('[REQUESTS] Error creating audit log:', error)
+        return h.response({
+          error: 'Internal server error',
+          message: 'Failed to write requests log'
+        }).code(HTTP_INTERNAL_SERVER_ERROR)
+      }
+    }
+  },
+  {
     method: 'GET',
     path: '/statements',
     handler: async (request, h) => {

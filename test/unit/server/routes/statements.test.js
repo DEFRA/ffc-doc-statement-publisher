@@ -38,10 +38,86 @@ describe('statements route', () => {
 
       const { routes } = require('../../../../app/server/routes/statements')
       expect(Array.isArray(routes)).toBe(true)
-      expect(routes).toHaveLength(1)
-      expect(routes[0].method).toBe('GET')
-      expect(routes[0].path).toBe('/statements')
+      expect(routes).toHaveLength(2)
+      expect(routes[0].method).toBe('POST')
+      expect(routes[0].path).toBe('/requests')
       expect(typeof routes[0].handler).toBe('function')
+      expect(routes[1].method).toBe('GET')
+      expect(routes[1].path).toBe('/statements')
+      expect(typeof routes[1].handler).toBe('function')
+    })
+
+    describe('POST /requests route', () => {
+      let handler
+      let mockCreate
+
+      beforeEach(() => {
+        mockCreate = jest.fn().mockResolvedValue({ id: 123 })
+
+        jest.doMock('../../../../app/data', () => ({
+          requests: { create: mockCreate }
+        }))
+
+        const routesModule = require('../../../../app/server/routes/statements')
+        handler = routesModule.routes.find(r => r.path === '/requests').handler
+      })
+
+      test('should return 201 and success true when log entry is created', async () => {
+        const request = {
+          payload: {
+            username: 'bob',
+            filename: 'file.txt',
+            type: 'UPLOAD',
+            timestamp: '2024-01-01T00:00:00Z'
+          }
+        }
+
+        const h = {
+          response: (obj) => ({
+            code: (status) => ({ status, obj })
+          })
+        }
+
+        const result = await handler(request, h)
+
+        expect(mockCreate).toHaveBeenCalledWith({
+          username: 'bob',
+          filename: 'file.txt',
+          type: 'UPLOAD',
+          timestamp: '2024-01-01T00:00:00Z'
+        })
+
+        expect(result.status).toBe(201)
+        expect(result.obj).toEqual({ success: true, id: 123 })
+      })
+
+      test('should return 500 when db create throws', async () => {
+        const error = new Error('DB failed')
+        mockCreate.mockRejectedValue(error)
+
+        const request = {
+          payload: {
+            username: 'bob',
+            filename: 'file.txt',
+            type: 'UPLOAD',
+            timestamp: '2024-01-01T00:00:00Z'
+          }
+        }
+
+        const h = {
+          response: (obj) => ({
+            code: (status) => ({ status, obj })
+          })
+        }
+
+        const result = await handler(request, h)
+
+        expect(result.status).toBe(HTTP_INTERNAL_SERVER_ERROR)
+        expect(result.obj).toEqual({
+          error: 'Internal server error',
+          message: 'Failed to write requests log'
+        })
+      })
     })
 
     test('should export helper functions for testing', () => {
@@ -400,7 +476,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -441,7 +517,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -474,7 +550,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', filename: 'my-file.pdf', timestamp: '2026020510450842' } })
 
@@ -590,7 +666,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { offset: '10' } })
 
@@ -616,7 +692,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { continuationToken: '20', offset: '10' } })
 
@@ -642,7 +718,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { limit: '25' } })
 
@@ -674,7 +750,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -704,7 +780,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       const result = await handler({ query: {} })
 
@@ -740,7 +816,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} }, h)
 
@@ -765,7 +841,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123' } })
 
@@ -787,7 +863,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { limit: '10', offset: '5' } })
 
@@ -812,7 +888,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} })
 
@@ -833,7 +909,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: {} })
 
@@ -861,7 +937,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes[1].handler
 
       await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } })
 
