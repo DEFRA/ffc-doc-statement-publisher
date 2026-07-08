@@ -4,8 +4,19 @@ const validateRequest = require('./validate-request')
 const getRequestEmailTemplateByType = require('./get-request-email-template-by-type')
 const documentTypes = require('../constants/document-types')
 const { sendAlert } = require('../alert')
+const { markClaimStatus, claimMessage } = require('./message-claim-helpers')
 
 const processPublishMessage = async (message, receiver) => {
+  const body = typeof message.body === 'string' ? JSON.parse(message.body) : message.body
+  const messageId = message.messageId || body.messageId || body.documentReference
+
+  const claimed = await claimMessage(messageId, body.documentReference)
+
+  if (!claimed) {
+    console.info(`Message already claimed, skipping duplicate: ${messageId}`)
+    return
+  }
+
   const request = message.body
   const type = message.applicationProperties?.type || request.type
   try {
@@ -16,6 +27,7 @@ const processPublishMessage = async (message, receiver) => {
     request.emailTemplate = emailTemplate
 
     await publishStatement(request)
+    await markClaimStatus(messageId, 'completed')
     await receiver.completeMessage(message)
   } catch (err) {
     console.error('Unable to publish statement:', err)
@@ -31,6 +43,7 @@ const processPublishMessage = async (message, receiver) => {
     }
     sendAlert('statement publish message', alertPayload, `Unable to publish statement: ${err.message}`)
 
+    await markClaimStatus(messageId, 'failed')
     if (err.category === VALIDATION) {
       await receiver.deadLetterMessage(message)
     } else {

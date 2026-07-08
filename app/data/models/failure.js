@@ -1,7 +1,7 @@
 const comment = 'Example Output: Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
 const commentDate = 'Example Output:  2024-02-09 00:00:00 Source: Documents Used on Statement? No, used to build and populate the Payment Statement Status Report'
 
-module.exports = (sequelize, DataTypes) => {
+const failureModel = (sequelize, DataTypes) => {
   /**
    * Please see https://docs.notifications.service.gov.uk/node.html#send-an-email-error-codes for
    * more details about Notify error codes
@@ -36,3 +36,5 @@ module.exports = (sequelize, DataTypes) => {
   }
   return failure
 }
+
+module.exports = failureModel

@@ -7,105 +7,119 @@ const {
   SCHEME_NAME_MAX_LENGTH
 } = require('../../constants/metric-defaults')
 
-function idColumn (DataTypes) {
+const idColumn = (DataTypes) => {
   return {
     type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   }
 }
-function snapshotDateColumn (DataTypes) {
+
+const snapshotDateColumn = (DataTypes) => {
   return {
     type: DataTypes.DATEONLY,
     allowNull: false,
     field: 'snapshot_date'
   }
 }
-function periodTypeColumn (DataTypes) {
+
+const periodTypeColumn = (DataTypes) => {
   return {
     type: DataTypes.STRING(PERIOD_TYPE_MAX_LENGTH),
     allowNull: false,
     field: 'period_type'
   }
 }
-function schemeNameColumn (DataTypes) {
+
+const schemeNameColumn = (DataTypes) => {
   return {
     type: DataTypes.STRING(SCHEME_NAME_MAX_LENGTH),
     allowNull: true,
     field: 'scheme_name'
   }
 }
-function schemeYearColumn (DataTypes) {
+
+const schemeYearColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     allowNull: true,
     field: 'scheme_year'
   }
 }
-function totalStatementsColumn (DataTypes) {
+
+const totalStatementsColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     defaultValue: DEFAULT_TOTAL_STATEMENTS,
     field: 'total_statements'
   }
 }
-function printPostCountColumn (DataTypes) {
+
+const printPostCountColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     defaultValue: DEFAULT_COUNT,
     field: 'print_post_count'
   }
 }
-function printPostCostColumn (DataTypes) {
+
+const printPostCostColumn = (DataTypes) => {
   return {
     type: DataTypes.BIGINT,
     defaultValue: DEFAULT_PRINT_POST_COST,
     field: 'print_post_cost'
   }
 }
-function printPostUnitCostColumn (DataTypes) {
+
+const printPostUnitCostColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     defaultValue: DEFAULT_PRINT_POST_UNIT_COST,
     field: 'print_post_unit_cost'
   }
 }
-function emailCountColumn (DataTypes) {
+
+const emailCountColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     defaultValue: DEFAULT_COUNT,
     field: 'email_count'
   }
 }
-function failureCountColumn (DataTypes) {
+
+const failureCountColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     defaultValue: DEFAULT_COUNT,
     field: 'failure_count'
   }
 }
-function calculatedAtColumn (DataTypes) {
+
+const calculatedAtColumn = (DataTypes) => {
   return {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
     field: 'calculated_at'
   }
 }
-function dataStartDateColumn (DataTypes) {
+
+const dataStartDateColumn = (DataTypes) => {
   return {
     type: DataTypes.DATE,
     allowNull: true,
     field: 'data_start_date'
   }
 }
-function dataEndDateColumn (DataTypes) {
+
+const dataEndDateColumn = (DataTypes) => {
   return {
     type: DataTypes.DATE,
     allowNull: true,
     field: 'data_end_date'
   }
 }
-function monthInYearColumn (DataTypes) {
+
+const monthInYearColumn = (DataTypes) => {
   return {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -113,7 +127,7 @@ function monthInYearColumn (DataTypes) {
   }
 }
 
-function defineMetricColumns (DataTypes) {
+const defineMetricColumns = (DataTypes) => {
   return {
     id: idColumn(DataTypes),
     snapshotDate: snapshotDateColumn(DataTypes),
@@ -133,7 +147,7 @@ function defineMetricColumns (DataTypes) {
   }
 }
 
-function defineMetricOptions () {
+const defineMetricOptions = () => {
   return {
     tableName: 'metrics',
     timestamps: false,
@@ -155,10 +169,10 @@ function defineMetricOptions () {
   }
 }
 
-function metric (sequelize, DataTypes) {
+const metricModel = (sequelize, DataTypes) => {
   const columns = defineMetricColumns(DataTypes)
   const options = defineMetricOptions()
   return sequelize.define('metric', columns, options)
 }
 
-module.exports = metric
+module.exports = metricModel
