@@ -25,10 +25,10 @@ deployment:
   minReadySeconds: 0
 
 container:
-  requestMemory: 250Mi
-  requestCpu: 240m
-  limitMemory: 250Mi
-  limitCpu: 240m
+  requestMemory: 350Mi
+  requestCpu: 340m
+  limitMemory: 350Mi
+  limitCpu: 340m
   messageQueueHost: namespace.servicebus.windows.net
   publishTopicAddress: ffc-doc-statement-publish
   publishSubscriptionAddress: ffc-doc-statement-publisher
