@@ -11,6 +11,12 @@ describe('statements route', () => {
   let consoleInfoSpy
   let consoleErrorSpy
 
+  const createResponseToolkit = () => ({
+    response: jest.fn().mockImplementation(obj => ({
+      code: jest.fn().mockReturnValue(obj)
+    }))
+  })
+
   beforeEach(() => {
     consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
@@ -194,6 +200,7 @@ describe('statements route', () => {
       expect(result.filename).toBe(filename)
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set filename:', filename)
     })
+
     test('should add received between criteria for 16-digit timestamp', () => {
       const db = require('../../../../app/data')
       const result = buildQueryCriteria({ timestamp: '2026020510450842' }, db)
@@ -335,34 +342,16 @@ describe('statements route', () => {
       formatStatementTimestamp = statementsModule.formatStatementTimestamp
     })
 
-    test('should format Date to 16-digit timestamp', () => {
-      const date = new Date('2026-02-15T10:09:23.450Z')
+    test.each([
+      ['2026-02-15T10:09:23.450Z', '2026021510092345'],
+      ['2026-01-01T00:00:00.000Z', '2026010100000000'],
+      ['2026-02-15T10:09:23.567Z', '2026021510092356'],
+      ['2026-02-15T10:09:23.999Z', '2026021510092399'],
+      ['2026-02-15T10:09:23.001Z', '2026021510092300']
+    ])('formats %s to %s', (inputIsoString, expectedTimestamp) => {
+      const date = new Date(inputIsoString)
       const result = formatStatementTimestamp(date)
-      expect(result).toBe('2026021510092345')
-    })
-
-    test('should handle dates with leading zeros', () => {
-      const date = new Date('2026-01-01T00:00:00.000Z')
-      const result = formatStatementTimestamp(date)
-      expect(result).toBe('2026010100000000')
-    })
-
-    test('should round milliseconds to centiseconds correctly', () => {
-      const date = new Date('2026-02-15T10:09:23.567Z')
-      const result = formatStatementTimestamp(date)
-      expect(result).toBe('2026021510092356')
-    })
-
-    test('should handle high millisecond values', () => {
-      const date = new Date('2026-02-15T10:09:23.999Z')
-      const result = formatStatementTimestamp(date)
-      expect(result).toBe('2026021510092399')
-    })
-
-    test('should handle low millisecond values', () => {
-      const date = new Date('2026-02-15T10:09:23.001Z')
-      const result = formatStatementTimestamp(date)
-      expect(result).toBe('2026021510092300')
+      expect(result).toBe(expectedTimestamp)
     })
   })
 
@@ -454,6 +443,7 @@ describe('statements route', () => {
 
   describe('handler', () => {
     test('returns payload with parsed values', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({
@@ -476,7 +466,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       const result = await handler({ query: {} })
 
@@ -495,6 +485,7 @@ describe('statements route', () => {
     })
 
     test('returns payload with null values when properties are missing', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({
@@ -517,7 +508,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       const result = await handler({ query: {} })
 
@@ -537,6 +528,7 @@ describe('statements route', () => {
 
     test('applies query filters correctly', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -550,7 +542,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', filename: 'my-file.pdf', timestamp: '2026020510450842' } })
 
@@ -578,6 +570,8 @@ describe('statements route', () => {
           received: '2026-06-04T11:45:20.000Z'
         }]
       })
+
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -591,9 +585,11 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
-      await handler({ query: { timestamp: '04-06-2026 11:45' } })
+      const h = createResponseToolkit()
+
+      await handler({ query: { timestamp: '04-06-2026 11:45' } }, h)
 
       expect(mockFindAll).toHaveBeenCalledTimes(1)
       const where = mockFindAll.mock.calls[0][0].where
@@ -617,6 +613,8 @@ describe('statements route', () => {
             received: '2026-06-04T11:46:00.000Z'
           }]
         })
+
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -630,9 +628,11 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[0].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
-      await handler({ query: { timestamp: '04-06-2026 11:45' } })
+      const h = createResponseToolkit()
+
+      await handler({ query: { timestamp: '04-06-2026 11:45' } }, h)
 
       expect(mockFindAll).toHaveBeenCalledTimes(2)
 
@@ -653,6 +653,7 @@ describe('statements route', () => {
 
     test('uses offset parameter when provided', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -666,7 +667,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { offset: '10' } })
 
@@ -679,6 +680,7 @@ describe('statements route', () => {
 
     test('prioritizes continuationToken over offset', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -692,7 +694,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { continuationToken: '20', offset: '10' } })
 
@@ -705,6 +707,7 @@ describe('statements route', () => {
 
     test('uses custom limit when provided', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -718,7 +721,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { limit: '25' } })
 
@@ -737,6 +740,7 @@ describe('statements route', () => {
         frn: '123',
         received: '2020-01-01T00:00:00.000Z'
       })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({ count: 150, rows: mockResults })
@@ -750,7 +754,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       const result = await handler({ query: {} })
 
@@ -758,6 +762,7 @@ describe('statements route', () => {
     })
 
     test('returns null continuation token when no more results', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({
@@ -780,7 +785,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       const result = await handler({ query: {} })
 
@@ -803,6 +808,7 @@ describe('statements route', () => {
         response: jest.fn().mockReturnValue(mockResponse)
       }
 
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockRejectedValue(new Error('DB error'))
@@ -816,7 +822,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: {} }, h)
 
@@ -828,6 +834,7 @@ describe('statements route', () => {
     })
 
     test('logs handler invocation with query parameters', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({ count: 0, rows: [] })
@@ -841,7 +848,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { frn: '123' } })
 
@@ -850,6 +857,7 @@ describe('statements route', () => {
 
     test('logs query execution details', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -863,7 +871,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { limit: '10', offset: '5' } })
 
@@ -875,6 +883,7 @@ describe('statements route', () => {
     })
 
     test('logs result count', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({ count: 2, rows: [{}, {}] })
@@ -888,7 +897,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: {} })
 
@@ -896,6 +905,7 @@ describe('statements route', () => {
     })
 
     test('logs response details', async () => {
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: jest.fn().mockResolvedValue({ count: 1, rows: [{}] })
@@ -909,7 +919,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: {} })
 
@@ -924,6 +934,7 @@ describe('statements route', () => {
 
     test('applies combined filters with pagination', async () => {
       const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
+      jest.resetModules()
       jest.doMock('../../../../app/data', () => ({
         statement: {
           findAndCountAll: mockFindAll
@@ -937,7 +948,7 @@ describe('statements route', () => {
       }))
 
       const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes[1].handler
+      const handler = routes.find(r => r.path === '/statements').handler
 
       await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } })
 
