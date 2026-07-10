@@ -11,6 +11,9 @@ jest.mock('../../../app/monitoring/check-delivery-status', () => ({
 const mockUpdateDeliveryFromResponse = jest.fn()
 jest.mock('../../../app/monitoring/update-delivery-from-response', () => mockUpdateDeliveryFromResponse)
 
+const mockSendAlert = jest.fn()
+jest.mock('../../../app/alert', () => ({ sendAlert: mockSendAlert }))
+
 const { DELIVERED, SENDING, CREATED, TEMPORARY_FAILURE, PERMANENT_FAILURE, TECHNICAL_FAILURE } = require('../../../app/constants/statuses')
 const { INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const updateDeliveries = require('../../../app/monitoring/update-deliveries')
@@ -29,6 +32,7 @@ describe('updateDeliveries', () => {
 
     mockCheckDeliveryStatus.mockResolvedValue({ data: { status: DELIVERED } })
     mockUpdateDeliveryFromResponse.mockResolvedValue()
+    mockSendAlert.mockResolvedValue()
   })
 
   afterEach(() => {
@@ -98,6 +102,30 @@ describe('updateDeliveries', () => {
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to update delivery 2'),
       'Test error'
+    )
+  })
+
+  test('should throw and alert when batch failure rate exceeds threshold', async () => {
+    mockProcessAllOutstandingDeliveries.mockImplementation(async (processFn) => {
+      const deliveries = [
+        { deliveryId: '1', reference: 'ref1' },
+        { deliveryId: '2', reference: 'ref2' },
+        { deliveryId: '3', reference: 'ref3' },
+        { deliveryId: '4', reference: 'ref4' }
+      ]
+      mockCheckDeliveryStatus.mockImplementation((reference) => {
+        if (reference === 'ref1') return Promise.resolve({ data: { status: DELIVERED } })
+        throw new Error('Notify unavailable')
+      })
+      await processFn(deliveries)
+      return { totalProcessed: 4, batchCount: 1 }
+    })
+
+    await expect(updateDeliveries()).rejects.toThrow('Batch failure rate exceeded threshold')
+    expect(mockSendAlert).toHaveBeenCalledWith(
+      'delivery status update',
+      expect.any(Error),
+      expect.stringContaining('Batch failure rate exceeded threshold: 3/4')
     )
   })
 
