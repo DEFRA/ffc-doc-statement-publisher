@@ -43,12 +43,12 @@ describe('message-claim-helpers', () => {
       expect(result).toBe(false)
     })
 
-    test('returns true and reclaims when the existing claim is stale (> 5 minutes)', async () => {
+    test('returns true and reclaims when the existing claim is stale (> 5 minutes) and status is processing', async () => {
       const error = new Error('duplicate')
       error.name = 'SequelizeUniqueConstraintError'
       db.messageClaim.create.mockRejectedValue(error)
       const staleDate = new Date(Date.now() - 6 * 60 * 1000)
-      db.messageClaim.findOne.mockResolvedValue({ updatedAt: staleDate })
+      db.messageClaim.findOne.mockResolvedValue({ status: 'processing', updatedAt: staleDate })
       db.messageClaim.update.mockResolvedValue({})
 
       const result = await claimMessage('message-1', 'document-1')
@@ -63,6 +63,20 @@ describe('message-claim-helpers', () => {
         expect.stringContaining('Stale message claim reclaimed')
       )
       expect(result).toBe(true)
+    })
+
+    test.each(['failed', 'completed'])('returns false when stale claim has status %s', async (status) => {
+      const error = new Error('duplicate')
+      error.name = 'SequelizeUniqueConstraintError'
+      db.messageClaim.create.mockRejectedValue(error)
+      const staleDate = new Date(Date.now() - 6 * 60 * 1000)
+      db.messageClaim.findOne.mockResolvedValue({ status, updatedAt: staleDate })
+
+      const result = await claimMessage('message-1', 'document-1')
+
+      expect(db.messageClaim.update).not.toHaveBeenCalled()
+      expect(mockSendAlert).not.toHaveBeenCalled()
+      expect(result).toBe(false)
     })
 
     test('returns false when no existing claim is found after constraint error', async () => {

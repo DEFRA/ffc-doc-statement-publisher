@@ -16,7 +16,7 @@ const claimMessage = async (messageId, documentReference) => {
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
       const existing = await db.messageClaim.findOne({ where: { messageId } })
-      if (existing && (Date.now() - new Date(existing.updatedAt).getTime() > RECLAIM_AFTER_MS)) {
+      if (existing && existing.status === 'processing' && (Date.now() - new Date(existing.updatedAt).getTime() > RECLAIM_AFTER_MS)) {
         const message = `Stale message claim reclaimed after ${RECLAIM_AFTER_MINUTES} minutes, retrying: ${messageId}`
         console.warn(message)
         await sendAlert('message claim', new Error(message), message)

@@ -6,7 +6,7 @@ const { processRetentionMessage } = require('./process-retention-message')
 
 let receivers = []
 const CONNECTION_COUNT = 3
-const MAX_CONCURRENT_MESSAGES = 10
+const MAX_CONCURRENT_MESSAGES = 5
 
 const start = async () => {
   try {
@@ -23,12 +23,8 @@ const start = async () => {
       }
 
       const receiver = new MessageReceiver(
-        config.publishSubscription,
-        publishAction,
-        {
-          maxConcurrentCalls: MAX_CONCURRENT_MESSAGES,
-          receiveMode: 'peekLock'
-        }
+        { ...config.publishSubscription, maxConcurrentCalls: MAX_CONCURRENT_MESSAGES, receiveMode: 'peekLock' },
+        publishAction
       )
 
       await receiver.subscribe()
