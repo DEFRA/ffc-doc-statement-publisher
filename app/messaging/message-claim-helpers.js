@@ -1,7 +1,9 @@
 const db = require('../data')
 const { sendAlert } = require('../alert')
 
-const RECLAIM_AFTER_MS = 5 * 60 * 1000
+const RECLAIM_AFTER_MINUTES = 5
+const MS_PER_MINUTE = 60 * 1000
+const RECLAIM_AFTER_MS = RECLAIM_AFTER_MINUTES * MS_PER_MINUTE
 
 const claimMessage = async (messageId, documentReference) => {
   try {
@@ -15,7 +17,7 @@ const claimMessage = async (messageId, documentReference) => {
     if (error.name === 'SequelizeUniqueConstraintError') {
       const existing = await db.messageClaim.findOne({ where: { messageId } })
       if (existing && (Date.now() - new Date(existing.updatedAt).getTime() > RECLAIM_AFTER_MS)) {
-        const message = `Stale message claim reclaimed after ${RECLAIM_AFTER_MS / 60000} minutes, retrying: ${messageId}`
+        const message = `Stale message claim reclaimed after ${RECLAIM_AFTER_MINUTES} minutes, retrying: ${messageId}`
         console.warn(message)
         await sendAlert('message claim', new Error(message), message)
         await db.messageClaim.update(

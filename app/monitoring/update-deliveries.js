@@ -19,7 +19,9 @@ const createConcurrencyLimiter = (concurrency) => {
         reject(err)
       } finally {
         running--
-        if (queue.length > 0) queue.shift()()
+        if (queue.length > 0) {
+          queue.shift()()
+        }
       }
     }
     running < concurrency ? run() : queue.push(run)
@@ -33,7 +35,7 @@ const updateDeliveries = async () => {
 
     const { totalProcessed, batchCount } = await processAllOutstandingDeliveries(async (deliveryBatch) => {
       const semaphore = createConcurrencyLimiter(CONCURRENCY)
-      const results = new Array(deliveryBatch.length)
+      const results = Array.from({ length: deliveryBatch.length })
 
       await Promise.all(deliveryBatch.map((delivery, i) =>
         semaphore(async () => {
