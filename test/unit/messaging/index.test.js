@@ -1,3 +1,11 @@
+const mockPublishSubscription = { host: 'test-host', address: 'test-publish', topic: 'test-publish-topic', type: 'subscription' }
+const mockRetentionSubscription = { host: 'test-host', address: 'test-retention', topic: 'test-retention-topic', type: 'subscription' }
+
+jest.mock('../../../app/config', () => ({
+  publishSubscription: mockPublishSubscription,
+  retentionSubscription: mockRetentionSubscription
+}))
+
 jest.mock('ffc-messaging', () => ({
   MessageReceiver: jest.fn().mockImplementation(() => ({
     subscribe: jest.fn(),
@@ -5,11 +13,11 @@ jest.mock('ffc-messaging', () => ({
   }))
 }))
 
-jest.mock('../../../app/data')
+jest.mock('../../../app/data', () => ({}))
 jest.mock('../../../app/alert', () => ({
   sendAlert: jest.fn()
 }))
-jest.mock('../../../app/messaging/process-publish-message')
+jest.mock('../../../app/messaging/process-publish-message', () => jest.fn())
 jest.mock('../../../app/messaging/process-retention-message', () => ({
   processRetentionMessage: jest.fn()
 }))
@@ -30,16 +38,18 @@ describe('messaging', () => {
 
   test('should start successfully and create all receivers including retention receiver', async () => {
     await messageService.start()
+    const config = require('../../../app/config')
     expect(MessageReceiver).toHaveBeenCalledTimes(4)
     for (let i = 0; i < 3; i++) {
-      expect(MessageReceiver.mock.calls[i][0]).toBe(require('../../../app/config').publishSubscription)
-      expect(typeof MessageReceiver.mock.calls[i][1]).toBe('function')
-      expect(MessageReceiver.mock.calls[i][2]).toEqual({
-        maxConcurrentCalls: 10,
+      expect(MessageReceiver.mock.calls[i][0]).toEqual({
+        ...config.publishSubscription,
+        maxConcurrentCalls: 5,
         receiveMode: 'peekLock'
       })
+      expect(typeof MessageReceiver.mock.calls[i][1]).toBe('function')
+      expect(MessageReceiver.mock.calls[i][2]).toBeUndefined()
     }
-    expect(MessageReceiver.mock.calls[3][0]).toBe(require('../../../app/config').retentionSubscription)
+    expect(MessageReceiver.mock.calls[3][0]).toBe(config.retentionSubscription)
     expect(typeof MessageReceiver.mock.calls[3][1]).toBe('function')
   })
 
