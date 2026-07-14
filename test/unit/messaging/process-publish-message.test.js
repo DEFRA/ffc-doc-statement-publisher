@@ -1,14 +1,14 @@
 jest.mock('../../../app/messaging/validate-request')
 const validateRequest = require('../../../app/messaging/validate-request')
 
-jest.mock('../../../app/publishing/publish-statement')
-const publishStatement = require('../../../app/publishing/publish-statement')
+jest.mock('../../../app/publishing', () => ({ publishStatement: jest.fn() }))
+const { publishStatement } = require('../../../app/publishing')
 
 jest.mock('../../../app/messaging/get-request-email-template-by-type')
 const getRequestEmailTemplateByType = require('../../../app/messaging/get-request-email-template-by-type')
 
 jest.mock('../../../app/messaging/message-claim-helpers')
-const { claimMessage, markClaimStatus } = require('../../../app/messaging/message-claim-helpers')
+const { claimMessage, markClaimStatus, getClaimStatus } = require('../../../app/messaging/message-claim-helpers')
 
 jest.mock('../../../app/alert', () => ({
   sendAlert: jest.fn()
@@ -36,6 +36,7 @@ describe('processPublishMessage', () => {
     getRequestEmailTemplateByType.mockReturnValue(EMAIL_TEMPLATE)
     claimMessage.mockResolvedValue(true)
     markClaimStatus.mockResolvedValue(undefined)
+    getClaimStatus.mockResolvedValue(null)
     sendAlert.mockImplementation(() => undefined)
 
     validateRequest.mockReturnValue({ value: message })
@@ -56,25 +57,43 @@ describe('processPublishMessage', () => {
     const expectedMessageId = message.messageId || message.body.messageId || message.body.documentReference
 
     expect(claimMessage).toHaveBeenCalledWith(expectedMessageId, message.body.documentReference)
-    expect(markClaimStatus).toHaveBeenCalledWith(expectedMessageId, 'completed')
     expect(publishStatement).toHaveBeenCalledWith(expect.objectContaining({
       ...message.body,
       emailTemplate: EMAIL_TEMPLATE
     }))
+    // completeMessage must be called before markClaimStatus to prevent stuck messages on lock expiry
+    const completeOrder = receiver.completeMessage.mock.invocationCallOrder[0]
+    const markOrder = markClaimStatus.mock.invocationCallOrder[0]
+    expect(completeOrder).toBeLessThan(markOrder)
     expect(receiver.completeMessage).toHaveBeenCalledWith(message)
+    expect(markClaimStatus).toHaveBeenCalledWith(expectedMessageId, 'completed')
     expect(receiver.abandonMessage).not.toHaveBeenCalled()
     expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
   })
 
-  test('does not publish or settle the message when it has already been claimed', async () => {
+  test('completes the Service Bus message when the claim already exists as completed', async () => {
     claimMessage.mockResolvedValue(false)
+    getClaimStatus.mockResolvedValue('completed')
 
     await processPublishMessage(message, receiver)
 
     expect(publishStatement).not.toHaveBeenCalled()
     expect(markClaimStatus).not.toHaveBeenCalled()
-    expect(receiver.completeMessage).not.toHaveBeenCalled()
+    expect(receiver.completeMessage).toHaveBeenCalledWith(message)
     expect(receiver.abandonMessage).not.toHaveBeenCalled()
+    expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
+  })
+
+  test('abandons the Service Bus message when the claim is held by another instance', async () => {
+    claimMessage.mockResolvedValue(false)
+    getClaimStatus.mockResolvedValue('processing')
+
+    await processPublishMessage(message, receiver)
+
+    expect(publishStatement).not.toHaveBeenCalled()
+    expect(markClaimStatus).not.toHaveBeenCalled()
+    expect(receiver.abandonMessage).toHaveBeenCalledWith(message)
+    expect(receiver.completeMessage).not.toHaveBeenCalled()
     expect(receiver.deadLetterMessage).not.toHaveBeenCalled()
   })
 

@@ -48,9 +48,11 @@ const scheduleNextRun = () => {
 const startMetricsPolling = () => {
   console.log('Starting metrics polling')
 
-  calculateAllMetrics().catch(err => {
-    console.error('Initial metrics calculation failed:', err)
-  })
+  if (!config.isProd) {
+    calculateAllMetrics().catch(err => {
+      console.error('Initial metrics calculation failed:', err)
+    })
+  }
 
   scheduleNextRun()
   return pollingInterval

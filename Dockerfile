@@ -26,4 +26,4 @@ LABEL uk.gov.defra.ffc.parent-image=defradigital/node:${PARENT_VERSION}
 COPY --from=development /home/node/app/ ./app/
 COPY --from=development /home/node/package*.json ./
 RUN HUSKY=0 npm ci --ignore-scripts
-CMD [ "node", "app" ]
+CMD [ "node", "--max-old-space-size=380", "app" ]

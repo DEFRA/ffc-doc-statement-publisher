@@ -39,18 +39,16 @@ describe('messaging', () => {
   test('should start successfully and create all receivers including retention receiver', async () => {
     await messageService.start()
     const config = require('../../../app/config')
-    expect(MessageReceiver).toHaveBeenCalledTimes(4)
-    for (let i = 0; i < 3; i++) {
-      expect(MessageReceiver.mock.calls[i][0]).toEqual({
-        ...config.publishSubscription,
-        maxConcurrentCalls: 5,
-        receiveMode: 'peekLock'
-      })
-      expect(typeof MessageReceiver.mock.calls[i][1]).toBe('function')
-      expect(MessageReceiver.mock.calls[i][2]).toBeUndefined()
-    }
-    expect(MessageReceiver.mock.calls[3][0]).toBe(config.retentionSubscription)
-    expect(typeof MessageReceiver.mock.calls[3][1]).toBe('function')
+    expect(MessageReceiver).toHaveBeenCalledTimes(2)
+    expect(MessageReceiver.mock.calls[0][0]).toEqual({
+      ...config.publishSubscription,
+      maxConcurrentCalls: 5,
+      receiveMode: 'peekLock'
+    })
+    expect(typeof MessageReceiver.mock.calls[0][1]).toBe('function')
+    expect(MessageReceiver.mock.calls[0][2]).toBeUndefined()
+    expect(MessageReceiver.mock.calls[1][0]).toBe(config.retentionSubscription)
+    expect(typeof MessageReceiver.mock.calls[1][1]).toBe('function')
   })
 
   test('should throw and send alert when any receiver subscribe fails', async () => {

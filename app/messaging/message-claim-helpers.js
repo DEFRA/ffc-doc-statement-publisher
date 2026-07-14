@@ -39,7 +39,13 @@ const markClaimStatus = async (messageId, status) => {
   )
 }
 
+const getClaimStatus = async (messageId) => {
+  const existing = await db.messageClaim.findOne({ where: { messageId } })
+  return existing?.status ?? null
+}
+
 module.exports = {
   claimMessage,
-  markClaimStatus
+  markClaimStatus,
+  getClaimStatus
 }
