@@ -10,7 +10,7 @@ const mockSendAlert = jest.fn()
 jest.mock('../../../app/alert', () => ({ sendAlert: mockSendAlert }))
 
 const db = require('../../../app/data')
-const { claimMessage, markClaimStatus } = require('../../../app/messaging/message-claim-helpers')
+const { claimMessage, markClaimStatus, getClaimStatus } = require('../../../app/messaging/message-claim-helpers')
 
 describe('message-claim-helpers', () => {
   beforeEach(() => {
@@ -106,6 +106,25 @@ describe('message-claim-helpers', () => {
         { status: 'completed', updatedAt: expect.any(Date) },
         { where: { messageId: 'message-1' } }
       )
+    })
+  })
+
+  describe('getClaimStatus', () => {
+    test('returns the status of an existing claim', async () => {
+      db.messageClaim.findOne.mockResolvedValue({ status: 'completed' })
+
+      const result = await getClaimStatus('message-1')
+
+      expect(db.messageClaim.findOne).toHaveBeenCalledWith({ where: { messageId: 'message-1' } })
+      expect(result).toBe('completed')
+    })
+
+    test('returns null when no claim exists', async () => {
+      db.messageClaim.findOne.mockResolvedValue(null)
+
+      const result = await getClaimStatus('message-1')
+
+      expect(result).toBeNull()
     })
   })
 })

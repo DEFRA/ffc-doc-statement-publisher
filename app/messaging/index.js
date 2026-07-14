@@ -5,7 +5,7 @@ const processPublishMessage = require('./process-publish-message')
 const { processRetentionMessage } = require('./process-retention-message')
 
 let receivers = []
-const CONNECTION_COUNT = 3
+const CONNECTION_COUNT = 1
 const MAX_CONCURRENT_MESSAGES = 5
 
 const start = async () => {
