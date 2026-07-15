@@ -4,7 +4,7 @@ const validateRequest = require('./validate-request')
 const getRequestEmailTemplateByType = require('./get-request-email-template-by-type')
 const documentTypes = require('../constants/document-types')
 const { sendAlert } = require('../alert')
-const { markClaimStatus, claimMessage } = require('./message-claim-helpers')
+const { markClaimStatus, claimMessage, getClaimStatus } = require('./message-claim-helpers')
 
 const processPublishMessage = async (message, receiver) => {
   const body = typeof message.body === 'string' ? JSON.parse(message.body) : message.body
@@ -13,7 +13,14 @@ const processPublishMessage = async (message, receiver) => {
   const claimed = await claimMessage(messageId, body.documentReference)
 
   if (!claimed) {
-    console.info(`Message already claimed, skipping duplicate: ${messageId}`)
+    const existingStatus = await getClaimStatus(messageId)
+    if (existingStatus === 'completed') {
+      console.info(`Message already processed, completing in Service Bus: ${messageId}`)
+      await receiver.completeMessage(message)
+    } else {
+      console.info(`Message already being processed by another instance, abandoning: ${messageId}`)
+      await receiver.abandonMessage(message)
+    }
     return
   }
 
@@ -27,8 +34,8 @@ const processPublishMessage = async (message, receiver) => {
     request.emailTemplate = emailTemplate
 
     await publishStatement(request)
-    await markClaimStatus(messageId, 'completed')
     await receiver.completeMessage(message)
+    await markClaimStatus(messageId, 'completed')
   } catch (err) {
     console.error('Unable to publish statement:', err)
 

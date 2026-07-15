@@ -20,14 +20,14 @@ containerSecret:
 deployment:
   minReplicas: 1
   maxReplicas: 3
-  cpuThreshold: 80
-  memoryThreshold: 80
+  cpuThreshold: 75
+  memoryThreshold: 65
   minReadySeconds: 0
 
 container:
-  requestMemory: 350Mi
+  requestMemory: 550Mi
   requestCpu: 340m
-  limitMemory: 350Mi
+  limitMemory: 550Mi
   limitCpu: 340m
   messageQueueHost: namespace.servicebus.windows.net
   publishTopicAddress: ffc-doc-statement-publish
