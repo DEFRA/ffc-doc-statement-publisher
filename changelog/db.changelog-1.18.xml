@@ -1,0 +1,28 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-3.9.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+  <changeSet id="1" author="Alistair Wishart">
+    <tagDatabase tag="v1.18.0" />
+    </changeSet>
+  <changeSet id="2" author="Alistair Wishart">
+    <createTable tableName="requests">
+      <column autoIncrement="true" name="id" type="bigserial">
+        <constraints primaryKey="true" primaryKeyName="id_pkey" nullable="false"/>
+      </column>
+      <column name="searchTerms" type="JSON">
+        <constraints nullable="false"/>
+      </column>
+      <column name="type" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="username" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="timestamp" type="TIMESTAMP" >
+        <constraints nullable="false" />
+      </column>
+       </createTable>
+  </changeSet>
+  <changeSet id="3" author="Alistair Wishart">
+    <setTableRemarks tableName="requests" remarks="Records all instances of Search or Download Statement requests from Pay Web"/>
+  </changeSet>
+</databaseChangeLog>
