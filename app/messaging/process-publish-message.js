@@ -6,6 +6,17 @@ const documentTypes = require('../constants/document-types')
 const { sendAlert } = require('../alert')
 const { markClaimStatus, claimMessage, getClaimStatus } = require('./message-claim-helpers')
 
+const ABANDON_BACKOFF_MS = 15_000
+const ABANDON_BACKOFF_MAX_MS = 3 * 60_000
+
+const delayedAbandon = async (message, receiver) => {
+  const delayMs = Math.min((message.deliveryCount || 0) * ABANDON_BACKOFF_MS, ABANDON_BACKOFF_MAX_MS)
+  if (delayMs > 0) {
+    await new Promise(resolve => setTimeout(resolve, delayMs))
+  }
+  await receiver.abandonMessage(message)
+}
+
 const processPublishMessage = async (message, receiver) => {
   const body = typeof message.body === 'string' ? JSON.parse(message.body) : message.body
   const messageId = message.messageId || body.messageId || body.documentReference
@@ -19,7 +30,7 @@ const processPublishMessage = async (message, receiver) => {
       await receiver.completeMessage(message)
     } else {
       console.info(`Message already being processed by another instance, abandoning: ${messageId}`)
-      await receiver.abandonMessage(message)
+      await delayedAbandon(message, receiver)
     }
     return
   }
@@ -54,7 +65,7 @@ const processPublishMessage = async (message, receiver) => {
     if (err.category === VALIDATION) {
       await receiver.deadLetterMessage(message)
     } else {
-      await receiver.abandonMessage(message)
+      await delayedAbandon(message, receiver)
     }
   }
 }

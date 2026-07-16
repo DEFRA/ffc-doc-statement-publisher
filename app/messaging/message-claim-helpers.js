@@ -1,7 +1,7 @@
 const db = require('../data')
 const { sendAlert } = require('../alert')
 
-const RECLAIM_AFTER_MINUTES = 5
+const RECLAIM_AFTER_MINUTES = 2
 const MS_PER_MINUTE = 60 * 1000
 const RECLAIM_AFTER_MS = RECLAIM_AFTER_MINUTES * MS_PER_MINUTE
 
