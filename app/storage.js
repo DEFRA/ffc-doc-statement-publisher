@@ -75,7 +75,7 @@ const saveReportFile = async (filename, readableStream) => {
 
       readableStream.on('data', (chunk) => {
         hasData = true
-        console.debug('[STORAGE] Received chunk:', chunk)
+        console.debug('[STORAGE] Received chunk:', chunk.toString('utf8'))
       })
 
       readableStream.on('end', () => {

@@ -22,6 +22,9 @@ container:
   reportDurationType: months
   retentionPeriodInWeeks: 78
   alertTopicAddress: ffc-doc-alerting
+ingress:
+  server: azure.defra.cloud
+  endpoint: ffc-doc-statement-publisher-test
 secretProviderClass:
   azure:
     keyvaultName: DEVFFCINFKV1001

@@ -33,6 +33,7 @@ data:
   AZURE_LOG_LEVEL: {{ quote .Values.container.azureLogLevel }}
   NOTIFY_API_KEY: {{ quote .Values.container.notifyApiKey }}
   NOTIFY_API_KEY_LETTER: {{ quote .Values.container.notifyApiKeyLetter }}
+  NOTIFY_CALLBACK_BEARER_TOKEN: {{ quote .Values.container.notifyCallbackBearerToken }}
   STATEMENT_RECEIVER_API_VERSION: {{ quote .Values.container.statementReceiverApiVersion }}
   DELINKED_INTERVAL_NUMBER: {{ quote .Values.container.reportIntervalNumber }}
   DELINKED_INTERVAL_TYPE: {{ quote .Values.container.reportIntervalType }}

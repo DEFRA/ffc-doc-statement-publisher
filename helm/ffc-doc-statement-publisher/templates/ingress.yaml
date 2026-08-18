@@ -1,0 +1,9 @@
+{{- include "ffc-helm-library.ingress" (list . "ffc-doc-statement-publisher.ingress") -}}
+{{- define "ffc-doc-statement-publisher.ingress" -}}
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /notify/callback
+        pathType: Prefix
+{{- end -}}
