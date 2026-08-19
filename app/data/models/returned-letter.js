@@ -11,7 +11,7 @@ const returnedLetterModel = (sequelize, DataTypes) => {
       unique: true
     },
     reference: {
-      type: DataTypes.UUID,
+      type: DataTypes.STRING,
       index: true
     },
     dateSent: {

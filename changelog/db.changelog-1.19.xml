@@ -11,7 +11,7 @@
         <column name="notificationId" type="uuid">
             <constraints nullable="false" unique="true"/>
         </column>
-        <column name="reference" type="uuid"/>
+        <column name="reference" type="varchar(255)"/>
         <column name="dateSent" type="timestamp"/>
         <column name="receivedAt" type="timestamp">
             <constraints nullable="false"/>

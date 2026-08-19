@@ -59,9 +59,9 @@ describe('returned-letters route', () => {
   describe('handler', () => {
     const validPayload = {
       notification_id: 'Te5T1nG-t43-k3y1D-d035-1T5Th1n6',
-      reference: 'a1b2c3d4-0000-0000-0000-000000000001',
+      reference: 'DELINKED_TEST_00000001_2023_statement.pdf',
       date_sent: '2026-08-18T10:00:00.000000Z',
-      upload_letter_file_name: 'SFI_00000001_2023_statement.pdf'
+      upload_letter_file_name: null
     }
 
     test('returns 401 when Authorization header is missing', async () => {
@@ -125,9 +125,9 @@ describe('returned-letters route', () => {
 describe('returned-letters route via server.inject()', () => {
   const VALID_PAYLOAD = {
     notification_id: 'Te5T1nG-t43-k3y1D-d035-1T5Th1n6',
-    reference: 'a1b2c3d4-0000-0000-0000-000000000001',
+    reference: 'DELINKED_TEST_00000001_2023_statement.pdf',
     date_sent: '2026-08-18T10:00:00.000000Z',
-    upload_letter_file_name: 'SFI_00000001_2023_statement.pdf'
+    upload_letter_file_name: null
   }
 
   let server
