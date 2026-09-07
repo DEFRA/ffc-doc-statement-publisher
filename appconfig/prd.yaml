@@ -22,6 +22,7 @@ container:
   reportDurationType: months
   retentionPeriodInWeeks: 78
   alertTopicAddress: ffc-doc-alerting
+
 secretProviderClass:
   azure:
     keyvaultName: PRDFFCINFKV1001

@@ -44,6 +44,7 @@ container:
   storageReportFolder: reports
   notifyApiKey: dummy
   notifyApiKeyLetter: dummy
+  notifyCallbackBearerToken: dummy
   statementReceiverApiVersion: v1
   statementReceiverEndpoint: https://ffc-doc-statement-receiver
   reportIntervalNumber: 1

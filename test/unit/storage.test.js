@@ -265,7 +265,7 @@ describe('storage', () => {
       await storage.saveReportFile(filename, readableStream)
 
       expect(console.log).toHaveBeenCalledWith('[STORAGE] Starting report file save:', filename)
-      expect(console.debug).toHaveBeenCalledWith('[STORAGE] Received chunk:', chunk)
+      expect(console.debug).toHaveBeenCalledWith('[STORAGE] Received chunk:', chunk.toString('utf8'))
       expect(console.debug).toHaveBeenCalledWith('[STORAGE] Stream ended, had data:', true)
 
       const expectedBlobPath = `${mockStorageConfig.reportFolder}/${filename}`

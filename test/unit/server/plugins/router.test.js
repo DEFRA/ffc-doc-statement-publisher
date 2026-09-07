@@ -4,6 +4,7 @@ describe('router plugin', () => {
   let mockHealthzRoute
   let mockMetricsRoute
   let mockStatementsRoute
+  let mockReturnedLettersRoute
 
   beforeEach(() => {
     jest.resetModules()
@@ -13,10 +14,13 @@ describe('router plugin', () => {
     mockMetricsRoute = [{ path: '/metrics', method: 'GET' }]
     mockStatementsRoute = [{ path: '/statements', method: 'GET' }]
 
+    mockReturnedLettersRoute = { path: '/notify/callback/returned-letters', method: 'POST', options: { auth: false }, handler: jest.fn() }
+
     jest.mock('../../../../app/server/routes/healthy', () => mockHealthyRoute)
     jest.mock('../../../../app/server/routes/healthz', () => mockHealthzRoute)
     jest.mock('../../../../app/server/routes/metrics', () => mockMetricsRoute)
     jest.mock('../../../../app/server/routes/statements', () => mockStatementsRoute)
+    jest.mock('../../../../app/server/routes/returned-letters', () => mockReturnedLettersRoute)
 
     routerPlugin = require('../../../../app/server/plugins/router')
   })
@@ -50,7 +54,8 @@ describe('router plugin', () => {
         mockHealthyRoute,
         mockHealthzRoute,
         ...mockMetricsRoute,
-        ...mockStatementsRoute
+        ...mockStatementsRoute,
+        mockReturnedLettersRoute
       ])
     })
 
