@@ -1,47 +1,51 @@
-const db = require('../../../app/data')
-const saveDelivery = require('../../../app/publishing/save-delivery')
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['delivery'])
 
 jest.mock('../../../app/data', () => ({
-  delivery: {
-    create: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
+const saveDelivery = require('../../../app/publishing/save-delivery')
+
 describe('saveDelivery', () => {
-  const transaction = {}
+  const transaction = mockDb.trx
   const timestamp = new Date()
 
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves([{ deliveryId: '789' }])
   })
 
   test.each([
     ['email', '123', 'ref-456'],
     ['letter', '124', 'ref-789']
   ])(
-    'should call db.delivery.create with correct parameters for method %s',
+    'should insert a delivery row with correct parameters for method %s',
     async (method, statementId, reference) => {
       await saveDelivery(statementId, method, reference, timestamp, transaction)
-      expect(db.delivery.create).toHaveBeenCalledWith({
+      expect(mockDb.tables.delivery).toHaveBeenCalledWith(transaction)
+      expect(mockDb.builder.insert).toHaveBeenCalledWith({
         statementId,
         method,
         reference,
         requested: timestamp
-      }, { transaction })
+      })
+      expect(mockDb.builder.returning).toHaveBeenCalledWith(['deliveryId'])
     }
   )
 
-  test('should return the result of db.delivery.create', async () => {
-    const mockResult = { id: '789' }
-    db.delivery.create.mockResolvedValue(mockResult)
-
+  test('should return the saved row', async () => {
     const result = await saveDelivery('123', 'email', 'ref-456', timestamp, transaction)
-    expect(result).toBe(mockResult)
+    expect(result).toEqual({ deliveryId: '789' })
   })
 
-  test('should handle errors thrown by db.delivery.create', async () => {
+  test('should handle errors thrown while saving', async () => {
     const error = new Error('Test error')
-    db.delivery.create.mockRejectedValue(error)
+    mockDb.builder.rejects(error)
 
     await expect(saveDelivery('123', 'email', 'ref-456', timestamp, transaction))
       .rejects.toThrow('Test error')

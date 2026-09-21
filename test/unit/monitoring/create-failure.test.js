@@ -1,14 +1,23 @@
-const db = require('../../../app/data')
-const createFailure = require('../../../app/monitoring/create-failure')
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['failure'])
 
 jest.mock('../../../app/data', () => ({
-  failure: {
-    create: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
+const createFailure = require('../../../app/monitoring/create-failure')
+
 describe('processCreateFailure', () => {
-  const transaction = {}
+  const transaction = mockDb.trx
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockDb.builder.resolves()
+  })
 
   test.each([
     {
@@ -26,15 +35,13 @@ describe('processCreateFailure', () => {
       errorObject: null,
       expected: { reason: undefined, statusCode: null, error: null, message: null }
     }
-  ])('should call db.failure.create correctly $description', async ({ errorObject, expected }) => {
+  ])('should insert the failure row correctly $description', async ({ errorObject, expected }) => {
     const deliveryId = '123'
     const timestamp = new Date()
 
     await createFailure(deliveryId, errorObject, timestamp, transaction)
 
-    expect(db.failure.create).toHaveBeenCalledWith(
-      { deliveryId, failed: timestamp, ...expected },
-      { transaction }
-    )
+    expect(mockDb.tables.failure).toHaveBeenCalledWith(transaction)
+    expect(mockDb.builder.insert).toHaveBeenCalledWith({ deliveryId, failed: timestamp, ...expected })
   })
 })

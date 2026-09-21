@@ -1,55 +1,45 @@
-const { removeStatements } = require('../../../app/retention/remove-statements')
-const db = require('../../../app/data')
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['statement'])
 
 jest.mock('../../../app/data', () => ({
-  Sequelize: {
-    Op: {
-      in: 'IN_OPERATOR'
-    }
-  },
-  statement: {
-    destroy: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
+
+const { removeStatements } = require('../../../app/retention/remove-statements')
 
 describe('removeStatements', () => {
   const statementIds = [10, 20, 30]
-  const mockTransaction = { id: 'transaction-object' }
+  const mockTransaction = mockDb.trx
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves(3)
   })
 
-  test('calls db.statement.destroy with correct parameters including transaction', async () => {
-    db.statement.destroy.mockResolvedValue(3) // optional: number of rows deleted
-
+  test('deletes statements with statementId in the given list, including transaction', async () => {
     await removeStatements(statementIds, mockTransaction)
 
-    expect(db.statement.destroy).toHaveBeenCalledTimes(1)
-    expect(db.statement.destroy).toHaveBeenCalledWith({
-      where: {
-        statementId: { [db.Sequelize.Op.in]: statementIds }
-      },
-      transaction: mockTransaction
-    })
+    expect(mockDb.tables.statement).toHaveBeenCalledTimes(1)
+    expect(mockDb.tables.statement).toHaveBeenCalledWith(mockTransaction)
+    expect(mockDb.builder.whereIn).toHaveBeenCalledWith('statementId', statementIds)
+    expect(mockDb.builder.del).toHaveBeenCalledTimes(1)
   })
 
   test('passes undefined transaction if not provided', async () => {
-    db.statement.destroy.mockResolvedValue(0)
+    mockDb.builder.resolves(0)
 
     await removeStatements(statementIds)
 
-    expect(db.statement.destroy).toHaveBeenCalledWith({
-      where: {
-        statementId: { [db.Sequelize.Op.in]: statementIds }
-      },
-      transaction: undefined
-    })
+    expect(mockDb.tables.statement).toHaveBeenCalledWith(undefined)
   })
 
-  test('propagates errors from db.statement.destroy', async () => {
+  test('propagates errors from the delete', async () => {
     const error = new Error('DB failure')
-    db.statement.destroy.mockRejectedValue(error)
+    mockDb.builder.rejects(error)
 
     await expect(removeStatements(statementIds, mockTransaction)).rejects.toThrow('DB failure')
   })

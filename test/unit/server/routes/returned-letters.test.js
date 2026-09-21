@@ -1,3 +1,5 @@
+const { createQueryBuilder } = require('../../../helpers/mock-knex')
+
 const mockConfig = {
   notifyCallbackBearerToken: 'test-secret-token',
   port: 3010,
@@ -5,11 +7,12 @@ const mockConfig = {
 }
 
 const setupMocks = () => {
-  const mockCreate = jest.fn().mockResolvedValue({})
+  const builder = createQueryBuilder().resolves({})
+  const mockReturnedLetter = jest.fn(() => builder)
+  const mockCreate = builder.insert
 
   jest.mock('../../../../app/data', () => ({
-    returnedLetter: { create: mockCreate },
-    sequelize: { literal: jest.fn().mockReturnValue('') }
+    returnedLetter: mockReturnedLetter
   }))
 
   jest.mock('../../../../app/config', () => mockConfig)
@@ -109,10 +112,10 @@ describe('returned-letters route', () => {
       expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ reference: null }))
     })
 
-    test('returns 500 when db.create throws', async () => {
+    test('returns 500 when the insert throws', async () => {
       const mockResponse = { code: jest.fn().mockReturnThis() }
       mockH.response.mockReturnValue(mockResponse)
-      mockCreate.mockRejectedValue(new Error('DB error'))
+      mockCreate.mockImplementationOnce(() => { throw new Error('DB error') })
 
       await route.handler({ headers: { authorization: 'Bearer test-secret-token' }, payload: validPayload }, mockH)
 

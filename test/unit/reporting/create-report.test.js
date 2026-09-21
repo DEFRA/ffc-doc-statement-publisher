@@ -1,9 +1,21 @@
-const createReport = require('../../../app/reporting/create-report')
-const db = require('../../../app/data')
+const { createKnexMock } = require('../../helpers/mock-knex')
 
-jest.mock('../../../app/data')
+const mockDb = createKnexMock(['report'])
+
+jest.mock('../../../app/data', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
+}))
+
+const createReport = require('../../../app/reporting/create-report')
 
 describe('createReport', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   test('should create a report with the given parameters', async () => {
     const schemeName = 'Test Scheme'
     const lastDeliveryId = 123
@@ -12,6 +24,7 @@ describe('createReport', () => {
     const requested = new Date('2024-12-12')
 
     const mockReport = {
+      reportId: 1,
       lastDeliveryId,
       schemeName,
       reportStartDate,
@@ -19,21 +32,19 @@ describe('createReport', () => {
       requested
     }
 
-    // Mock the create method
-    db.report.create.mockResolvedValue(mockReport)
+    mockDb.builder.resolves([mockReport])
 
     const result = await createReport(schemeName, lastDeliveryId, reportStartDate, reportEndDate, requested)
 
-    expect(db.report.create).toHaveBeenCalledWith(
-      {
-        lastDeliveryId,
-        schemeName,
-        reportStartDate,
-        reportEndDate,
-        requested
-      }
-    )
-
+    expect(mockDb.tables.report).toHaveBeenCalledWith()
+    expect(mockDb.builder.insert).toHaveBeenCalledWith({
+      lastDeliveryId,
+      schemeName,
+      reportStartDate,
+      reportEndDate,
+      requested
+    })
+    expect(mockDb.builder.returning).toHaveBeenCalledWith('*')
     expect(result).toEqual(mockReport)
   })
 })

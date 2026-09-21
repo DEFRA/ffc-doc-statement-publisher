@@ -1,12 +1,20 @@
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['statement', 'delivery'])
+
+jest.mock('../../../app/data', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
+}))
+jest.mock('../../../app/publishing/publish')
+jest.mock('../../../app/publishing/is-dp-scheme')
+
 const { LETTER } = require('../../../app/constants/methods')
-const db = require('../../../app/data')
 const publish = require('../../../app/publishing/publish')
 const isDpScheme = require('../../../app/publishing/is-dp-scheme')
 const scheduleLetter = require('../../../app/monitoring/schedule-letter')
-
-jest.mock('../../../app/data')
-jest.mock('../../../app/publishing/publish')
-jest.mock('../../../app/publishing/is-dp-scheme')
 
 describe('processScheduleLetter', () => {
   let mockTransaction
@@ -17,10 +25,7 @@ describe('processScheduleLetter', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockTransaction = {
-      commit: jest.fn(),
-      rollback: jest.fn()
-    }
+    mockTransaction = mockDb.trx
 
     delivery = {
       deliveryId: '456',
@@ -38,7 +43,7 @@ describe('processScheduleLetter', () => {
 
     publishResponse = { data: { id: 'notify-ref-789' } }
 
-    db.statement.findOne.mockResolvedValue(statement)
+    mockDb.builder.resolves(statement)
     isDpScheme.mockReturnValue(true)
     publish.mockResolvedValue(publishResponse)
   })
@@ -51,14 +56,12 @@ describe('processScheduleLetter', () => {
 
   test('gets statement using transaction', async () => {
     await scheduleLetter(delivery, mockTransaction)
-    expect(db.statement.findOne).toHaveBeenCalledWith({
-      where: { statementId: delivery.statementId },
-      transaction: mockTransaction
-    })
+    expect(mockDb.tables.statement).toHaveBeenCalledWith(mockTransaction)
+    expect(mockDb.builder.where).toHaveBeenCalledWith({ statementId: delivery.statementId })
   })
 
   test('throws error if statement not found', async () => {
-    db.statement.findOne.mockResolvedValue(null)
+    mockDb.builder.resolves(undefined)
     await expect(scheduleLetter(delivery, mockTransaction))
       .rejects
       .toThrow(`Statement not found for statementId: ${delivery.statementId}`)
@@ -73,7 +76,7 @@ describe('processScheduleLetter', () => {
       const result = await scheduleLetter(delivery, mockTransaction)
       expect(result).toBe(false)
       expect(publish).not.toHaveBeenCalled()
-      expect(db.delivery.create).not.toHaveBeenCalled()
+      expect(mockDb.builder.insert).not.toHaveBeenCalled()
     })
 
     test('logs non-DP scheme message', async () => {
@@ -103,14 +106,16 @@ describe('processScheduleLetter', () => {
 
     test('creates new delivery record with correct data', async () => {
       const timestamp = new Date()
-      jest.spyOn(global, 'Date').mockImplementation(() => timestamp)
+      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(() => timestamp)
       await scheduleLetter(delivery, mockTransaction)
-      expect(db.delivery.create).toHaveBeenCalledWith({
+      dateSpy.mockRestore()
+      expect(mockDb.tables.delivery).toHaveBeenCalledWith(mockTransaction)
+      expect(mockDb.builder.insert).toHaveBeenCalledWith({
         statementId: delivery.statementId,
         method: LETTER,
         reference: publishResponse.data.id,
         requested: timestamp
-      }, { transaction: mockTransaction })
+      })
     })
 
     test('returns true on successful scheduling', async () => {
@@ -128,14 +133,15 @@ describe('processScheduleLetter', () => {
   })
 
   describe('error handling', () => {
-    const errorCases = [
-      { name: 'publish error', mockFn: () => publish.mockRejectedValue(new Error('Publish failed')), expectedError: 'Publish failed' },
-      { name: 'delivery creation error', mockFn: () => db.delivery.create.mockRejectedValue(new Error('DB error')), expectedError: 'DB error' }
-    ]
+    test('throws publish error', async () => {
+      publish.mockRejectedValue(new Error('Publish failed'))
+      await expect(scheduleLetter(delivery, mockTransaction)).rejects.toThrow('Publish failed')
+    })
 
-    test.each(errorCases)('throws $name', async ({ mockFn, expectedError }) => {
-      mockFn()
-      await expect(scheduleLetter(delivery, mockTransaction)).rejects.toThrow(expectedError)
+    test('throws delivery creation error', async () => {
+      publish.mockResolvedValue(publishResponse)
+      mockDb.builder.insert.mockImplementationOnce(() => { throw new Error('DB error') })
+      await expect(scheduleLetter(delivery, mockTransaction)).rejects.toThrow('DB error')
     })
 
     test('logs publish errors', async () => {

@@ -8,13 +8,9 @@ const mockTransaction = jest.fn().mockImplementation(() => {
   }
 })
 
-const mockSequelize = {
-  transaction: mockTransaction
-}
-
 jest.mock('../../../app/data', () => {
   return {
-    sequelize: mockSequelize
+    transaction: mockTransaction
   }
 })
 

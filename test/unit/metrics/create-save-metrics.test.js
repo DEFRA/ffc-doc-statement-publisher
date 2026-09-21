@@ -1,20 +1,24 @@
-const { saveMetrics, createMetricRecord } = require('../../../app/metrics/create-save-metrics')
+const { METRIC_SELECT } = require('../../../app/metrics/metric-columns')
 const { DEFAULT_PRINT_POST_UNIT_COST } = require('../../../app/constants/print-post-pricing')
 const { PERIOD_ALL, PERIOD_YEAR, PERIOD_MONTH_IN_YEAR, PERIOD_MONTH, PERIOD_WEEK, PERIOD_DAY } = require('../../../app/constants/periods')
 
+const { createKnexMock, createQueryBuilder } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['metric'])
+
 jest.mock('../../../app/data', () => ({
-  metric: {
-    findAll: jest.fn(),
-    update: jest.fn(),
-    bulkCreate: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
-const db = require('../../../app/data')
+const { saveMetrics, createMetricRecord } = require('../../../app/metrics/create-save-metrics')
 
 describe('create-save-metrics', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves([])
   })
 
   describe('createMetricRecord', () => {
@@ -298,19 +302,17 @@ describe('create-save-metrics', () => {
     const endDate = new Date(2024, 11, 31)
 
     test('should handle empty results array', async () => {
-      db.metric.findAll.mockResolvedValue([])
-
       const result = await saveMetrics([], PERIOD_ALL, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 0, updated: 0 })
-      expect(db.metric.findAll).toHaveBeenCalledWith({
-        where: {
-          snapshotDate,
-          periodType: PERIOD_ALL
-        }
+      expect(mockDb.tables.metric).toHaveBeenCalledWith()
+      expect(mockDb.builder.select).toHaveBeenCalledWith(METRIC_SELECT)
+      expect(mockDb.builder.where).toHaveBeenCalledWith({
+        snapshot_date: snapshotDate,
+        period_type: PERIOD_ALL
       })
-      expect(db.metric.bulkCreate).not.toHaveBeenCalled()
-      expect(db.metric.update).not.toHaveBeenCalled()
+      expect(mockDb.builder.insert).not.toHaveBeenCalled()
+      expect(mockDb.builder.update).not.toHaveBeenCalled()
     })
 
     test('should insert new metrics when no existing records found', async () => {
@@ -339,34 +341,25 @@ describe('create-save-metrics', () => {
         }
       ]
 
-      db.metric.findAll.mockResolvedValue([])
-      db.metric.bulkCreate.mockResolvedValue([{}, {}])
-
       const result = await saveMetrics(results, PERIOD_ALL, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 2, updated: 0 })
-      expect(db.metric.findAll).toHaveBeenCalledWith({
-        where: {
-          snapshotDate,
-          periodType: PERIOD_ALL
-        }
-      })
-      expect(db.metric.bulkCreate).toHaveBeenCalledTimes(1)
-      expect(db.metric.bulkCreate).toHaveBeenCalledWith(
+      expect(mockDb.builder.insert).toHaveBeenCalledTimes(1)
+      expect(mockDb.builder.insert).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            schemeName: 'SFI',
-            schemeYear: '2024',
-            totalStatements: 100
+            scheme_name: 'SFI',
+            scheme_year: '2024',
+            total_statements: 100
           }),
           expect.objectContaining({
-            schemeName: 'DP',
-            schemeYear: '2024',
-            totalStatements: 200
+            scheme_name: 'DP',
+            scheme_year: '2024',
+            total_statements: 200
           })
         ])
       )
-      expect(db.metric.update).not.toHaveBeenCalled()
+      expect(mockDb.builder.update).not.toHaveBeenCalled()
     })
 
     test('should update existing metrics when records found', async () => {
@@ -391,24 +384,23 @@ describe('create-save-metrics', () => {
         monthInYear: null
       }
 
-      db.metric.findAll.mockResolvedValue([existingRecord])
-      db.metric.update.mockResolvedValue([1])
+      mockDb.builder.resolves([existingRecord])
 
       const result = await saveMetrics(results, PERIOD_ALL, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 0, updated: 1 })
-      expect(db.metric.update).toHaveBeenCalledTimes(1)
-      expect(db.metric.update).toHaveBeenCalledWith(
+      expect(mockDb.builder.update).toHaveBeenCalledTimes(1)
+      expect(mockDb.builder.where).toHaveBeenCalledWith({ id: 123 })
+      expect(mockDb.builder.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 123,
-          schemeName: 'SFI',
-          schemeYear: '2024',
-          monthInYear: null,
-          totalStatements: 100
-        }),
-        { where: { id: 123 } }
+          scheme_name: 'SFI',
+          scheme_year: '2024',
+          month_in_year: null,
+          total_statements: 100
+        })
       )
-      expect(db.metric.bulkCreate).not.toHaveBeenCalled()
+      expect(mockDb.builder.insert).not.toHaveBeenCalled()
     })
 
     test('should handle mixed inserts and updates', async () => {
@@ -463,19 +455,17 @@ describe('create-save-metrics', () => {
         }
       ]
 
-      db.metric.findAll.mockResolvedValue(existingRecords)
-      db.metric.update.mockResolvedValue([1])
-      db.metric.bulkCreate.mockResolvedValue([{}])
+      mockDb.builder.resolves(existingRecords)
 
       const result = await saveMetrics(results, PERIOD_ALL, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 1, updated: 2 })
-      expect(db.metric.update).toHaveBeenCalledTimes(2)
-      expect(db.metric.bulkCreate).toHaveBeenCalledTimes(1)
-      expect(db.metric.bulkCreate).toHaveBeenCalledWith(
+      expect(mockDb.builder.update).toHaveBeenCalledTimes(2)
+      expect(mockDb.builder.insert).toHaveBeenCalledTimes(1)
+      expect(mockDb.builder.insert).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            schemeName: 'BPS'
+            scheme_name: 'BPS'
           })
         ])
       )
@@ -503,18 +493,17 @@ describe('create-save-metrics', () => {
         monthInYear: 6
       }
 
-      db.metric.findAll.mockResolvedValue([existingRecord])
-      db.metric.update.mockResolvedValue([1])
+      mockDb.builder.resolves([existingRecord])
 
       const result = await saveMetrics(results, PERIOD_MONTH_IN_YEAR, snapshotDate, startDate, endDate)
 
       expect(result).toEqual({ inserted: 0, updated: 1 })
-      expect(db.metric.update).toHaveBeenCalledWith(
+      expect(mockDb.builder.where).toHaveBeenCalledWith({ id: 456 })
+      expect(mockDb.builder.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 456,
-          monthInYear: 6
-        }),
-        { where: { id: 456 } }
+          month_in_year: 6
+        })
       )
     })
 
@@ -559,16 +548,15 @@ describe('create-save-metrics', () => {
         }
       ]
 
-      db.metric.findAll.mockResolvedValue(existingRecords)
-      db.metric.update.mockResolvedValue([1])
+      mockDb.builder.resolves(existingRecords)
 
       const result = await saveMetrics(results, PERIOD_ALL, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 0, updated: 2 })
-      expect(db.metric.update).toHaveBeenCalledTimes(2)
+      expect(mockDb.builder.update).toHaveBeenCalledTimes(2)
     })
 
-    test('should propagate error from findAll', async () => {
+    test('should propagate error from the existing-records lookup', async () => {
       const results = [
         {
           'statement.schemeName': 'SFI',
@@ -583,13 +571,13 @@ describe('create-save-metrics', () => {
         }
       ]
 
-      db.metric.findAll.mockRejectedValue(new Error('Database connection error'))
+      mockDb.builder.rejects(new Error('Database connection error'))
 
       await expect(saveMetrics(results, PERIOD_ALL, snapshotDate, null, null))
         .rejects.toThrow('Database connection error')
     })
 
-    test('should propagate error from bulkCreate', async () => {
+    test('should propagate error from insert', async () => {
       const results = [
         {
           'statement.schemeName': 'SFI',
@@ -604,8 +592,11 @@ describe('create-save-metrics', () => {
         }
       ]
 
-      db.metric.findAll.mockResolvedValue([])
-      db.metric.bulkCreate.mockRejectedValue(new Error('Bulk insert failed'))
+      const selectBuilder = createQueryBuilder().resolves([])
+      const insertBuilder = createQueryBuilder().rejects(new Error('Bulk insert failed'))
+      mockDb.tables.metric
+        .mockReturnValueOnce(selectBuilder)
+        .mockReturnValueOnce(insertBuilder)
 
       await expect(saveMetrics(results, PERIOD_ALL, snapshotDate, null, null))
         .rejects.toThrow('Bulk insert failed')
@@ -633,23 +624,22 @@ describe('create-save-metrics', () => {
         monthInYear: null
       }
 
-      db.metric.findAll.mockResolvedValue([existingRecord])
-      db.metric.update.mockRejectedValue(new Error('Update failed'))
+      const selectBuilder = createQueryBuilder().resolves([existingRecord])
+      const updateBuilder = createQueryBuilder().rejects(new Error('Update failed'))
+      mockDb.tables.metric
+        .mockReturnValueOnce(selectBuilder)
+        .mockReturnValueOnce(updateBuilder)
 
       await expect(saveMetrics(results, PERIOD_ALL, snapshotDate, null, null))
         .rejects.toThrow('Update failed')
     })
 
-    test('should correctly pass period type to findAll', async () => {
-      db.metric.findAll.mockResolvedValue([])
-
+    test('should correctly pass period type to the existing-records lookup', async () => {
       await saveMetrics([], PERIOD_YEAR, snapshotDate, startDate, endDate)
 
-      expect(db.metric.findAll).toHaveBeenCalledWith({
-        where: {
-          snapshotDate,
-          periodType: PERIOD_YEAR
-        }
+      expect(mockDb.builder.where).toHaveBeenCalledWith({
+        snapshot_date: snapshotDate,
+        period_type: PERIOD_YEAR
       })
     })
 
@@ -675,20 +665,18 @@ describe('create-save-metrics', () => {
         monthInYear: null
       }
 
-      db.metric.findAll.mockResolvedValue([existingRecord])
-      db.metric.update.mockResolvedValue([1])
+      mockDb.builder.resolves([existingRecord])
 
       const result = await saveMetrics(results, PERIOD_MONTH, snapshotDate, null, null)
 
       expect(result).toEqual({ inserted: 0, updated: 1 })
-      expect(db.metric.update).toHaveBeenCalledWith(
+      expect(mockDb.builder.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 1,
-          schemeName: 'SFI',
-          schemeYear: null,
-          monthInYear: null
-        }),
-        { where: { id: 1 } }
+          scheme_name: 'SFI',
+          scheme_year: null,
+          month_in_year: null
+        })
       )
     })
   })

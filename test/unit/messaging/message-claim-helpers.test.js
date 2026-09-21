@@ -1,30 +1,35 @@
+const { createKnexMock, createQueryBuilder } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['messageClaim'])
+
 jest.mock('../../../app/data', () => ({
-  messageClaim: {
-    create: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
 const mockSendAlert = jest.fn()
 jest.mock('../../../app/alert', () => ({ sendAlert: mockSendAlert }))
 
-const db = require('../../../app/data')
 const { claimMessage, markClaimStatus, getClaimStatus } = require('../../../app/messaging/message-claim-helpers')
+
+const UNIQUE_VIOLATION = '23505'
 
 describe('message-claim-helpers', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockSendAlert.mockResolvedValue()
+    mockDb.builder.resolves()
   })
 
   describe('claimMessage', () => {
     test('creates a processing claim and returns true when the insert succeeds', async () => {
-      db.messageClaim.create.mockResolvedValue({})
+      mockDb.builder.resolves({})
 
       const result = await claimMessage('message-1', 'document-1')
 
-      expect(db.messageClaim.create).toHaveBeenCalledWith({
+      expect(mockDb.builder.insert).toHaveBeenCalledWith({
         messageId: 'message-1',
         documentReference: 'document-1',
         status: 'processing'
@@ -34,9 +39,12 @@ describe('message-claim-helpers', () => {
 
     test('returns false when a recent duplicate is found', async () => {
       const error = new Error('duplicate')
-      error.name = 'SequelizeUniqueConstraintError'
-      db.messageClaim.create.mockRejectedValue(error)
-      db.messageClaim.findOne.mockResolvedValue({ updatedAt: new Date() })
+      error.code = UNIQUE_VIOLATION
+      const insertBuilder = createQueryBuilder().rejects(error)
+      const selectBuilder = createQueryBuilder().resolves({ status: 'processing', updatedAt: new Date() })
+      mockDb.tables.messageClaim
+        .mockReturnValueOnce(insertBuilder)
+        .mockReturnValueOnce(selectBuilder)
 
       const result = await claimMessage('message-1', 'document-1')
 
@@ -45,17 +53,21 @@ describe('message-claim-helpers', () => {
 
     test('returns true and reclaims when the existing claim is stale (> 5 minutes) and status is processing', async () => {
       const error = new Error('duplicate')
-      error.name = 'SequelizeUniqueConstraintError'
-      db.messageClaim.create.mockRejectedValue(error)
+      error.code = UNIQUE_VIOLATION
       const staleDate = new Date(Date.now() - 6 * 60 * 1000)
-      db.messageClaim.findOne.mockResolvedValue({ status: 'processing', updatedAt: staleDate })
-      db.messageClaim.update.mockResolvedValue({})
+      const insertBuilder = createQueryBuilder().rejects(error)
+      const selectBuilder = createQueryBuilder().resolves({ status: 'processing', updatedAt: staleDate })
+      const updateBuilder = createQueryBuilder().resolves({})
+      mockDb.tables.messageClaim
+        .mockReturnValueOnce(insertBuilder)
+        .mockReturnValueOnce(selectBuilder)
+        .mockReturnValueOnce(updateBuilder)
 
       const result = await claimMessage('message-1', 'document-1')
 
-      expect(db.messageClaim.update).toHaveBeenCalledWith(
-        { status: 'processing', updatedAt: expect.any(Date) },
-        { where: { messageId: 'message-1' } }
+      expect(updateBuilder.where).toHaveBeenCalledWith({ messageId: 'message-1' })
+      expect(updateBuilder.update).toHaveBeenCalledWith(
+        { status: 'processing', updatedAt: expect.any(Date) }
       )
       expect(mockSendAlert).toHaveBeenCalledWith(
         'message claim',
@@ -67,23 +79,29 @@ describe('message-claim-helpers', () => {
 
     test.each(['failed', 'completed'])('returns false when stale claim has status %s', async (status) => {
       const error = new Error('duplicate')
-      error.name = 'SequelizeUniqueConstraintError'
-      db.messageClaim.create.mockRejectedValue(error)
+      error.code = UNIQUE_VIOLATION
       const staleDate = new Date(Date.now() - 6 * 60 * 1000)
-      db.messageClaim.findOne.mockResolvedValue({ status, updatedAt: staleDate })
+      const insertBuilder = createQueryBuilder().rejects(error)
+      const selectBuilder = createQueryBuilder().resolves({ status, updatedAt: staleDate })
+      mockDb.tables.messageClaim
+        .mockReturnValueOnce(insertBuilder)
+        .mockReturnValueOnce(selectBuilder)
 
       const result = await claimMessage('message-1', 'document-1')
 
-      expect(db.messageClaim.update).not.toHaveBeenCalled()
+      expect(selectBuilder.update).not.toHaveBeenCalled()
       expect(mockSendAlert).not.toHaveBeenCalled()
       expect(result).toBe(false)
     })
 
     test('returns false when no existing claim is found after constraint error', async () => {
       const error = new Error('duplicate')
-      error.name = 'SequelizeUniqueConstraintError'
-      db.messageClaim.create.mockRejectedValue(error)
-      db.messageClaim.findOne.mockResolvedValue(null)
+      error.code = UNIQUE_VIOLATION
+      const insertBuilder = createQueryBuilder().rejects(error)
+      const selectBuilder = createQueryBuilder().resolves(undefined)
+      mockDb.tables.messageClaim
+        .mockReturnValueOnce(insertBuilder)
+        .mockReturnValueOnce(selectBuilder)
 
       const result = await claimMessage('message-1', 'document-1')
 
@@ -92,7 +110,7 @@ describe('message-claim-helpers', () => {
 
     test('rethrows unexpected errors', async () => {
       const error = new Error('db exploded')
-      db.messageClaim.create.mockRejectedValue(error)
+      mockDb.builder.rejects(error)
 
       await expect(claimMessage('message-1', 'document-1')).rejects.toThrow('db exploded')
     })
@@ -102,25 +120,25 @@ describe('message-claim-helpers', () => {
     test('updates the status and updatedAt for the supplied message id', async () => {
       await markClaimStatus('message-1', 'completed')
 
-      expect(db.messageClaim.update).toHaveBeenCalledWith(
-        { status: 'completed', updatedAt: expect.any(Date) },
-        { where: { messageId: 'message-1' } }
+      expect(mockDb.builder.where).toHaveBeenCalledWith({ messageId: 'message-1' })
+      expect(mockDb.builder.update).toHaveBeenCalledWith(
+        { status: 'completed', updatedAt: expect.any(Date) }
       )
     })
   })
 
   describe('getClaimStatus', () => {
     test('returns the status of an existing claim', async () => {
-      db.messageClaim.findOne.mockResolvedValue({ status: 'completed' })
+      mockDb.builder.resolves({ status: 'completed' })
 
       const result = await getClaimStatus('message-1')
 
-      expect(db.messageClaim.findOne).toHaveBeenCalledWith({ where: { messageId: 'message-1' } })
+      expect(mockDb.builder.where).toHaveBeenCalledWith({ messageId: 'message-1' })
       expect(result).toBe('completed')
     })
 
     test('returns null when no claim exists', async () => {
-      db.messageClaim.findOne.mockResolvedValue(null)
+      mockDb.builder.resolves(undefined)
 
       const result = await getClaimStatus('message-1')
 

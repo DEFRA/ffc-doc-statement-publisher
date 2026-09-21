@@ -1,39 +1,43 @@
-const db = require('../../../app/data')
-const removeFailedReport = require('../../../app/reporting/remove-failed-report')
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['report'])
 
 jest.mock('../../../app/data', () => ({
-  report: {
-    destroy: jest.fn()
-  }
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
+
+const removeFailedReport = require('../../../app/reporting/remove-failed-report')
 
 describe('removeFailedReport', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves()
   })
 
-  test('should call db.report.destroy with correct reportId when valid reportId given', async () => {
+  test('should delete the report with the correct reportId when valid reportId given', async () => {
     const reportId = 123
     await removeFailedReport(reportId)
 
-    expect(db.report.destroy).toHaveBeenCalledTimes(1)
-    expect(db.report.destroy).toHaveBeenCalledWith({
-      where: { reportId: 123 }
-    })
+    expect(mockDb.tables.report).toHaveBeenCalledTimes(1)
+    expect(mockDb.builder.where).toHaveBeenCalledWith({ reportId })
+    expect(mockDb.builder.del).toHaveBeenCalledTimes(1)
   })
 
-  test('should not call db.report.destroy when no reportId provided', async () => {
+  test('should not touch the report table when no reportId provided', async () => {
     await removeFailedReport()
 
-    expect(db.report.destroy).not.toHaveBeenCalled()
+    expect(mockDb.tables.report).not.toHaveBeenCalled()
   })
 
-  test('should handle errors from db.report.destroy', async () => {
+  test('should handle errors from the delete', async () => {
     const reportId = 123
     const error = new Error('Database error')
-    db.report.destroy.mockRejectedValue(error)
+    mockDb.builder.rejects(error)
 
     await expect(removeFailedReport(reportId)).rejects.toThrow('Database error')
-    expect(db.report.destroy).toHaveBeenCalledTimes(1)
+    expect(mockDb.tables.report).toHaveBeenCalledTimes(1)
   })
 })
