@@ -1,4 +1,5 @@
 const db = require('../../../app/data')
+const { truncate } = require('../../helpers/truncate')
 const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
 const saveRequest = require('../../../app/publishing/save-request')
 
@@ -46,11 +47,11 @@ describe('saveRequest', () => {
 
   afterEach(async () => {
     jest.clearAllMocks()
-    await db.sequelize.truncate({ cascade: true })
+    await truncate()
   })
 
   afterAll(async () => {
-    await db.sequelize.close()
+    await db.close()
   })
 
   const request = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE).body
@@ -62,32 +63,32 @@ describe('saveRequest', () => {
 
     test('saves 1 statement', async () => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const statements = await db.statement.findAll()
+      const statements = await db.statement()
       expect(statements.length).toBe(1)
     })
 
     test.each(statementKeys)('saves statement $key to column $column', async ({ key, column }) => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const statement = await db.statement.findOne()
+      const statement = await db.statement().first()
       expect(statement[column]).toBe(request[key])
     })
 
     test('saves statement FRN as string', async () => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const statement = await db.statement.findOne()
+      const statement = await db.statement().first()
       expect(statement.frn).toBe(String(request.frn))
     })
 
     test.each(addressKeys)('saves address $key to statement $column', async ({ key, column }) => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const statement = await db.statement.findOne()
+      const statement = await db.statement().first()
       expect(statement[column]).toBe(request.address[key])
     })
 
     test('saves 1 delivery with correct fields', async () => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const delivery = await db.delivery.findOne()
-      const statement = await db.statement.findOne()
+      const delivery = await db.delivery().first()
+      const statement = await db.statement().first()
       expect(delivery.statementId).toBe(statement.statementId)
       expect(delivery.method).toBe(EMAIL)
       expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
@@ -97,11 +98,11 @@ describe('saveRequest', () => {
 
     test('saves 1 failure if reason provided', async () => {
       await saveRequest(request, reference, EMAIL, { reason })
-      const failures = await db.failure.findAll()
+      const failures = await db.failure()
       if (value) {
         expect(failures.length).toBe(1)
-        const failure = await db.failure.findOne()
-        const delivery = await db.delivery.findOne()
+        const failure = await db.failure().first()
+        const delivery = await db.delivery().first()
         expect(failure.deliveryId).toBe(delivery.deliveryId)
         expect(failure.reason).toBe(value)
         expect(failure.failed).toStrictEqual(SYSTEM_TIME)

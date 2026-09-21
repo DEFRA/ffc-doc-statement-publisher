@@ -5,6 +5,7 @@ const { mockNotifyClient } = require('../../mocks/modules/notifications-node-cli
 const { BlobServiceClient } = require('@azure/storage-blob')
 const { storageConfig } = require('../../../app/config')
 const db = require('../../../app/data')
+const { truncate } = require('../../helpers/truncate')
 const saveStatement = require('../../../app/publishing/save-statement')
 const publishStatement = require('../../../app/publishing/publish-statement')
 const path = require('path')
@@ -22,11 +23,11 @@ describe('publishStatement', () => {
 
   afterEach(async () => {
     jest.clearAllMocks()
-    await db.sequelize.truncate({ cascade: true })
+    await truncate()
   })
 
   afterAll(async () => {
-    await db.sequelize.close()
+    await db.close()
   })
 
   describe.each([
@@ -39,15 +40,15 @@ describe('publishStatement', () => {
 
     describe('Duplicate request', () => {
       beforeEach(async () => {
-        const transaction = await db.sequelize.transaction()
+        const transaction = await db.transaction()
         await saveStatement(request, new Date(), transaction)
         await transaction.commit()
       })
 
       test('does not save a duplicate', async () => {
-        const before = await db.statement.findAll()
+        const before = await db.statement()
         await publishStatement(request)
-        const after = await db.statement.findAll()
+        const after = await db.statement()
         expect(before.length).toBe(1)
         expect(after.length).toBe(1)
       })
@@ -60,9 +61,9 @@ describe('publishStatement', () => {
 
     describe('Non-duplicate request', () => {
       test('saves the request', async () => {
-        const before = await db.statement.findAll()
+        const before = await db.statement()
         await publishStatement(request)
-        const after = await db.statement.findAll()
+        const after = await db.statement()
         expect(before.length).toBe(0)
         expect(after.length).toBe(1)
       })

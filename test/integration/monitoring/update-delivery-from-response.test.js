@@ -20,6 +20,7 @@ jest.mock('../../../app/publishing/fetch-statement-file', () => mockFetchStateme
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
 const db = require('../../../app/data')
+const { truncate } = require('../../helpers/truncate')
 const updateDeliveryFromResponse = require('../../../app/monitoring/update-delivery-from-response')
 const path = require('path')
 const { DELIVERED, SENDING, CREATED, TEMPORARY_FAILURE, PERMANENT_FAILURE, TECHNICAL_FAILURE } = require('../../../app/constants/statuses')
@@ -45,9 +46,9 @@ describe('updateDeliveryFromResponse', () => {
     const blockBlobClient = container.getBlockBlobClient(`${config.folder}/${FILE_NAME}`)
     await blockBlobClient.uploadFile(TEST_FILE)
 
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1])
-    await db.delivery.bulkCreate([mockDelivery1])
+    await truncate()
+    await db.statement().insert([mockStatement1])
+    await db.delivery().insert([mockDelivery1])
 
     mockSendEmail = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
     mockPrepareUpload = jest.fn().mockReturnValue(MOCK_PREPARED_FILE)
@@ -57,8 +58,8 @@ describe('updateDeliveryFromResponse', () => {
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test.each([
@@ -70,20 +71,20 @@ describe('updateDeliveryFromResponse', () => {
     { status: TECHNICAL_FAILURE, complete: true, failure: null }
   ])('should handle status %s', async ({ status, complete, failure }) => {
     await updateDeliveryFromResponse(mockDelivery1, { data: { status } })
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
+    const delivery = await db.delivery().where({ deliveryId: mockDelivery1.deliveryId }).first()
     expect(!!delivery.completed).toBe(complete)
 
     if (failure) {
-      const fail = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-      expect(fail).not.toBeNull()
+      const fail = await db.failure().where({ deliveryId: mockDelivery1.deliveryId }).first()
+      expect(fail).not.toBeUndefined()
       expect(fail.reason).toBe(failure.reason)
       expect(fail.failed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
     } else if ([TEMPORARY_FAILURE, PERMANENT_FAILURE].includes(status) === false) {
       // For technical failure, a new delivery is created
       if (status === TECHNICAL_FAILURE) {
-        const deliveries = await db.delivery.findAll({ where: { statementId: mockDelivery1.statementId } })
+        const deliveries = await db.delivery().where({ statementId: mockDelivery1.statementId })
         expect(deliveries.length).toBe(2)
-        const newDelivery = await db.delivery.findOne({ where: { statementId: mockDelivery1.statementId, completed: null } })
+        const newDelivery = await db.delivery().where({ statementId: mockDelivery1.statementId, completed: null }).first()
         expect(newDelivery.requested).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
       }
 
@@ -106,17 +107,17 @@ describe('updateDeliveryFromResponse', () => {
     {}
   ])('should not complete delivery or create failure if status missing or data missing: %o', async (response) => {
     await updateDeliveryFromResponse(mockDelivery1, response)
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
+    const delivery = await db.delivery().where({ deliveryId: mockDelivery1.deliveryId }).first()
     expect(delivery.completed).toBeNull()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure).toBeNull()
+    const failure = await db.failure().where({ deliveryId: mockDelivery1.deliveryId }).first()
+    expect(failure).toBeUndefined()
   })
 
   test('should not complete delivery or create failure if status unknown', async () => {
     await updateDeliveryFromResponse(mockDelivery1, { data: { status: 'unknown' } })
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
+    const delivery = await db.delivery().where({ deliveryId: mockDelivery1.deliveryId }).first()
     expect(delivery.completed).toBeNull()
-    const failure = await db.failure.findOne({ where: { deliveryId: mockDelivery1.deliveryId } })
-    expect(failure).toBeNull()
+    const failure = await db.failure().where({ deliveryId: mockDelivery1.deliveryId }).first()
+    expect(failure).toBeUndefined()
   })
 })

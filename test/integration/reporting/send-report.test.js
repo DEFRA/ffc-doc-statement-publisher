@@ -1,4 +1,5 @@
 const db = require('../../../app/data')
+const { truncate } = require('../../helpers/truncate')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const createReport = require('../../../app/reporting/create-report')
 const { saveReportFile } = require('../../../app/storage')
@@ -21,14 +22,14 @@ describe('sendReport', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1, mockStatement2])
-    await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
+    await truncate()
+    await db.statement().insert([mockStatement1, mockStatement2])
+    await db.delivery().insert([mockDelivery1, mockDelivery2])
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   const createMockStream = (deliveries = []) => ({
@@ -57,10 +58,12 @@ describe('sendReport', () => {
 
     await sendReport(schemeName, startDate, endDate)
 
-    expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Object))
+    // A Knex transaction is itself callable (`trx('table')`), so it is typeof 'function',
+    // unlike a Sequelize transaction; expect.any(Object) does not match a function in Jest.
+    expect(getDeliveriesForReport).toHaveBeenCalledWith(schemeName, startDate, endDate, expect.any(Function))
     expect(createReport).toHaveBeenCalledWith(schemeName, null, startDate, endDate, expect.any(Date))
     expect(saveReportFile).toHaveBeenCalledWith(expect.stringContaining('test-'), expect.any(Object))
-    expect(completeReport).toHaveBeenCalledWith(1, 2, expect.any(Object))
+    expect(completeReport).toHaveBeenCalledWith(1, 2, expect.any(Function))
   })
 
   test('skips report creation when no deliveries found', async () => {
