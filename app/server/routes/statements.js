@@ -1,4 +1,4 @@
-const db = require('../../data')
+const { statement, requests } = require('../../data')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
 const SUCCESS_CODE = 201
@@ -110,31 +110,7 @@ const parseDateTimeToExactRange = (timestamp) => {
   return null
 }
 
-const getSequelizeOperator = (sequelizeDb) => {
-  return sequelizeDb.sequelize?.Op || sequelizeDb.Sequelize?.Op
-}
-
-const addTimestampCriteria = (query, criteria, sequelizeDb) => {
-  if (query.timestamp) {
-    const op = getSequelizeOperator(sequelizeDb)
-    const range = parseTimestampToRange(query.timestamp)
-
-    if (range && op?.between) {
-      console.info('[STATEMENTS] Adding timestamp range criteria to query on received:', range)
-      criteria.received = { [op.between]: [range.from, range.to] }
-    }
-
-    if (range === null) {
-      console.info('[STATEMENTS] Timestamp format not recognised, skipping filter:', query.timestamp)
-    }
-
-    if (range && op?.between === undefined) {
-      console.info('[STATEMENTS] Sequelize Op not available, skipping timestamp filter')
-    }
-  }
-}
-
-const buildQueryCriteria = (query, sequelizeDb) => {
+const buildQueryCriteria = (query) => {
   console.info('[STATEMENTS] buildQueryCriteria called with:', query)
   const criteria = {}
 
@@ -159,10 +135,24 @@ const buildQueryCriteria = (query, sequelizeDb) => {
     criteria.filename = query.filename
   }
 
-  addTimestampCriteria(query, criteria, sequelizeDb)
-
   console.info('[STATEMENTS] Final criteria:', criteria)
   return criteria
+}
+
+const buildReceivedRange = (query) => {
+  if (!query.timestamp) {
+    return null
+  }
+
+  const range = parseTimestampToRange(query.timestamp)
+
+  if (range) {
+    console.info('[STATEMENTS] Adding timestamp range criteria to query on received:', range)
+  } else {
+    console.info('[STATEMENTS] Timestamp format not recognised, skipping filter:', query.timestamp)
+  }
+
+  return range
 }
 
 const getOffset = (continuationToken, offset) => {
@@ -207,13 +197,19 @@ const formatStatement = (s) => {
   return formatted
 }
 
-const executeQuery = async (criteria, limitNum, offsetNum) => {
-  const where = Object.keys(criteria).length > ZERO ? criteria : undefined
-  return db.statement.findAndCountAll({
-    where,
-    limit: limitNum,
-    offset: offsetNum
-  })
+const executeQuery = async (criteria, limitNum, offsetNum, range) => {
+  const applyFilters = (query) => {
+    query.where(criteria)
+    if (range) {
+      query.whereBetween('received', [range.from, range.to])
+    }
+    return query
+  }
+
+  const { count } = await applyFilters(statement()).count({ count: '*' }).first()
+  const rows = await applyFilters(statement()).limit(limitNum).offset(offsetNum)
+
+  return { count: Number(count), rows }
 }
 
 const executeQueryForDateTimeTimestamp = async (request, criteria, limitNum, offsetNum) => {
@@ -223,15 +219,13 @@ const executeQueryForDateTimeTimestamp = async (request, criteria, limitNum, off
     return null
   }
 
-  const op = getSequelizeOperator(db)
   const exactRange = parseDateTimeToExactRange(timestamp)
-  if (Boolean(op?.between && exactRange) === false) {
+  if (!exactRange) {
     return null
   }
 
-  const exactCriteria = { ...criteria, received: { [op.between]: [exactRange.from, exactRange.to] } }
-  console.info('[STATEMENTS] Executing exact timestamp query with:', { criteria: exactCriteria, limit: limitNum, offset: offsetNum })
-  const exactResult = await executeQuery(exactCriteria, limitNum, offsetNum)
+  console.info('[STATEMENTS] Executing exact timestamp query with:', { criteria, range: exactRange, limit: limitNum, offset: offsetNum })
+  const exactResult = await executeQuery(criteria, limitNum, offsetNum, exactRange)
 
   if (exactResult.count > ZERO) {
     console.info('[STATEMENTS] Exact timestamp query returned', exactResult.rows.length, 'results')
@@ -242,14 +236,14 @@ const executeQueryForDateTimeTimestamp = async (request, criteria, limitNum, off
   return null
 }
 
-const queryStatements = async (request, criteria, limitNum, offsetNum) => {
+const queryStatements = async (request, criteria, limitNum, offsetNum, range) => {
   const exactResult = await executeQueryForDateTimeTimestamp(request, criteria, limitNum, offsetNum)
   if (exactResult) {
     return exactResult
   }
 
   console.info('[STATEMENTS] Executing query with:', { criteria, limit: limitNum, offset: offsetNum })
-  return executeQuery(criteria, limitNum, offsetNum)
+  return executeQuery(criteria, limitNum, offsetNum, range)
 }
 
 module.exports = {
@@ -262,12 +256,14 @@ module.exports = {
 
         console.log('[REQUESTS] Handler called with payload:', request.payload)
 
-        const entry = await db.requests.create({
-          username,
-          searchTerms,
-          type,
-          timestamp
-        })
+        const [entry] = await requests()
+          .insert({
+            username,
+            searchTerms,
+            type,
+            timestamp
+          })
+          .returning('id')
 
         return h.response({ success: true, id: entry.id }).code(SUCCESS_CODE)
       } catch (error) {
@@ -286,10 +282,11 @@ module.exports = {
       console.info('[STATEMENTS] Handler called with query:', request.query)
 
       try {
-        const criteria = buildQueryCriteria(request.query, db)
+        const criteria = buildQueryCriteria(request.query)
+        const range = buildReceivedRange(request.query)
         const limitNum = request.query.limit ? Number.parseInt(request.query.limit, DECIMAL) : DEFAULT_LIMIT
         const offsetNum = getOffset(request.query.continuationToken, request.query.offset)
-        const { count, rows } = await queryStatements(request, criteria, limitNum, offsetNum)
+        const { count, rows } = await queryStatements(request, criteria, limitNum, offsetNum, range)
 
         console.info('[STATEMENTS] Query returned', rows.length, 'results')
 
@@ -326,6 +323,7 @@ module.exports = {
     }
   }],
   buildQueryCriteria,
+  buildReceivedRange,
   getOffset,
   formatStatementTimestamp,
   formatStatement,

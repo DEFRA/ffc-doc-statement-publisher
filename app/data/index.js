@@ -1,10 +1,19 @@
-const path = require('node:path')
 const config = require('../config')
-const dbConfig = config.dbConfig[config.env]
-const modelPath = path.join(__dirname, 'models')
 const { Database } = require('ffc-database')
 
-const database = new Database({ ...dbConfig, modelPath })
-const db = database.connect()
+const dbConfig = config.dbConfig[config.env]
 
-module.exports = db
+const tables = {
+  delivery: 'deliveries',
+  failure: 'failures',
+  messageClaim: 'messageClaims',
+  metric: 'metrics',
+  report: 'reports',
+  requests: 'requests',
+  returnedLetter: 'returned_letters',
+  statement: 'statements'
+}
+
+const database = new Database({ ...dbConfig, tables })
+
+module.exports = database.connect()

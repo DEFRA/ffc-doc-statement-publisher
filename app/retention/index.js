@@ -7,7 +7,7 @@ const { removeFailures } = require('./remove-failures')
 const { removeStatements } = require('./remove-statements')
 
 const removeAgreementData = async (retentionData) => {
-  const transaction = await db.sequelize.transaction()
+  const transaction = await db.transaction()
   try {
     const { documentReference, filename } = retentionData
 

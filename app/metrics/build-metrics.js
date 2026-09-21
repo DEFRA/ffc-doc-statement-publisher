@@ -1,4 +1,5 @@
 const db = require('../data')
+const { delivery } = db
 const {
   PRINT_POST_UNIT_COST_2024,
   PRINT_POST_UNIT_COST_2026,
@@ -14,89 +15,75 @@ const {
 } = require('../constants/periods')
 
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
-const extractMonthFromCompletedDelivery = db.sequelize.literal(
-  'COALESCE(EXTRACT(MONTH FROM "delivery"."completed"), EXTRACT(MONTH FROM "delivery"."requested"))'
-)
-const extractYearFromCompletedDelivery = db.sequelize.literal(
-  'COALESCE(EXTRACT(YEAR FROM "delivery"."completed"), EXTRACT(YEAR FROM "delivery"."requested"))'
-)
 
+const MONTH_GROUP_EXPRESSION = 'COALESCE(EXTRACT(MONTH FROM "deliveries"."completed"), EXTRACT(MONTH FROM "deliveries"."requested"))'
+const YEAR_GROUP_EXPRESSION = 'COALESCE(EXTRACT(YEAR FROM "deliveries"."completed"), EXTRACT(YEAR FROM "deliveries"."requested"))'
+
+// Joined tables are referenced by their real table names rather than the former
+// ORM model-name aliases ("delivery"/"statement"/"failure"); the "statement."
+// prefixed output keys below are kept so create-save-metrics.js's result readers
+// (`result['statement.schemeName']` etc) do not need to change.
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
-  const whereClause = {}
-
-  if (!useSchemeYear && startDate && endDate) {
-    const op = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR)
-      ? db.Sequelize.Op.lte
-      : db.Sequelize.Op.lt
-
-    const completedRange = {
-      completed: {
-        [db.Sequelize.Op.gte]: startDate,
-        [op]: endDate
-      }
-    }
-
-    const requestedRange = {
-      method: METHOD_LETTER,
-      requested: {
-        [db.Sequelize.Op.gte]: startDate,
-        [op]: endDate
-      }
-    }
-
-    whereClause[db.Sequelize.Op.or] = [completedRange, requestedRange]
+  if (useSchemeYear || !startDate || !endDate) {
+    return () => {}
   }
 
-  if (period === PERIOD_MONTH_IN_YEAR && startDate && endDate) {
-    whereClause[db.Sequelize.Op.or] = [
-      { completed: { [db.Sequelize.Op.gte]: startDate, [db.Sequelize.Op.lte]: endDate } },
-      { method: METHOD_LETTER, requested: { [db.Sequelize.Op.gte]: startDate, [db.Sequelize.Op.lte]: endDate } }
-    ]
-  }
+  const upperBoundOperator = (period === PERIOD_YEAR || period === PERIOD_MONTH_IN_YEAR) ? '<=' : '<'
 
-  return whereClause
+  return (query) => {
+    query.where(function () {
+      this.where('deliveries.completed', '>=', startDate)
+        .andWhere('deliveries.completed', upperBoundOperator, endDate)
+        .orWhere(function () {
+          this.where('deliveries.method', METHOD_LETTER)
+            .andWhere('deliveries.requested', '>=', startDate)
+            .andWhere('deliveries.requested', upperBoundOperator, endDate)
+        })
+    })
+  }
 }
 
-const buildStatementInclude = (useSchemeYear, schemeYear, includeSchemeYearInSelect = true) => ({
-  model: db.statement,
-  as: 'statement',
-  attributes: includeSchemeYearInSelect
-    ? ['schemeName', 'schemeYear']
-    : ['schemeName'],
-  required: true,
-  where: useSchemeYear && schemeYear ? { schemeYear: String(schemeYear) } : {}
-})
+const buildStatementInclude = (useSchemeYear, schemeYear, includeSchemeYearInSelect = true) => (query) => {
+  query
+    .innerJoin('statements', 'statements.statementId', 'deliveries.statementId')
+    .select(db.client.raw('statements."schemeName" as "statement.schemeName"'))
 
-const buildFailureInclude = () => ({
-  model: db.failure,
-  as: 'failure',
-  attributes: [],
-  required: false
-})
+  if (includeSchemeYearInSelect) {
+    query.select(db.client.raw('statements."schemeYear" as "statement.schemeYear"'))
+  }
+
+  if (useSchemeYear && schemeYear) {
+    query.andWhere('statements.schemeYear', String(schemeYear))
+  }
+}
+
+const buildFailureInclude = () => (query) => {
+  query.leftJoin('failures', 'failures.deliveryId', 'deliveries.deliveryId')
+}
 
 const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
   const attributes = []
 
   if (includeYear) {
-    attributes.push([extractYearFromCompletedDelivery, 'receivedYear'])
+    attributes.push(db.client.raw(`${YEAR_GROUP_EXPRESSION} as "receivedYear"`))
   }
 
   if (includeMonth) {
-    attributes.push([extractMonthFromCompletedDelivery, 'receivedMonth'])
+    attributes.push(db.client.raw(`${MONTH_GROUP_EXPRESSION} as "receivedMonth"`))
   }
 
   attributes.push(
-    [db.sequelize.literal(`COUNT(DISTINCT CASE WHEN ("delivery"."completed" IS NOT NULL OR "delivery"."method" = '${METHOD_LETTER}') AND "failure"."failureId" IS NULL THEN "delivery"."deliveryId" END)`), 'totalStatements'],
-    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN 1 END)`), 'printPostCount'],
-    [db.sequelize.literal(`SUM(
+    db.client.raw(`COUNT(DISTINCT CASE WHEN ("deliveries"."completed" IS NOT NULL OR "deliveries"."method" = '${METHOD_LETTER}') AND "failures"."failureId" IS NULL THEN "deliveries"."deliveryId" END) as "totalStatements"`),
+    db.client.raw(`COUNT(CASE WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL THEN 1 END) as "printPostCount"`),
+    db.client.raw(`SUM(
       CASE
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL AND COALESCE("delivery"."completed", "delivery"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
-        WHEN "delivery"."method" = '${METHOD_LETTER}' AND "failure"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
+        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL AND COALESCE("deliveries"."completed", "deliveries"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL AND COALESCE("deliveries"."completed", "deliveries"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
         ELSE 0
       END
-    )`), 'printPostCost'],
-    [db.sequelize.literal(`COUNT(CASE WHEN "delivery"."method" = '${METHOD_EMAIL}' AND "delivery"."completed" IS NOT NULL AND "failure"."failureId" IS NULL THEN 1 END)`), 'emailCount']
+    ) as "printPostCost"`),
+    db.client.raw(`COUNT(CASE WHEN "deliveries"."method" = '${METHOD_EMAIL}' AND "deliveries"."completed" IS NOT NULL AND "failures"."failureId" IS NULL THEN 1 END) as "emailCount"`)
   )
 
   return attributes
@@ -107,31 +94,25 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, 
   const shouldGroupByMonth = period === PERIOD_MONTH_IN_YEAR
   const shouldIncludeYear = !isSchemeBased
 
-  const groupFields = [
-    db.sequelize.literal('statement."schemeName"')
-  ]
+  const groupFields = ['statements."schemeName"']
 
   if (!isSchemeBased) {
-    groupFields.unshift(extractYearFromCompletedDelivery)
+    groupFields.unshift(YEAR_GROUP_EXPRESSION)
     if (shouldGroupByMonth) {
-      groupFields.unshift(extractMonthFromCompletedDelivery)
+      groupFields.unshift(MONTH_GROUP_EXPRESSION)
     }
   }
 
   if (isSchemeBased) {
-    groupFields.push(db.sequelize.literal('statement."schemeYear"'))
+    groupFields.push('statements."schemeYear"')
   }
 
-  return db.delivery.findAll({
-    attributes: buildQueryAttributes(shouldGroupByMonth, shouldIncludeYear),
-    include: [
-      buildStatementInclude(useSchemeYear, schemeYear, isSchemeBased),
-      buildFailureInclude()
-    ],
-    where: whereClause,
-    group: groupFields,
-    raw: true
-  })
+  return delivery()
+    .modify(buildStatementInclude(useSchemeYear, schemeYear, isSchemeBased))
+    .modify(buildFailureInclude())
+    .select(buildQueryAttributes(shouldGroupByMonth, shouldIncludeYear))
+    .modify(whereClause)
+    .groupByRaw(groupFields.join(', '))
 }
 
 module.exports = {

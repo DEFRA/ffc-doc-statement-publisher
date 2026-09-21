@@ -1,4 +1,4 @@
-const db = require('../data')
+const { report } = require('../data')
 const hour = 23
 const minute = 59
 const second = 59
@@ -9,31 +9,14 @@ const getTodaysReport = async (schemeName) => {
   const startOfDay = new Date(today.setHours(0, 0, 0, 0))
   const endOfDay = new Date(today.setHours(hour, minute, second, millisecond))
 
-  return db.report.findAll({
-    where: {
-      schemeName,
-      [db.Op.or]: [
-        {
-          sent: {
-            [db.Op.between]: [startOfDay, endOfDay]
-          }
-        },
-        {
-          [db.Op.and]: [
-            {
-              sent: {
-                [db.Op.eq]: null
-              }
-            }, {
-              requested: {
-                [db.Op.between]: [startOfDay, endOfDay]
-              }
-            }
-          ]
-        }
-      ]
-    }
-  })
+  return report()
+    .where({ schemeName })
+    .where(function () {
+      this.whereBetween('sent', [startOfDay, endOfDay])
+        .orWhere(function () {
+          this.whereNull('sent').whereBetween('requested', [startOfDay, endOfDay])
+        })
+    })
 }
 
 module.exports = getTodaysReport

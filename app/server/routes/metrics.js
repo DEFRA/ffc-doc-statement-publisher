@@ -1,4 +1,5 @@
-const db = require('../../data')
+const { metric } = require('../../data')
+const { METRIC_SELECT, toMetricRow } = require('../../metrics/metric-columns')
 const { calculateMetricsForPeriod } = require('../../metrics/metrics-calculator')
 const { HTTP_OK, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
@@ -94,30 +95,28 @@ const formatMetricsResponse = (totals, schemeMetrics) => {
 }
 
 const fetchMetrics = async (period, schemeYear, month) => {
-  const mostRecentSnapshot = await db.metric.findOne({
-    attributes: [[db.sequelize.fn('MAX', db.sequelize.col('snapshot_date')), 'maxDate']],
-    where: {
+  const mostRecentSnapshot = (await metric()
+    .max('snapshot_date as maxDate')
+    .where(toMetricRow({
       periodType: period,
       ...(schemeYear && { schemeYear }),
       ...(month && { monthInYear: month })
-    },
-    raw: true
-  })
+    }))
+    .first()) ?? null
 
   if (!mostRecentSnapshot?.maxDate) {
     return []
   }
 
-  return db.metric.findAll({
-    where: {
+  return metric()
+    .select(METRIC_SELECT)
+    .where(toMetricRow({
       snapshotDate: mostRecentSnapshot.maxDate,
       periodType: period,
       ...(schemeYear && { schemeYear }),
       ...(month && { monthInYear: month })
-    },
-    raw: true,
-    order: [['schemeName', 'ASC']]
-  })
+    }))
+    .orderBy('scheme_name', 'asc')
 }
 
 const processMetrics = (metrics) => {

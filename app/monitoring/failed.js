@@ -8,14 +8,14 @@ const scheduleLetter = require('./schedule-letter')
 const { EMAIL } = require('../constants/methods')
 
 const failed = async (delivery, failure) => {
-  const transaction = await db.sequelize.transaction()
+  const transaction = await db.transaction()
   try {
     const statement = await getStatementByStatementId(delivery.statementId, transaction)
     if (!statement) {
       throw new Error(`Statement not found for delivery ${delivery.deliveryId}`)
     }
     const deliveryId = delivery.deliveryId
-    const timestamp = Date.now()
+    const timestamp = new Date()
     console.log(`Unable to deliver statement ${statement.filename} to ${statement.email}: ${failure?.reason}`)
     if (config.sendCrmFailureMessageEnabled) {
       await sendCrmMessage(statement.email, statement.frn, failure?.reason)

@@ -1,7 +1,7 @@
-const db = require('../data')
+const { statement } = require('../data')
 
 const getStatementByStatementId = async (statementId, transaction) => {
-  return db.statement.findOne({ where: { statementId }, transaction })
+  return (await statement(transaction ?? undefined).where({ statementId }).first()) ?? null
 }
 
 module.exports = getStatementByStatementId

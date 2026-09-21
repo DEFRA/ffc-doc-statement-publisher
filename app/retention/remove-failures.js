@@ -1,12 +1,7 @@
-const db = require('../data')
+const { failure } = require('../data')
 
 const removeFailures = async (deliveryIds, transaction) => {
-  await db.failure.destroy({
-    where: {
-      deliveryId: { [db.Sequelize.Op.in]: deliveryIds }
-    },
-    transaction
-  })
+  await failure(transaction ?? undefined).whereIn('deliveryId', deliveryIds).del()
 }
 
 module.exports = {
