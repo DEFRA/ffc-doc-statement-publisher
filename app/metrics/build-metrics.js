@@ -15,14 +15,15 @@ const {
 } = require('../constants/periods')
 
 const { METHOD_LETTER, METHOD_EMAIL } = require('../constants/delivery-methods')
+const { delivery: DELIVERIES, statement: STATEMENTS, failure: FAILURES } = require('../constants/tables')
 
-const MONTH_GROUP_EXPRESSION = 'COALESCE(EXTRACT(MONTH FROM "deliveries"."completed"), EXTRACT(MONTH FROM "deliveries"."requested"))'
-const YEAR_GROUP_EXPRESSION = 'COALESCE(EXTRACT(YEAR FROM "deliveries"."completed"), EXTRACT(YEAR FROM "deliveries"."requested"))'
+const MONTH_GROUP_EXPRESSION = `COALESCE(EXTRACT(MONTH FROM "${DELIVERIES}"."completed"), EXTRACT(MONTH FROM "${DELIVERIES}"."requested"))`
+const YEAR_GROUP_EXPRESSION = `COALESCE(EXTRACT(YEAR FROM "${DELIVERIES}"."completed"), EXTRACT(YEAR FROM "${DELIVERIES}"."requested"))`
 
-// Joined tables are referenced by their real table names rather than the former
-// ORM model-name aliases ("delivery"/"statement"/"failure"); the "statement."
-// prefixed output keys below are kept so create-save-metrics.js's result readers
-// (`result['statement.schemeName']` etc) do not need to change.
+// Joined tables are referenced by their real table names (via constants/tables.js)
+// rather than the former ORM model-name aliases ("delivery"/"statement"/"failure");
+// the "statement." prefixed output keys below are kept so create-save-metrics.js's
+// result readers (`result['statement.schemeName']` etc) do not need to change.
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
   if (useSchemeYear || !startDate || !endDate) {
     return () => {}
@@ -32,12 +33,12 @@ const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear)
 
   return (query) => {
     query.where(function () {
-      this.where('deliveries.completed', '>=', startDate)
-        .andWhere('deliveries.completed', upperBoundOperator, endDate)
+      this.where(`${DELIVERIES}.completed`, '>=', startDate)
+        .andWhere(`${DELIVERIES}.completed`, upperBoundOperator, endDate)
         .orWhere(function () {
-          this.where('deliveries.method', METHOD_LETTER)
-            .andWhere('deliveries.requested', '>=', startDate)
-            .andWhere('deliveries.requested', upperBoundOperator, endDate)
+          this.where(`${DELIVERIES}.method`, METHOD_LETTER)
+            .andWhere(`${DELIVERIES}.requested`, '>=', startDate)
+            .andWhere(`${DELIVERIES}.requested`, upperBoundOperator, endDate)
         })
     })
   }
@@ -45,20 +46,20 @@ const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear)
 
 const buildStatementInclude = (useSchemeYear, schemeYear, includeSchemeYearInSelect = true) => (query) => {
   query
-    .innerJoin('statements', 'statements.statementId', 'deliveries.statementId')
-    .select(db.client.raw('statements."schemeName" as "statement.schemeName"'))
+    .innerJoin(STATEMENTS, `${STATEMENTS}.statementId`, `${DELIVERIES}.statementId`)
+    .select(db.client.raw(`${STATEMENTS}."schemeName" as "statement.schemeName"`))
 
   if (includeSchemeYearInSelect) {
-    query.select(db.client.raw('statements."schemeYear" as "statement.schemeYear"'))
+    query.select(db.client.raw(`${STATEMENTS}."schemeYear" as "statement.schemeYear"`))
   }
 
   if (useSchemeYear && schemeYear) {
-    query.andWhere('statements.schemeYear', String(schemeYear))
+    query.andWhere(`${STATEMENTS}.schemeYear`, String(schemeYear))
   }
 }
 
 const buildFailureInclude = () => (query) => {
-  query.leftJoin('failures', 'failures.deliveryId', 'deliveries.deliveryId')
+  query.leftJoin(FAILURES, `${FAILURES}.deliveryId`, `${DELIVERIES}.deliveryId`)
 }
 
 const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
@@ -73,17 +74,17 @@ const buildQueryAttributes = (includeMonth = false, includeYear = true) => {
   }
 
   attributes.push(
-    db.client.raw(`COUNT(DISTINCT CASE WHEN ("deliveries"."completed" IS NOT NULL OR "deliveries"."method" = '${METHOD_LETTER}') AND "failures"."failureId" IS NULL THEN "deliveries"."deliveryId" END) as "totalStatements"`),
-    db.client.raw(`COUNT(CASE WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL THEN 1 END) as "printPostCount"`),
+    db.client.raw(`COUNT(DISTINCT CASE WHEN ("${DELIVERIES}"."completed" IS NOT NULL OR "${DELIVERIES}"."method" = '${METHOD_LETTER}') AND "${FAILURES}"."failureId" IS NULL THEN "${DELIVERIES}"."deliveryId" END) as "totalStatements"`),
+    db.client.raw(`COUNT(CASE WHEN "${DELIVERIES}"."method" = '${METHOD_LETTER}' AND "${FAILURES}"."failureId" IS NULL THEN 1 END) as "printPostCount"`),
     db.client.raw(`SUM(
       CASE
-        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL AND COALESCE("deliveries"."completed", "deliveries"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
-        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL AND COALESCE("deliveries"."completed", "deliveries"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
-        WHEN "deliveries"."method" = '${METHOD_LETTER}' AND "failures"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
+        WHEN "${DELIVERIES}"."method" = '${METHOD_LETTER}' AND "${FAILURES}"."failureId" IS NULL AND COALESCE("${DELIVERIES}"."completed", "${DELIVERIES}"."requested") >= '${PRINT_POST_PRICING_START_2026}' THEN ${PRINT_POST_UNIT_COST_2026}
+        WHEN "${DELIVERIES}"."method" = '${METHOD_LETTER}' AND "${FAILURES}"."failureId" IS NULL AND COALESCE("${DELIVERIES}"."completed", "${DELIVERIES}"."requested") >= '${PRINT_POST_PRICING_START_2024}' THEN ${PRINT_POST_UNIT_COST_2024}
+        WHEN "${DELIVERIES}"."method" = '${METHOD_LETTER}' AND "${FAILURES}"."failureId" IS NULL THEN ${DEFAULT_PRINT_POST_UNIT_COST}
         ELSE 0
       END
     ) as "printPostCost"`),
-    db.client.raw(`COUNT(CASE WHEN "deliveries"."method" = '${METHOD_EMAIL}' AND "deliveries"."completed" IS NOT NULL AND "failures"."failureId" IS NULL THEN 1 END) as "emailCount"`)
+    db.client.raw(`COUNT(CASE WHEN "${DELIVERIES}"."method" = '${METHOD_EMAIL}' AND "${DELIVERIES}"."completed" IS NOT NULL AND "${FAILURES}"."failureId" IS NULL THEN 1 END) as "emailCount"`)
   )
 
   return attributes
@@ -94,7 +95,7 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, 
   const shouldGroupByMonth = period === PERIOD_MONTH_IN_YEAR
   const shouldIncludeYear = !isSchemeBased
 
-  const groupFields = ['statements."schemeName"']
+  const groupFields = [`${STATEMENTS}."schemeName"`]
 
   if (!isSchemeBased) {
     groupFields.unshift(YEAR_GROUP_EXPRESSION)
@@ -104,7 +105,7 @@ const fetchMetricsData = async (whereClause, useSchemeYear, schemeYear, _month, 
   }
 
   if (isSchemeBased) {
-    groupFields.push('statements."schemeYear"')
+    groupFields.push(`${STATEMENTS}."schemeYear"`)
   }
 
   return delivery()

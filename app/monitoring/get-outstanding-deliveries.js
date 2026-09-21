@@ -1,4 +1,5 @@
 const { EMAIL } = require('../constants/methods')
+const { delivery: DELIVERIES, statement: STATEMENTS } = require('../constants/tables')
 const db = require('../data')
 const { delivery } = db
 
@@ -18,8 +19,8 @@ const getOutstandingDeliveries = async (options = {}) => {
 
   if (includeStatement) {
     query
-      .select('deliveries.*', db.client.raw('row_to_json(statements.*) as statement'))
-      .leftJoin('statements', 'statements.statementId', 'deliveries.statementId')
+      .select(`${DELIVERIES}.*`, db.client.raw(`row_to_json(${STATEMENTS}.*) as statement`))
+      .leftJoin(STATEMENTS, `${STATEMENTS}.statementId`, `${DELIVERIES}.statementId`)
   }
 
   return query
