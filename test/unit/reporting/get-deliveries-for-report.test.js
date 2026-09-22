@@ -1,6 +1,6 @@
 const mockRaw = jest.fn()
 
-jest.mock('../../../app/data', () => ({
+jest.mock('../../../app/database', () => ({
   client: { raw: (...args) => mockRaw(...args) }
 }))
 

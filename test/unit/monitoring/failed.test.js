@@ -2,7 +2,7 @@ const db = require('../../../app/database')
 const { mockTransaction } = require('../../mocks/objects/data')
 const { EMAIL, LETTER } = require('../../../app/constants/methods')
 
-jest.mock('../../../app/data')
+jest.mock('../../../app/database')
 jest.mock('../../../app/monitoring/get-statement-by-statement-id')
 jest.mock('../../../app/messaging/send-crm-message')
 jest.mock('../../../app/monitoring/complete-delivery')

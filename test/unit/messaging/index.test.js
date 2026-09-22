@@ -13,7 +13,7 @@ jest.mock('ffc-messaging', () => ({
   }))
 }))
 
-jest.mock('../../../app/data', () => ({}))
+jest.mock('../../../app/database', () => ({}))
 jest.mock('../../../app/alert', () => ({
   sendAlert: jest.fn()
 }))

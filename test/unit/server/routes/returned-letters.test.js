@@ -11,7 +11,7 @@ const setupMocks = () => {
   const mockReturnedLetter = jest.fn(() => builder)
   const mockCreate = builder.insert
 
-  jest.mock('../../../../app/data', () => ({
+  jest.mock('../../../../app/database', () => ({
     returnedLetter: mockReturnedLetter
   }))
 

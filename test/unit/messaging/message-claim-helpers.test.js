@@ -2,7 +2,7 @@ const { createKnexMock, createQueryBuilder } = require('../../helpers/mock-knex'
 
 const mockDb = createKnexMock(['messageClaim'])
 
-jest.mock('../../../app/data', () => ({
+jest.mock('../../../app/database', () => ({
   client: mockDb.knex,
   transaction: mockDb.transaction,
   close: mockDb.close,

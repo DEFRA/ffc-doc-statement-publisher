@@ -8,7 +8,7 @@ const mockTransaction = jest.fn().mockImplementation(() => {
   }
 })
 
-jest.mock('../../../app/data', () => {
+jest.mock('../../../app/database', () => {
   return {
     transaction: mockTransaction
   }

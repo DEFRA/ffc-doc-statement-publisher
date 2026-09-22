@@ -1,4 +1,4 @@
-jest.mock('../../../app/data', () => ({
+jest.mock('../../../app/database', () => ({
   transaction: jest.fn()
 }))
 
