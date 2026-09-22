@@ -45,7 +45,7 @@
     "log-timestamp": "0.3.0",
     "moment": "2.31.0",
     "notifications-node-client": "8.2.1",
-    "pg-query-stream": "4.8.1"
+    "pg-query-stream": "4.17.0"
   },
   "devDependencies": {
     "eslint": "9.39.1",
