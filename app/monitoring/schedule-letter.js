@@ -1,5 +1,5 @@
 const { LETTER } = require('../constants/methods')
-const db = require('../data')
+const db = require('../database')
 const publish = require('../publishing/publish')
 const isDpScheme = require('../publishing/is-dp-scheme')
 
@@ -9,10 +9,9 @@ const scheduleLetter = async (delivery, transaction) => {
   }
 
   const timestamp = new Date()
-  const statement = await db.statement.findOne({
-    where: { statementId: delivery.statementId },
-    transaction
-  })
+  const statement = (await db.statement(transaction)
+    .where({ statementId: delivery.statementId })
+    .first()) ?? null
 
   if (!statement) {
     throw new Error(`Statement not found for statementId: ${delivery.statementId}`)
@@ -32,12 +31,12 @@ const scheduleLetter = async (delivery, transaction) => {
       LETTER
     )
 
-    await db.delivery.create({
+    await db.delivery(transaction).insert({
       statementId: delivery.statementId,
       method: LETTER,
       reference: response.data.id,
       requested: timestamp
-    }, { transaction })
+    })
 
     console.log(`Letter scheduled successfully for statement ${statement.filename}`)
     return true

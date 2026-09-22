@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const getDeliveriesForReport = require('./get-deliveries-for-report')
 const createReport = require('./create-report')
 const { saveReportFile } = require('../storage')
@@ -81,7 +81,7 @@ const sendReport = async (schemeName, startDate, endDate) => {
   const reportDate = new Date()
   const report = await createReport(schemeName, lastDeliveryId, startDate, endDate, reportDate)
 
-  const transaction = await db.sequelize.transaction()
+  const transaction = await db.transaction()
   console.log('[REPORTING] start building report for scheme: ', schemeName)
 
   try {

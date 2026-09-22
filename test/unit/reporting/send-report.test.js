@@ -1,9 +1,20 @@
+const { createKnexMock } = require('../../helpers/mock-knex')
+
+const mockDb = createKnexMock(['report'])
+
+jest.mock('../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
+}))
+
 const { sendReport, getDataRow } = require('../../../app/reporting/send-report')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const createReport = require('../../../app/reporting/create-report')
 const completeReport = require('../../../app/reporting/complete-report')
 const { saveReportFile } = require('../../../app/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { PassThrough } = require('stream')
 
 jest.mock('../../../app/reporting/get-deliveries-for-report')
@@ -11,7 +22,6 @@ jest.mock('../../../app/reporting/create-report')
 jest.mock('../../../app/reporting/complete-report')
 jest.mock('../../../app/publishing/publish-by-email')
 jest.mock('../../../app/storage')
-jest.mock('../../../app/data')
 
 describe('sendReport', () => {
   let transaction
@@ -25,7 +35,8 @@ describe('sendReport', () => {
 
   beforeEach(() => {
     transaction = { commit: jest.fn(), rollback: jest.fn() }
-    db.sequelize.transaction.mockResolvedValue(transaction)
+    db.transaction.mockResolvedValue(transaction)
+    mockDb.builder.resolves()
 
     mockStream = {
       on: jest.fn(),

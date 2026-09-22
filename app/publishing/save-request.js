@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 
 const saveStatement = require('./save-statement')
 const sendCrmMessage = require('../messaging/send-crm-message')
@@ -15,7 +15,7 @@ const trySendCrmMessage = async (email, frn, reason) => {
 }
 
 const saveRequest = async (request, reference, method, errorObject) => {
-  const transaction = await db.sequelize.transaction()
+  const transaction = await db.transaction()
   try {
     const timestamp = new Date()
     const statement = await saveStatement(request, timestamp, transaction)

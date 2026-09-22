@@ -1,21 +1,26 @@
-const createDelivery = require('../../../app/monitoring/create-delivery')
-const db = require('../../../app/data')
+const { createKnexMock } = require('../../helpers/mock-knex')
 
-jest.mock('../../../app/data', () => ({
-  delivery: {
-    create: jest.fn()
-  }
+const mockDb = createKnexMock(['delivery'])
+
+jest.mock('../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
+
+const createDelivery = require('../../../app/monitoring/create-delivery')
 
 describe('processCreateDelivery', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves()
   })
 
   test.each([
     {
       description: 'with a transaction',
-      transaction: { commit: jest.fn(), rollback: jest.fn() }
+      transaction: mockDb.trx
     },
     {
       description: 'without a transaction',
@@ -27,21 +32,11 @@ describe('processCreateDelivery', () => {
     const reference = 'REF-123-ABC'
     const requested = new Date('2025-04-14T12:00:00Z')
 
-    db.delivery.create.mockResolvedValue({
-      id: 456,
-      statementId,
-      method,
-      reference,
-      requested
-    })
-
     await createDelivery(statementId, method, reference, requested, transaction)
 
-    expect(db.delivery.create).toHaveBeenCalledTimes(1)
-    expect(db.delivery.create).toHaveBeenCalledWith(
-      { statementId, method, reference, requested },
-      { transaction }
-    )
+    expect(mockDb.tables.delivery).toHaveBeenCalledTimes(1)
+    expect(mockDb.tables.delivery).toHaveBeenCalledWith(transaction)
+    expect(mockDb.builder.insert).toHaveBeenCalledWith({ statementId, method, reference, requested })
   })
 
   test('throws an error if the database operation fails', async () => {
@@ -49,12 +44,11 @@ describe('processCreateDelivery', () => {
     const method = 'email'
     const reference = 'REF-123-ABC'
     const requested = new Date('2025-04-14T12:00:00Z')
-    const mockTransaction = { commit: jest.fn(), rollback: jest.fn() }
 
     const dbError = new Error('Database connection failed')
-    db.delivery.create.mockRejectedValue(dbError)
+    mockDb.builder.rejects(dbError)
 
-    await expect(createDelivery(statementId, method, reference, requested, mockTransaction))
+    await expect(createDelivery(statementId, method, reference, requested, mockDb.trx))
       .rejects
       .toThrow(dbError)
   })

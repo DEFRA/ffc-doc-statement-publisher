@@ -15,7 +15,8 @@ jest.mock('ffc-messaging')
 
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
+const { truncate } = require('../../helpers/truncate')
 const rescheduleDelivery = require('../../../app/monitoring/reschedule-delivery')
 const path = require('path')
 const { mockStatement1, mockStatement2 } = require('../../mocks/statement')
@@ -39,40 +40,40 @@ describe('rescheduleDeliveries', () => {
     const blockBlobClient = container.getBlockBlobClient(`${config.folder}/${FILE_NAME}`)
     await blockBlobClient.uploadFile(TEST_FILE)
 
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1, mockStatement2])
-    await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
+    await truncate()
+    await db.statement().insert([mockStatement1, mockStatement2])
+    await db.delivery().insert([mockDelivery1, mockDelivery2])
 
     mockSendEmail = jest.fn().mockResolvedValue({ data: { id: mockDelivery1.reference } })
     mockPrepareUpload = jest.fn().mockReturnValue(MOCK_PREPARED_FILE)
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test('should complete delivery', async () => {
     await rescheduleDelivery(mockDelivery1)
-    const delivery = await db.delivery.findByPk(mockDelivery1.deliveryId)
+    const delivery = await db.delivery().where({ deliveryId: mockDelivery1.deliveryId }).first()
     expect(delivery.completed).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
   })
 
   test('should create new delivery', async () => {
     await rescheduleDelivery(mockDelivery1)
-    const deliveries = await db.delivery.findAll({ where: { statementId: mockDelivery1.statementId } })
+    const deliveries = await db.delivery().where({ statementId: mockDelivery1.statementId })
     expect(deliveries.length).toBe(2)
   })
 
   test('should create new delivery with requested date', async () => {
     await rescheduleDelivery(mockDelivery1)
-    const delivery = await db.delivery.findOne({ where: { statementId: mockDelivery1.statementId, completed: null } })
+    const delivery = await db.delivery().where({ statementId: mockDelivery1.statementId, completed: null }).first()
     expect(delivery.requested).toStrictEqual(new Date(2022, 7, 5, 15, 30, 10, 120))
   })
 
   test('should not create new statement', async () => {
     await rescheduleDelivery(mockDelivery1)
-    const statements = await db.statement.findAll()
+    const statements = await db.statement()
     expect(statements.length).toBe(2)
   })
 
