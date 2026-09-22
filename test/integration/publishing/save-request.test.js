@@ -1,5 +1,6 @@
 const db = require('../../../app/data')
-const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
+const config = require('../../../app/config')
+const { mockGetSender, mockSender } = require('../../mocks/modules/sender-cache')
 const saveRequest = require('../../../app/publishing/save-request')
 
 const { EMAIL } = require('../../../app/constants/methods')
@@ -113,25 +114,25 @@ describe('saveRequest', () => {
     test(`CRM message ${sendCRM ? 'is sent' : 'is not sent'}`, async () => {
       await saveRequest(request, reference, EMAIL, { reason })
       if (sendCRM) {
-        expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+        expect(mockGetSender).toHaveBeenCalledWith(config.crmTopic)
+        expect(mockSender.sendMessages).toHaveBeenCalled()
       } else {
-        expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-        expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+        expect(mockGetSender).not.toHaveBeenCalled()
+        expect(mockSender.sendMessages).not.toHaveBeenCalled()
       }
     })
 
     if (sendCRM) {
       test('CRM message content is correct', async () => {
         await saveRequest(request, reference, EMAIL, { reason })
-        expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
+        expect(mockSender.sendMessages).toHaveBeenCalledWith(expect.objectContaining({
           ...MESSAGE,
           body: {
             email: request.email,
             errorMessage,
             frn: request.frn
           }
-        })
+        }), undefined)
       })
     }
   })

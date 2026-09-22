@@ -15,7 +15,6 @@ jest.mock('../../../app/alert', () => ({
 }))
 const { sendAlert } = require('../../../app/alert')
 
-const { mockMessageReceiver } = require('../../mocks/modules/ffc-messaging')
 const { VALIDATION } = require('../../../app/constants/errors')
 const processPublishMessage = require('../../../app/messaging/process-publish-message')
 const EMAIL_TEMPLATE = require('../../mocks/components/notify-template-id')
@@ -25,10 +24,11 @@ let message
 
 describe('processPublishMessage', () => {
   beforeEach(() => {
-    receiver = mockMessageReceiver()
-    receiver.abandonMessage = jest.fn()
-    receiver.completeMessage = jest.fn()
-    receiver.deadLetterMessage = jest.fn()
+    receiver = {
+      completeMessage: jest.fn(),
+      abandonMessage: jest.fn(),
+      deadLetterMessage: jest.fn()
+    }
 
     message = structuredClone(require('../../mocks/messages/publish').STATEMENT_MESSAGE)
 

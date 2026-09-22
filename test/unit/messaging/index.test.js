@@ -6,11 +6,11 @@ jest.mock('../../../app/config', () => ({
   retentionSubscription: mockRetentionSubscription
 }))
 
-jest.mock('ffc-messaging', () => ({
-  MessageReceiver: jest.fn().mockImplementation(() => ({
-    subscribe: jest.fn(),
-    closeConnection: jest.fn()
-  }))
+jest.mock('../../../app/messaging/service-bus', () => ({
+  createServiceBusClient: jest.fn(),
+  createReceiver: jest.fn(),
+  subscribeReceiver: jest.fn(),
+  closeSenders: jest.fn()
 }))
 
 jest.mock('../../../app/data', () => ({}))
@@ -22,14 +22,22 @@ jest.mock('../../../app/messaging/process-retention-message', () => ({
   processRetentionMessage: jest.fn()
 }))
 
-const messageService = require('../../../app/messaging')
-const { MessageReceiver } = require('ffc-messaging')
+const config = require('../../../app/config')
+const serviceBus = require('../../../app/messaging/service-bus')
 const { sendAlert } = require('../../../app/alert')
 const processPublishMessage = require('../../../app/messaging/process-publish-message')
 
+const messageService = require('../../../app/messaging')
+
 describe('messaging', () => {
-  afterEach(() => {
+  let mockReceiver
+
+  beforeEach(() => {
     jest.clearAllMocks()
+    mockReceiver = { close: jest.fn().mockResolvedValue() }
+    serviceBus.createServiceBusClient.mockReturnValue({ close: jest.fn().mockResolvedValue() })
+    serviceBus.createReceiver.mockReturnValue(mockReceiver)
+    serviceBus.subscribeReceiver.mockReturnValue()
   })
 
   afterAll(async () => {
@@ -38,24 +46,27 @@ describe('messaging', () => {
 
   test('should start successfully and create all receivers including retention receiver', async () => {
     await messageService.start()
-    const config = require('../../../app/config')
-    expect(MessageReceiver).toHaveBeenCalledTimes(2)
-    expect(MessageReceiver.mock.calls[0][0]).toEqual({
+
+    const publishConfig = {
       ...config.publishSubscription,
       maxConcurrentCalls: 5,
-      receiveMode: 'peekLock'
-    })
-    expect(typeof MessageReceiver.mock.calls[0][1]).toBe('function')
-    expect(MessageReceiver.mock.calls[0][2]).toBeUndefined()
-    expect(MessageReceiver.mock.calls[1][0]).toBe(config.retentionSubscription)
-    expect(typeof MessageReceiver.mock.calls[1][1]).toBe('function')
+      autoCompleteMessages: false
+    }
+
+    expect(serviceBus.createServiceBusClient).toHaveBeenCalledTimes(1)
+    expect(serviceBus.createServiceBusClient).toHaveBeenCalledWith(config.publishSubscription)
+    expect(serviceBus.createReceiver).toHaveBeenCalledTimes(2)
+    expect(serviceBus.createReceiver).toHaveBeenNthCalledWith(1, expect.anything(), publishConfig)
+    expect(serviceBus.createReceiver).toHaveBeenNthCalledWith(2, expect.anything(), config.retentionSubscription)
+    expect(serviceBus.subscribeReceiver).toHaveBeenCalledTimes(2)
+    expect(serviceBus.subscribeReceiver).toHaveBeenNthCalledWith(1, mockReceiver, expect.any(Function), expect.any(Function), publishConfig)
+    expect(serviceBus.subscribeReceiver).toHaveBeenNthCalledWith(2, mockReceiver, expect.any(Function), expect.any(Function), config.retentionSubscription)
   })
 
   test('should throw and send alert when any receiver subscribe fails', async () => {
-    MessageReceiver.mockImplementation(() => ({
-      subscribe: jest.fn().mockRejectedValue(new Error('Subscribe failed')),
-      closeConnection: jest.fn()
-    }))
+    serviceBus.subscribeReceiver.mockImplementation(() => {
+      throw new Error('Subscribe failed')
+    })
 
     await expect(messageService.start()).rejects.toThrow('Subscribe failed')
     expect(sendAlert).toHaveBeenCalledWith(
@@ -67,15 +78,14 @@ describe('messaging', () => {
 
   test('should send alert when publishAction fails during message processing', async () => {
     const mockMessage = { body: 'test' }
-    const mockReceiver = { subscribe: jest.fn(), closeConnection: jest.fn() }
-    MessageReceiver.mockImplementation(() => mockReceiver)
     processPublishMessage.mockRejectedValue(new Error('Processing failed'))
 
     await messageService.start()
 
-    const publishAction = MessageReceiver.mock.calls[0][1]
-    await publishAction(mockMessage)
+    const publishAction = serviceBus.subscribeReceiver.mock.calls[0][1]
+    await publishAction(mockMessage, mockReceiver)
 
+    expect(processPublishMessage).toHaveBeenCalledWith(mockMessage, mockReceiver)
     expect(sendAlert).toHaveBeenCalledWith(
       'messaging',
       mockMessage,
