@@ -20,9 +20,9 @@ const start = async () => {
     for (let i = 0; i < CONNECTION_COUNT; i++) {
       const publishConfig = { ...config.publishSubscription, maxConcurrentCalls: MAX_CONCURRENT_MESSAGES, autoCompleteMessages: false }
 
-      const publishAction = async (message, receiver) => {
+      const publishAction = async (message, messageReceiver) => {
         try {
-          await processPublishMessage(message, receiver)
+          await processPublishMessage(message, messageReceiver)
         } catch (error) {
           console.error(`Error processing message: ${error.message}`)
           sendAlert('messaging', message, `Error processing message: ${error.message}`)
