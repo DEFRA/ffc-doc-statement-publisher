@@ -1,4 +1,4 @@
-const { statement } = require('../data')
+const { statement } = require('../database')
 
 const findStatements = async (documentReference, filename, transaction) => {
   return statement(transaction ?? undefined)

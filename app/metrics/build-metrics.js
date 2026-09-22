@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const { delivery } = db
 const {
   PRINT_POST_UNIT_COST_2024,

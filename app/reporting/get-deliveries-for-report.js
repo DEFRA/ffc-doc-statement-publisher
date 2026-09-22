@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const { delivery: DELIVERIES, statement: STATEMENTS, failure: FAILURES } = require('../constants/tables')
 
 const getDeliveriesForReport = async (schemeName, start, end) => {

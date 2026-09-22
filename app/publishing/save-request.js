@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 
 const saveStatement = require('./save-statement')
 const sendCrmMessage = require('../messaging/send-crm-message')

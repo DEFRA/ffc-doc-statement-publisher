@@ -1,4 +1,4 @@
-const { messageClaim } = require('../data')
+const { messageClaim } = require('../database')
 const { sendAlert } = require('../alert')
 
 const UNIQUE_VIOLATION = '23505'

@@ -1,4 +1,4 @@
-const { statement } = require('../../data')
+const { statement } = require('../../database')
 
 const getExistingDocument = async (documentReference) => {
   return (await statement()

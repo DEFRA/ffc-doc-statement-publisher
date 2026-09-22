@@ -1,4 +1,4 @@
-const { report } = require('../data')
+const { report } = require('../database')
 
 const createReport = async (schemeName, lastDeliveryId, reportStartDate, reportEndDate, requested) => {
   const [saved] = await report()

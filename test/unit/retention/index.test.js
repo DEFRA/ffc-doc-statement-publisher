@@ -32,7 +32,7 @@ const { removeFailures } = require('../../../app/retention/remove-failures')
 const { removeDeliveries } = require('../../../app/retention/remove-deliveries')
 const { removeStatements } = require('../../../app/retention/remove-statements')
 const { deleteStatement } = require('../../../app/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 
 const { removeAgreementData } = require('../../../app/retention')
 

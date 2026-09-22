@@ -1,4 +1,4 @@
-const { delivery } = require('../data')
+const { delivery } = require('../database')
 
 const createDelivery = async (statementId, method, reference, requested, transaction) => {
   await delivery(transaction ?? undefined).insert({

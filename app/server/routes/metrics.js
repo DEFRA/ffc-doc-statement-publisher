@@ -1,4 +1,4 @@
-const { metric } = require('../../data')
+const { metric } = require('../../database')
 const { METRIC_SELECT, toMetricRow } = require('../../metrics/metric-columns')
 const { calculateMetricsForPeriod } = require('../../metrics/metrics-calculator')
 const { HTTP_OK, HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')

@@ -15,7 +15,7 @@ jest.mock('ffc-messaging')
 
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const rescheduleDelivery = require('../../../app/monitoring/reschedule-delivery')
 const path = require('path')

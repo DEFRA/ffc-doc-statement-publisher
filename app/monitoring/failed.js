@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const getStatementByStatementId = require('./get-statement-by-statement-id')
 const sendCrmMessage = require('../messaging/send-crm-message')
 const completeDelivery = require('./complete-delivery')

@@ -1,6 +1,6 @@
 const { EMAIL } = require('../constants/methods')
 const { delivery: DELIVERIES, statement: STATEMENTS } = require('../constants/tables')
-const db = require('../data')
+const db = require('../database')
 const { delivery } = db
 
 const getOutstandingDeliveries = async (options = {}) => {

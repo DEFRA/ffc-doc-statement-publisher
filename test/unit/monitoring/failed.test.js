@@ -1,4 +1,4 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { mockTransaction } = require('../../mocks/objects/data')
 const { EMAIL, LETTER } = require('../../../app/constants/methods')
 

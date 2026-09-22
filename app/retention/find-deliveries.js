@@ -1,4 +1,4 @@
-const { delivery } = require('../data')
+const { delivery } = require('../database')
 
 const findDeliveries = async (statementIds, transaction) => {
   return delivery(transaction ?? undefined)

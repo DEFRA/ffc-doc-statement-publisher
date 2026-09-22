@@ -1,5 +1,5 @@
 const { randomUUID: uuidv4 } = require('node:crypto')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
 const { sendReport } = require('../../../app/reporting/send-report')

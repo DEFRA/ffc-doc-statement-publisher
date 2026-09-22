@@ -1,4 +1,4 @@
-const { delivery } = require('../data')
+const { delivery } = require('../database')
 
 const saveDelivery = async (statementId, method, reference, timestamp, transaction) => {
   const [saved] = await delivery(transaction ?? undefined)

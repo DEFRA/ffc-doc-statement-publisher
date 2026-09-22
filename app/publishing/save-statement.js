@@ -1,4 +1,4 @@
-const { statement } = require('../data')
+const { statement } = require('../database')
 
 const saveStatement = async (request, timestamp, transaction) => {
   const [saved] = await statement(transaction ?? undefined)

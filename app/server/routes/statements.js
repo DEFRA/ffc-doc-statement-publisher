@@ -1,4 +1,4 @@
-const { statement, requests } = require('../../data')
+const { statement, requests } = require('../../database')
 const { HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
 const SUCCESS_CODE = 201

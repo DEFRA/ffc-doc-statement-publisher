@@ -1,4 +1,4 @@
-const { report } = require('../data')
+const { report } = require('../database')
 const hour = 23
 const minute = 59
 const second = 59

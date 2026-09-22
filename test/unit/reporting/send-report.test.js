@@ -14,7 +14,7 @@ const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-fo
 const createReport = require('../../../app/reporting/create-report')
 const completeReport = require('../../../app/reporting/complete-report')
 const { saveReportFile } = require('../../../app/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { PassThrough } = require('stream')
 
 jest.mock('../../../app/reporting/get-deliveries-for-report')

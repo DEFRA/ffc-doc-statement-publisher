@@ -1,4 +1,4 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
 const { mockReport1 } = require('../../mocks/report')

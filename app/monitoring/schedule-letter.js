@@ -1,5 +1,5 @@
 const { LETTER } = require('../constants/methods')
-const db = require('../data')
+const db = require('../database')
 const publish = require('../publishing/publish')
 const isDpScheme = require('../publishing/is-dp-scheme')
 

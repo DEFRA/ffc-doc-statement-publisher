@@ -1,4 +1,4 @@
-const { report } = require('../data')
+const { report } = require('../database')
 
 const removeFailedReport = async (reportId) => {
   if (reportId) {

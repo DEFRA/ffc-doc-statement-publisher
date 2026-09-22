@@ -19,7 +19,7 @@ jest.mock('../../../app/publishing/fetch-statement-file', () => mockFetchStateme
 
 const { BlobServiceClient } = require('@azure/storage-blob')
 const config = require('../../../app/config/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const updateDeliveryFromResponse = require('../../../app/monitoring/update-delivery-from-response')
 const path = require('path')

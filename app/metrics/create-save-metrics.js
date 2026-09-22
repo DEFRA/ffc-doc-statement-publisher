@@ -1,4 +1,4 @@
-const { metric } = require('../data')
+const { metric } = require('../database')
 const { METRIC_SELECT, toMetricRow } = require('./metric-columns')
 const { DEFAULT_PRINT_POST_UNIT_COST } = require('../constants/print-post-pricing')
 

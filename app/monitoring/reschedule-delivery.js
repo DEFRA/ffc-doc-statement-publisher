@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const getPersonalisation = require('../publishing/get-personalisation')
 const publish = require('../publishing/publish')
 

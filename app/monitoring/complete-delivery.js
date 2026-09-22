@@ -1,4 +1,4 @@
-const { delivery } = require('../data')
+const { delivery } = require('../database')
 
 const completeDelivery = async (deliveryId, transaction) => {
   try {

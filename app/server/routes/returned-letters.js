@@ -1,4 +1,4 @@
-const { returnedLetter } = require('../../data')
+const { returnedLetter } = require('../../database')
 const config = require('../../config')
 const { HTTP_OK, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 

@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const { deleteStatement } = require('../storage')
 const { findDeliveries } = require('./find-deliveries')
 const { findStatements } = require('./find-statements')

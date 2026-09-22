@@ -1,4 +1,4 @@
-const { report } = require('../data')
+const { report } = require('../database')
 
 const completeReport = async (reportId, lastDeliveryId, transaction) => {
   await report(transaction ?? undefined)

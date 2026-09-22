@@ -1,4 +1,4 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 const createReport = require('../../../app/reporting/create-report')

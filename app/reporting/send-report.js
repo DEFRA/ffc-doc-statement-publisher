@@ -1,4 +1,4 @@
-const db = require('../data')
+const db = require('../database')
 const getDeliveriesForReport = require('./get-deliveries-for-report')
 const createReport = require('./create-report')
 const { saveReportFile } = require('../storage')

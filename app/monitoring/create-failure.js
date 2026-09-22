@@ -1,4 +1,4 @@
-const { failure } = require('../data')
+const { failure } = require('../database')
 
 const createFailure = async (deliveryId, errorObject, timestamp, transaction) => {
   await failure(transaction ?? undefined).insert({
