@@ -21,7 +21,7 @@ const METRIC_SELECT = Object.entries(METRIC_COLUMNS).map(([camel, snake]) => `${
 const toMetricRow = (record) => {
   const row = {}
   for (const [camel, snake] of Object.entries(METRIC_COLUMNS)) {
-    if (Object.prototype.hasOwn.call(record, camel)) {
+    if (Object.hasOwn(record, camel)) {
       row[snake] = record[camel]
     }
   }
