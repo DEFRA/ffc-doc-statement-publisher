@@ -1,42 +1,45 @@
-const { MessageReceiver } = require('ffc-messaging')
 const config = require('../config')
+const { createServiceBusClient, createReceiver, subscribeReceiver, closeSenders } = require('./service-bus')
 const { sendAlert } = require('../alert')
 const processPublishMessage = require('./process-publish-message')
 const { processRetentionMessage } = require('./process-retention-message')
+const errorHandler = (error) => {
+  console.error('Error occurred:', error)
+}
 
+let sbClient
 let receivers = []
 const CONNECTION_COUNT = 1
 const MAX_CONCURRENT_MESSAGES = 5
 
 const start = async () => {
+  sbClient = createServiceBusClient(config.publishSubscription)
   try {
     console.info(`Starting messaging service with ${CONNECTION_COUNT} connections`)
 
     for (let i = 0; i < CONNECTION_COUNT; i++) {
-      const publishAction = async (message) => {
+      const publishConfig = { ...config.publishSubscription, maxConcurrentCalls: MAX_CONCURRENT_MESSAGES, autoCompleteMessages: false }
+
+      const publishAction = async (message, messageReceiver) => {
         try {
-          await processPublishMessage(message, receivers[i])
+          await processPublishMessage(message, messageReceiver)
         } catch (error) {
           console.error(`Error processing message: ${error.message}`)
           sendAlert('messaging', message, `Error processing message: ${error.message}`)
         }
       }
 
-      const receiver = new MessageReceiver(
-        { ...config.publishSubscription, maxConcurrentCalls: MAX_CONCURRENT_MESSAGES, receiveMode: 'peekLock' },
-        publishAction
-      )
+      const receiver = createReceiver(sbClient, publishConfig)
 
-      await receiver.subscribe()
+      subscribeReceiver(receiver, publishAction, errorHandler, publishConfig)
       receivers.push(receiver)
       console.info(`Connection ${i + 1}/${CONNECTION_COUNT} established`)
     }
 
     console.info(`Ready to publish payment statements (max throughput: ${CONNECTION_COUNT * MAX_CONCURRENT_MESSAGES} concurrent messages)`)
 
-    const retentionAction = message => processRetentionMessage(message, retentionReceiver)
-    const retentionReceiver = new MessageReceiver(config.retentionSubscription, retentionAction)
-    await retentionReceiver.subscribe()
+    const retentionReceiver = createReceiver(sbClient, config.retentionSubscription)
+    subscribeReceiver(retentionReceiver, processRetentionMessage, errorHandler, config.retentionSubscription)
     receivers.push(retentionReceiver)
     console.info('Retention receiver ready')
   } catch (error) {
@@ -47,8 +50,17 @@ const start = async () => {
 }
 
 const stop = async () => {
+  await closeSenders()
+  if (sbClient) {
+    try {
+      await sbClient.close()
+    } catch (error) {
+      console.error('Failed to close senders:', error)
+    }
+    sbClient = null
+  }
   console.info('Shutting down messaging service')
-  await Promise.all(receivers.map(receiver => receiver.closeConnection()))
+  await Promise.all(receivers.map(receiver => receiver.close()))
   receivers = []
   console.info('Messaging service stopped')
 }
