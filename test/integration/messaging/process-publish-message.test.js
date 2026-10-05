@@ -1,4 +1,5 @@
-const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
+const config = require('../../../app/config')
+const { mockGetSender, mockSender } = require('../../mocks/modules/sender-cache')
 const sendCrmMessage = require('../../../app/messaging/send-crm-message')
 const { EMPTY, INVALID, REJECTED } = require('../../../app/constants/failure-reasons')
 const { EMPTY: EMPTY_MESSAGE, INVALID: INVALID_MESSAGE } = require('../../mocks/messages/crm')
@@ -30,20 +31,18 @@ describe('Send invalid email message to CRM', () => {
 
     test('should send message to CRM', async () => {
       await sendCrmMessage(email, frn, reason)
-      expect(mockMessageSender().sendMessage).toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockGetSender).toHaveBeenCalledWith(config.crmTopic)
+      expect(mockSender.sendMessages).toHaveBeenCalled()
     })
 
     test('should send 1 message to CRM', async () => {
       await sendCrmMessage(email, frn, reason)
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockSender.sendMessages).toHaveBeenCalledTimes(1)
     })
 
     test('should send message to CRM with message', async () => {
       await sendCrmMessage(email, frn, reason)
-      expect(mockMessageSender().sendMessage).toHaveBeenCalledWith(message)
-      expect(mockMessageSender().closeConnection).toHaveBeenCalled()
+      expect(mockSender.sendMessages).toHaveBeenCalledWith(expect.objectContaining(message), undefined)
     })
   })
 
@@ -54,8 +53,8 @@ describe('Send invalid email message to CRM', () => {
 
     test('should not send message to CRM', async () => {
       try { await sendCrmMessage(email, frn, reason) } catch {}
-      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+      expect(mockGetSender).not.toHaveBeenCalled()
+      expect(mockSender.sendMessages).not.toHaveBeenCalled()
     })
   })
 
@@ -66,8 +65,8 @@ describe('Send invalid email message to CRM', () => {
 
     test('should not send message to CRM', async () => {
       try { await sendCrmMessage(email, frn, reason) } catch {}
-      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+      expect(mockGetSender).not.toHaveBeenCalled()
+      expect(mockSender.sendMessages).not.toHaveBeenCalled()
     })
   })
 
@@ -78,8 +77,8 @@ describe('Send invalid email message to CRM', () => {
 
     test('should not send message to CRM', async () => {
       try { await sendCrmMessage(email, frn, reason) } catch {}
-      expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-      expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+      expect(mockGetSender).not.toHaveBeenCalled()
+      expect(mockSender.sendMessages).not.toHaveBeenCalled()
     })
   })
 })

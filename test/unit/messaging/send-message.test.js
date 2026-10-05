@@ -1,12 +1,8 @@
-let mockSendMessage = jest.fn()
-let mockCloseConnection = jest.fn()
+const { getSender } = require('../../../app/messaging/service-bus/sender-cache')
+const { sendMessage: sbSendMessage } = require('../../../app/messaging/service-bus/send-message')
 
-jest.mock('ffc-messaging', () => ({
-  MessageSender: jest.fn().mockImplementation(() => ({
-    sendMessage: mockSendMessage,
-    closeConnection: mockCloseConnection
-  }))
-}))
+jest.mock('../../../app/messaging/service-bus/sender-cache')
+jest.mock('../../../app/messaging/service-bus/send-message')
 
 jest.mock('../../../app/messaging/create-message')
 const createMessage = require('../../../app/messaging/create-message')
@@ -17,52 +13,43 @@ const SOURCE = require('../../../app/constants/message-source')
 const sendMessage = require('../../../app/messaging/send-message')
 
 const body = 'Hello World!'
-const config = {}
+const config = { address: 'crm-topic' }
+const mockSender = { sendMessages: jest.fn() }
 
 describe('sendMessage', () => {
   beforeEach(() => {
-    mockSendMessage = jest.fn()
-    mockCloseConnection = jest.fn()
+    jest.clearAllMocks()
+    getSender.mockReturnValue(mockSender)
     createMessage.mockReturnValue({ body, type: CRM_MESSAGE_TYPE, source: SOURCE })
   })
 
-  afterEach(() => jest.clearAllMocks())
+  test('createMessage called with body and type', async () => {
+    await sendMessage(body, CRM_MESSAGE_TYPE, config)
+    expect(createMessage).toHaveBeenCalledWith(body, CRM_MESSAGE_TYPE)
+  })
 
-  describe('successful send', () => {
-    test.each([
-      ['createMessage', () => expect(createMessage).toHaveBeenCalled(), () => expect(createMessage).toHaveBeenCalledTimes(1)],
-      ['mockSendMessage', () => expect(mockSendMessage).toHaveBeenCalled(), () => expect(mockSendMessage).toHaveBeenCalledTimes(1)],
-      ['mockCloseConnection', () => expect(mockCloseConnection).toHaveBeenCalled(), () => expect(mockCloseConnection).toHaveBeenCalledTimes(1)]
-    ])('%s called', async (_, callCheck, callTimes) => {
-      await sendMessage(body, CRM_MESSAGE_TYPE, config)
-      callCheck()
-      callTimes()
-    })
+  test('gets sender from cache with config', async () => {
+    await sendMessage(body, CRM_MESSAGE_TYPE, config)
+    expect(getSender).toHaveBeenCalledTimes(1)
+    expect(getSender).toHaveBeenCalledWith(config)
+  })
 
-    test('createMessage called with body and CRM_MESSAGE_TYPE', async () => {
-      await sendMessage(body, CRM_MESSAGE_TYPE, config)
-      expect(createMessage).toHaveBeenCalledWith(body, CRM_MESSAGE_TYPE)
-    })
+  test('sends message using service-bus sendMessage', async () => {
+    const message = createMessage()
+    await sendMessage(body, CRM_MESSAGE_TYPE, config)
+    expect(sbSendMessage).toHaveBeenCalledTimes(1)
+    expect(sbSendMessage).toHaveBeenCalledWith(mockSender, message)
+  })
 
-    test('mockSendMessage called with createMessage return value', async () => {
-      const messageReturn = createMessage()
-      await sendMessage(body, CRM_MESSAGE_TYPE, config)
-      expect(mockSendMessage).toHaveBeenCalledWith(messageReturn)
-    })
-
-    test('returns undefined', async () => {
-      const result = await sendMessage(body, CRM_MESSAGE_TYPE, config)
-      expect(result).toBeUndefined()
-    })
+  test('returns undefined', async () => {
+    const result = await sendMessage(body, CRM_MESSAGE_TYPE, config)
+    expect(result).toBeUndefined()
   })
 
   describe('error handling', () => {
-    test.each([
-      ['mockSendMessage', () => { mockSendMessage.mockRejectedValue(new Error('FFC Messaging issue sending message')) }, /^FFC Messaging issue sending message$/],
-      ['mockCloseConnection', () => { mockCloseConnection.mockRejectedValue(new Error('FFC Messaging issue closing connection')) }, /^FFC Messaging issue closing connection$/]
-    ])('%s throws correct error', async (_, setupMock, expectedError) => {
-      setupMock()
-      await expect(sendMessage(body, CRM_MESSAGE_TYPE, config)).rejects.toThrow(expectedError)
+    test('throws when service-bus sendMessage fails', async () => {
+      sbSendMessage.mockRejectedValue(new Error('Service Bus issue sending message'))
+      await expect(sendMessage(body, CRM_MESSAGE_TYPE, config)).rejects.toThrow(/^Service Bus issue sending message$/)
     })
   })
 })

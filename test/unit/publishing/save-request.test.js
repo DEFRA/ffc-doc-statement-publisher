@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 const db = require('../../../app/database')
 const { truncate } = require('../../helpers/truncate')
 const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
+=======
+const db = require('../../../app/data')
+const config = require('../../../app/config')
+const { mockGetSender, mockSender } = require('../../mocks/modules/sender-cache')
+>>>>>>> 4bf02a8 (replace ffc-messaging with service-bus (#143))
 const saveRequest = require('../../../app/publishing/save-request')
 
 const REFERENCE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED).data.id
@@ -118,19 +124,19 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
       test('should handle sending message to CRM', async () => {
         await saveRequest(request, reference, method, { reason })
         if (sendMessage) {
-          expect(mockMessageSender().sendMessage).toHaveBeenCalledWith({
+          expect(mockGetSender).toHaveBeenCalledWith(config.crmTopic)
+          expect(mockSender.sendMessages).toHaveBeenCalledWith(expect.objectContaining({
             ...MESSAGE,
             body: {
               email: request.email,
               errorMessage,
               frn: request.frn
             }
-          })
-          expect(mockMessageSender().sendMessage).toHaveBeenCalledTimes(1)
-          expect(mockMessageSender().closeConnection).toHaveBeenCalledTimes(1)
+          }), undefined)
+          expect(mockSender.sendMessages).toHaveBeenCalledTimes(1)
         } else {
-          expect(mockMessageSender().sendMessage).not.toHaveBeenCalled()
-          expect(mockMessageSender().closeConnection).not.toHaveBeenCalled()
+          expect(mockGetSender).not.toHaveBeenCalled()
+          expect(mockSender.sendMessages).not.toHaveBeenCalled()
         }
       })
     })
