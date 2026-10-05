@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 const db = require('../../../app/database')
-const { truncate } = require('../../helpers/truncate')
-const { mockMessageSender } = require('../../mocks/modules/ffc-messaging')
-=======
-const db = require('../../../app/data')
 const config = require('../../../app/config')
+const { truncate } = require('../../helpers/truncate')
 const { mockGetSender, mockSender } = require('../../mocks/modules/sender-cache')
->>>>>>> 4bf02a8 (replace ffc-messaging with service-bus (#143))
 const saveRequest = require('../../../app/publishing/save-request')
 
 const REFERENCE = structuredClone(require('../../mocks/objects/notify-response').NOTIFY_RESPONSE_DELIVERED).data.id
