@@ -29,30 +29,35 @@ const getOutstandingDeliveries = async (options = {}) => {
 const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSize = 100) => {
   const fetchDeliveries = fetchFunction || getOutstandingDeliveries
 
-  const processBatch = async (lastProcessedId, totalProcessed, batchCount) => {
+  let totalProcessed = 0
+  let batchCount = 0
+  let lastProcessedId = 0
+
+  while (true) {
     const deliveries = await fetchDeliveries({
       limit: batchSize,
       lastProcessedId
     })
 
     if (deliveries.length === 0) {
-      return { totalProcessed, batchCount }
+      break
     }
+
+    batchCount++
 
     const results = await processFn(deliveries)
 
-    const processedCount = Array.isArray(results)
-      ? results.filter(result => result.success === true).length
-      : deliveries.length
+    if (Array.isArray(results)) {
+      const successCount = results.filter(result => result.success === true).length
+      totalProcessed += successCount
+    } else {
+      totalProcessed += deliveries.length
+    }
 
-    return processBatch(
-      deliveries[deliveries.length - 1].deliveryId,
-      totalProcessed + processedCount,
-      batchCount + 1
-    )
+    lastProcessedId = deliveries[deliveries.length - 1].deliveryId
   }
 
-  return processBatch(0, 0, 0)
+  return { totalProcessed, batchCount }
 }
 
 module.exports = {
