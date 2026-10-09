@@ -2,52 +2,6 @@
 version: v1.25.0
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
-  # TEMP (DOC-3089): ignores added to prove the build passes - remove before merge
-  SNYK-JS-AXIOS-20245042:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245044:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245046:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245048:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245056:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245060:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245062:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-AXIOS-20245066:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
-  SNYK-JS-GRPCGRPCJS-20251010:
-    - '*':
-        reason: TEMP (DOC-3089) - remove before merge
-        expires: 2026-10-20T00:00:00.000Z
-        created: 2026-10-06T00:00:00.000Z
   SNYK-JS-UUID-16133035:
     - '*':
         reason: no direct upgrade
