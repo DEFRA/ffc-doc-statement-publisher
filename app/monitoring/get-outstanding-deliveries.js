@@ -1,5 +1,7 @@
 const { EMAIL } = require('../constants/methods')
-const db = require('../data')
+const { delivery: DELIVERIES, statement: STATEMENTS } = require('../constants/tables')
+const db = require('../database')
+const { delivery } = db
 
 const getOutstandingDeliveries = async (options = {}) => {
   const {
@@ -8,27 +10,20 @@ const getOutstandingDeliveries = async (options = {}) => {
     includeStatement = false
   } = options
 
-  const queryOptions = {
-    where: {
-      deliveryId: { [db.Sequelize.Op.gt]: lastProcessedId },
-      reference: { [db.Sequelize.Op.not]: null },
-      method: EMAIL,
-      completed: null
-    },
-    limit,
-    order: [['deliveryId', 'ASC']]
-  }
+  const query = delivery()
+    .where('deliveryId', '>', lastProcessedId)
+    .whereNotNull('reference')
+    .where({ method: EMAIL, completed: null })
+    .orderBy('deliveryId', 'asc')
+    .limit(limit)
 
   if (includeStatement) {
-    queryOptions.include = [
-      {
-        model: db.statement,
-        as: 'statement',
-        required: false
-      }
-    ]
+    query
+      .select(`${DELIVERIES}.*`, db.client.raw(`row_to_json(${STATEMENTS}.*) as statement`))
+      .leftJoin(STATEMENTS, `${STATEMENTS}.statementId`, `${DELIVERIES}.statementId`)
   }
-  return db.delivery.findAll(queryOptions)
+
+  return query
 }
 
 const processAllOutstandingDeliveries = async (processFn, fetchFunction, batchSize = 100) => {

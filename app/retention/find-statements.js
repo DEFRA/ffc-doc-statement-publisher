@@ -1,11 +1,9 @@
-const db = require('../data')
+const { statement } = require('../database')
 
 const findStatements = async (documentReference, filename, transaction) => {
-  return db.statement.findAll({
-    attributes: ['statementId'],
-    where: { documentReference, filename },
-    transaction
-  })
+  return statement(transaction ?? undefined)
+    .select('statementId')
+    .where({ documentReference, filename })
 }
 
 module.exports = {

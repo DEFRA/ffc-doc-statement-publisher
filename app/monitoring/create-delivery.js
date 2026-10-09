@@ -1,12 +1,12 @@
-const db = require('../data')
+const { delivery } = require('../database')
 
 const createDelivery = async (statementId, method, reference, requested, transaction) => {
-  await db.delivery.create({
+  await delivery(transaction ?? undefined).insert({
     statementId,
     method,
     reference,
     requested
-  }, { transaction })
+  })
 }
 
 module.exports = createDelivery

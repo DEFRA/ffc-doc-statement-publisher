@@ -1,4 +1,5 @@
-const db = require('../data')
+const { metric } = require('../database')
+const { METRIC_SELECT, toMetricRow } = require('./metric-columns')
 const { DEFAULT_PRINT_POST_UNIT_COST } = require('../constants/print-post-pricing')
 
 const {
@@ -40,12 +41,12 @@ const saveMetrics = async (results, period, snapshotDate, startDate, endDate) =>
     createMetricRecord(result, period, snapshotDate, startDate, endDate)
   )
 
-  const existingRecords = await db.metric.findAll({
-    where: {
+  const existingRecords = await metric()
+    .select(METRIC_SELECT)
+    .where(toMetricRow({
       snapshotDate,
       periodType: period
-    }
-  })
+    }))
 
   const existingMap = new Map(
     existingRecords.map(record => [
@@ -70,12 +71,12 @@ const saveMetrics = async (results, period, snapshotDate, startDate, endDate) =>
 
   if (updates.length > 0) {
     await Promise.all(updates.map(record =>
-      db.metric.update(record, { where: { id: record.id } })
+      metric().where(toMetricRow({ id: record.id })).update(toMetricRow(record))
     ))
   }
 
   if (inserts.length > 0) {
-    await db.metric.bulkCreate(inserts)
+    await metric().insert(inserts.map(toMetricRow))
   }
 
   return { inserted: inserts.length, updated: updates.length }

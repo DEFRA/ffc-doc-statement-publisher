@@ -1,4 +1,5 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
+const { truncate } = require('../../helpers/truncate')
 const createReport = require('../../../app/reporting/create-report')
 const { mockReport1 } = require('../../mocks/report')
 
@@ -7,16 +8,16 @@ describe('createReport', () => {
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
 
-    await db.sequelize.truncate({ cascade: true })
+    await truncate()
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test('creates a new report', async () => {
-    const transaction = await db.sequelize.transaction()
+    const transaction = await db.transaction()
     const result = await createReport(
       mockReport1.schemeName,
       mockReport1.lastDeliveryId,

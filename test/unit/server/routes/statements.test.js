@@ -1,15 +1,30 @@
 const HTTP_INTERNAL_SERVER_ERROR = require('../../../../app/constants/statuses').HTTP_INTERNAL_SERVER_ERROR
+const { createKnexMock, createQueryBuilder } = require('../../../helpers/mock-knex')
 
-jest.mock('../../../../app/data', () => ({
-  statement: {},
-  sequelize: { Op: { like: Symbol('like'), between: Symbol('between') } }
+const mockDb = createKnexMock(['statement', 'requests'])
+
+jest.mock('../../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
 const statementsModule = require('../../../../app/server/routes/statements')
+const { routes, buildQueryCriteria, buildReceivedRange, getOffset, formatStatementTimestamp, formatStatement, parseTimestampToRange } = statementsModule
+
+// executeQuery runs a count query then a rows query against the `statement` table,
+// both via fresh `statement()` calls. This queues the pair of builders that a single
+// GET /statements handler invocation (for one pass, exact-minute or widened) consumes.
+const mockStatementQuery = (count, rows) => {
+  const countBuilder = createQueryBuilder().resolves({ count })
+  const rowsBuilder = createQueryBuilder().resolves(rows)
+  mockDb.tables.statement.mockReturnValueOnce(countBuilder).mockReturnValueOnce(rowsBuilder)
+  return { countBuilder, rowsBuilder }
+}
 
 describe('statements route', () => {
   let consoleInfoSpy
-  let consoleErrorSpy
 
   const createResponseToolkit = () => ({
     response: jest.fn().mockImplementation(obj => ({
@@ -18,31 +33,18 @@ describe('statements route', () => {
   })
 
   beforeEach(() => {
+    jest.clearAllMocks()
     consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation()
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    jest.spyOn(console, 'error').mockImplementation()
   })
 
   afterEach(() => {
-    jest.resetModules()
     jest.restoreAllMocks()
     jest.useRealTimers()
-    consoleInfoSpy.mockRestore()
-    consoleErrorSpy.mockRestore()
   })
 
   describe('module exports', () => {
     test('should export a GET route for /statements', () => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-
-      const { routes } = require('../../../../app/server/routes/statements')
       expect(Array.isArray(routes)).toBe(true)
       expect(routes).toHaveLength(2)
       expect(routes[0].method).toBe('POST')
@@ -53,125 +55,92 @@ describe('statements route', () => {
       expect(typeof routes[1].handler).toBe('function')
     })
 
-    describe('POST /requests route', () => {
-      let handler
-      let mockCreate
+    test('should export helper functions for testing', () => {
+      expect(typeof buildQueryCriteria).toBe('function')
+      expect(typeof buildReceivedRange).toBe('function')
+      expect(typeof getOffset).toBe('function')
+      expect(typeof formatStatementTimestamp).toBe('function')
+      expect(typeof formatStatement).toBe('function')
+      expect(typeof parseTimestampToRange).toBe('function')
+    })
+  })
 
-      beforeEach(() => {
-        mockCreate = jest.fn().mockResolvedValue({ id: 123 })
+  describe('POST /requests route', () => {
+    const handler = routes.find(r => r.path === '/requests').handler
 
-        jest.doMock('../../../../app/data', () => ({
-          requests: { create: mockCreate }
-        }))
+    beforeEach(() => {
+      mockDb.builder.resolves([{ id: 123 }])
+    })
 
-        const routesModule = require('../../../../app/server/routes/statements')
-        handler = routesModule.routes.find(r => r.path === '/requests').handler
-      })
-
-      test('should return 201 and success true when log entry is created', async () => {
-        const request = {
-          payload: {
-            username: 'bob',
-            searchTerms: { filename: 'FFC_Statement.pdf' },
-            type: 'UPLOAD',
-            timestamp: '2024-01-01T00:00:00Z'
-          }
-        }
-
-        const h = {
-          response: (obj) => ({
-            code: (status) => ({ status, obj })
-          })
-        }
-
-        const result = await handler(request, h)
-
-        expect(mockCreate).toHaveBeenCalledWith({
+    test('should return 201 and success true when log entry is created', async () => {
+      const request = {
+        payload: {
           username: 'bob',
           searchTerms: { filename: 'FFC_Statement.pdf' },
           type: 'UPLOAD',
           timestamp: '2024-01-01T00:00:00Z'
-        })
-
-        expect(result.status).toBe(201)
-        expect(result.obj).toEqual({ success: true, id: 123 })
-      })
-
-      test('should return 500 when db create throws', async () => {
-        const error = new Error('DB failed')
-        mockCreate.mockRejectedValue(error)
-
-        const request = {
-          payload: {
-            username: 'bob',
-            filename: 'file.txt',
-            type: 'UPLOAD',
-            timestamp: '2024-01-01T00:00:00Z'
-          }
         }
+      }
 
-        const h = {
-          response: (obj) => ({
-            code: (status) => ({ status, obj })
-          })
-        }
-
-        const result = await handler(request, h)
-
-        expect(result.status).toBe(HTTP_INTERNAL_SERVER_ERROR)
-        expect(result.obj).toEqual({
-          error: 'Internal server error',
-          message: 'Failed to write requests log'
+      const h = {
+        response: (obj) => ({
+          code: (status) => ({ status, obj })
         })
+      }
+
+      const result = await handler(request, h)
+
+      expect(mockDb.tables.requests).toHaveBeenCalledWith()
+      expect(mockDb.builder.insert).toHaveBeenCalledWith({
+        username: 'bob',
+        searchTerms: { filename: 'FFC_Statement.pdf' },
+        type: 'UPLOAD',
+        timestamp: '2024-01-01T00:00:00Z'
       })
+      expect(mockDb.builder.returning).toHaveBeenCalledWith('id')
+
+      expect(result.status).toBe(201)
+      expect(result.obj).toEqual({ success: true, id: 123 })
     })
 
-    test('should export helper functions for testing', () => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+    test('should return 500 when db insert throws', async () => {
+      mockDb.builder.rejects(new Error('DB failed'))
 
-      expect(typeof statementsModule.buildQueryCriteria).toBe('function')
-      expect(typeof statementsModule.getOffset).toBe('function')
-      expect(typeof statementsModule.formatStatementTimestamp).toBe('function')
-      expect(typeof statementsModule.formatStatement).toBe('function')
-      expect(typeof statementsModule.parseTimestampToRange).toBe('function')
+      const request = {
+        payload: {
+          username: 'bob',
+          filename: 'file.txt',
+          type: 'UPLOAD',
+          timestamp: '2024-01-01T00:00:00Z'
+        }
+      }
+
+      const h = {
+        response: (obj) => ({
+          code: (status) => ({ status, obj })
+        })
+      }
+
+      const result = await handler(request, h)
+
+      expect(result.status).toBe(HTTP_INTERNAL_SERVER_ERROR)
+      expect(result.obj).toEqual({
+        error: 'Internal server error',
+        message: 'Failed to write requests log'
+      })
     })
   })
 
   describe('buildQueryCriteria', () => {
-    let buildQueryCriteria
-
-    beforeEach(() => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-      buildQueryCriteria = statementsModule.buildQueryCriteria
-    })
-
     test('should build empty criteria when no query provided', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({}, db)
+      const result = buildQueryCriteria({})
       expect(result).toEqual({})
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] buildQueryCriteria called with:', {})
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Final criteria:', {})
     })
 
     test('should parse FRN as integer', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ frn: '1234567890' }, db)
+      const result = buildQueryCriteria({ frn: '1234567890' })
       expect(result.frn).toBe(1234567890)
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Parsed FRN:', {
         input: '1234567890',
@@ -180,106 +149,88 @@ describe('statements route', () => {
     })
 
     test('should set schemeShortName', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ schemeshortname: 'SFI' }, db)
+      const result = buildQueryCriteria({ schemeshortname: 'SFI' })
       expect(result.schemeShortName).toBe('SFI')
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set schemeShortName:', 'SFI')
     })
 
     test('should set schemeYear as string', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ schemeyear: '2023' }, db)
+      const result = buildQueryCriteria({ schemeyear: '2023' })
       expect(result.schemeYear).toBe('2023')
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set schemeYear (keeping as string):', '2023')
     })
 
     test('should set filename', () => {
-      const db = require('../../../../app/data')
       const filename = 'FFC_PaymentDelinkedStatement_DP_2024_1234000541_2026061108582129.pdf'
-      const result = buildQueryCriteria({ filename }, db)
+      const result = buildQueryCriteria({ filename })
       expect(result.filename).toBe(filename)
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Set filename:', filename)
     })
 
-    test('should add received between criteria for 16-digit timestamp', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ timestamp: '2026020510450842' }, db)
-      expect(result.received).toEqual({
-        [db.sequelize.Op.between]: [
-          new Date('2026-02-05T10:45:08.000Z'),
-          new Date('2026-02-05T10:45:08.999Z')
-        ]
-      })
-      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Adding timestamp range criteria to query on received:', expect.any(Object))
-    })
-
-    test('should add received between criteria for DD-MM-YYYY HH:MM timestamp', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ timestamp: '04-06-2026 11:45' }, db)
-      expect(result.received).toEqual({
-        [db.sequelize.Op.between]: [
-          new Date('2026-06-04T11:40:00.000Z'),
-          new Date('2026-06-04T11:50:00.999Z')
-        ]
-      })
-    })
-
-    test('should add received between criteria for DD-MM-YYYY date-only timestamp', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ timestamp: '04-06-2026' }, db)
-      expect(result.received).toEqual({
-        [db.sequelize.Op.between]: [
-          new Date('2026-06-04T00:00:00.000Z'),
-          new Date('2026-06-04T23:59:59.999Z')
-        ]
-      })
-    })
-
-    test('should skip timestamp filter for unrecognised format', () => {
-      const db = require('../../../../app/data')
-      const result = buildQueryCriteria({ timestamp: 'not-a-date' }, db)
+    test('should not include a received range; that is buildReceivedRange\'s job', () => {
+      const result = buildQueryCriteria({ timestamp: '2026020510450842' })
       expect(result.received).toBeUndefined()
-      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Timestamp format not recognised, skipping filter:', 'not-a-date')
     })
 
-    test('should build complete criteria with all filters', () => {
-      const db = require('../../../../app/data')
+    test('should build complete criteria with all filters except timestamp', () => {
       const result = buildQueryCriteria({
         frn: '1234567890',
         schemeshortname: 'SFI',
         schemeyear: '2023',
         timestamp: '2026020510450842'
-      }, db)
+      })
 
       expect(result.frn).toBe(1234567890)
       expect(result.schemeShortName).toBe('SFI')
       expect(result.schemeYear).toBe('2023')
-      expect(result.received).toEqual({ [db.sequelize.Op.between]: expect.any(Array) })
+      expect(result.received).toBeUndefined()
     })
 
     test('should log final criteria', () => {
-      const db = require('../../../../app/data')
-      buildQueryCriteria({ frn: '123' }, db)
+      buildQueryCriteria({ frn: '123' })
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Final criteria:', expect.any(Object))
     })
   })
 
-  describe('getOffset', () => {
-    let getOffset
-
-    beforeEach(() => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-      getOffset = statementsModule.getOffset
+  describe('buildReceivedRange', () => {
+    test('should return null when no timestamp provided', () => {
+      const result = buildReceivedRange({})
+      expect(result).toBeNull()
     })
 
+    test('should build range for 16-digit timestamp', () => {
+      const result = buildReceivedRange({ timestamp: '2026020510450842' })
+      expect(result).toEqual({
+        from: new Date('2026-02-05T10:45:08.000Z'),
+        to: new Date('2026-02-05T10:45:08.999Z')
+      })
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Adding timestamp range criteria to query on received:', expect.any(Object))
+    })
+
+    test('should build range for DD-MM-YYYY HH:MM timestamp', () => {
+      const result = buildReceivedRange({ timestamp: '04-06-2026 11:45' })
+      expect(result).toEqual({
+        from: new Date('2026-06-04T11:40:00.000Z'),
+        to: new Date('2026-06-04T11:50:00.999Z')
+      })
+    })
+
+    test('should build range for DD-MM-YYYY date-only timestamp', () => {
+      const result = buildReceivedRange({ timestamp: '04-06-2026' })
+      expect(result).toEqual({
+        from: new Date('2026-06-04T00:00:00.000Z'),
+        to: new Date('2026-06-04T23:59:59.999Z')
+      })
+    })
+
+    test('should return null and log for unrecognised format', () => {
+      const result = buildReceivedRange({ timestamp: 'not-a-date' })
+      expect(result).toBeNull()
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Timestamp format not recognised, skipping filter:', 'not-a-date')
+    })
+  })
+
+  describe('getOffset', () => {
     test('should use continuationToken when valid', () => {
       const result = getOffset('100', '50')
       expect(result).toBe(100)
@@ -327,21 +278,6 @@ describe('statements route', () => {
   })
 
   describe('formatStatementTimestamp', () => {
-    let formatStatementTimestamp
-
-    beforeEach(() => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-      formatStatementTimestamp = statementsModule.formatStatementTimestamp
-    })
-
     test.each([
       ['2026-02-15T10:09:23.450Z', '2026021510092345'],
       ['2026-01-01T00:00:00.000Z', '2026010100000000'],
@@ -356,21 +292,6 @@ describe('statements route', () => {
   })
 
   describe('formatStatement', () => {
-    let formatStatement
-
-    beforeEach(() => {
-      jest.doMock('../../../../app/data', () => ({
-        statement: {},
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-      formatStatement = statementsModule.formatStatement
-    })
-
     test('should format statement with all fields', () => {
       const statement = {
         filename: 'FFC_Statement.pdf',
@@ -442,33 +363,18 @@ describe('statements route', () => {
   })
 
   describe('handler', () => {
+    const handler = routes.find(r => r.path === '/statements').handler
+
     test('returns payload with parsed values', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({
-            count: 1,
-            rows: [{
-              filename: 'file.csv',
-              schemeId: '1',
-              marketingYear: '2023',
-              frn: '123',
-              received: '2020-01-01T00:00:00.000Z'
-            }]
-          })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(1, [{
+        filename: 'file.csv',
+        schemeId: '1',
+        marketingYear: '2023',
+        frn: '123',
+        received: '2020-01-01T00:00:00.000Z'
+      }])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const result = await handler({ query: {} })
+      const result = await handler({ query: {} }, createResponseToolkit())
 
       expect(result).toEqual({
         statements: [{
@@ -485,32 +391,15 @@ describe('statements route', () => {
     })
 
     test('returns payload with null values when properties are missing', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({
-            count: 1,
-            rows: [{
-              filename: null,
-              schemeId: null,
-              marketingYear: null,
-              frn: null,
-              received: '2020-01-01T00:00:00.000Z'
-            }]
-          })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(1, [{
+        filename: null,
+        schemeId: null,
+        marketingYear: null,
+        frn: null,
+        received: '2020-01-01T00:00:00.000Z'
+      }])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const result = await handler({ query: {} })
+      const result = await handler({ query: {} }, createResponseToolkit())
 
       expect(result).toEqual({
         statements: [{
@@ -527,209 +416,81 @@ describe('statements route', () => {
     })
 
     test('applies query filters correctly', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const { countBuilder, rowsBuilder } = mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
+      await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', filename: 'my-file.pdf', timestamp: '2026020510450842' } }, createResponseToolkit())
 
-      await handler({ query: { frn: '123', schemeshortname: 'SFI', schemeyear: '2023', filename: 'my-file.pdf', timestamp: '2026020510450842' } })
+      const criteria = {
+        frn: 123,
+        schemeShortName: 'SFI',
+        schemeYear: '2023',
+        filename: 'my-file.pdf'
+      }
+      const range = buildReceivedRange({ timestamp: '2026020510450842' })
 
-      expect(mockFindAll).toHaveBeenCalledWith({
-        where: {
-          frn: 123,
-          schemeShortName: 'SFI',
-          schemeYear: '2023',
-          filename: 'my-file.pdf',
-          received: expect.any(Object)
-        },
-        limit: 100,
-        offset: 0
-      })
+      expect(countBuilder.where).toHaveBeenCalledWith(criteria)
+      expect(countBuilder.whereBetween).toHaveBeenCalledWith('received', [range.from, range.to])
+      expect(rowsBuilder.where).toHaveBeenCalledWith(criteria)
+      expect(rowsBuilder.whereBetween).toHaveBeenCalledWith('received', [range.from, range.to])
+      expect(rowsBuilder.limit).toHaveBeenCalledWith(100)
+      expect(rowsBuilder.offset).toHaveBeenCalledWith(0)
     })
 
     test('uses exact minute results when timestamp includes time and exact matches exist', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({
-        count: 1,
-        rows: [{
-          filename: 'file.pdf',
-          schemeId: '1',
-          marketingYear: '2023',
-          frn: '123',
-          received: '2026-06-04T11:45:20.000Z'
-        }]
-      })
+      mockStatementQuery(1, [{
+        filename: 'file.pdf',
+        schemeId: '1',
+        marketingYear: '2023',
+        frn: '123',
+        received: '2026-06-04T11:45:20.000Z'
+      }])
 
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      await handler({ query: { timestamp: '04-06-2026 11:45' } }, createResponseToolkit())
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const h = createResponseToolkit()
-
-      await handler({ query: { timestamp: '04-06-2026 11:45' } }, h)
-
-      expect(mockFindAll).toHaveBeenCalledTimes(1)
-      const where = mockFindAll.mock.calls[0][0].where
-      const receivedOpSymbol = Object.getOwnPropertySymbols(where.received)[0]
-      expect(where.received[receivedOpSymbol]).toEqual([
-        new Date('2026-06-04T11:45:00.000Z'),
-        new Date('2026-06-04T11:45:59.999Z')
-      ])
+      expect(mockDb.tables.statement).toHaveBeenCalledTimes(2)
     })
 
     test('falls back to widened window when exact minute has no matches', async () => {
-      const mockFindAll = jest.fn()
-        .mockResolvedValueOnce({ count: 0, rows: [] })
-        .mockResolvedValueOnce({
-          count: 1,
-          rows: [{
-            filename: 'file.pdf',
-            schemeId: '1',
-            marketingYear: '2023',
-            frn: '123',
-            received: '2026-06-04T11:46:00.000Z'
-          }]
-        })
+      mockStatementQuery(0, [])
+      mockStatementQuery(1, [{
+        filename: 'file.pdf',
+        schemeId: '1',
+        marketingYear: '2023',
+        frn: '123',
+        received: '2026-06-04T11:46:00.000Z'
+      }])
 
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const result = await handler({ query: { timestamp: '04-06-2026 11:45' } }, createResponseToolkit())
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const h = createResponseToolkit()
-
-      await handler({ query: { timestamp: '04-06-2026 11:45' } }, h)
-
-      expect(mockFindAll).toHaveBeenCalledTimes(2)
-
-      const exactWhere = mockFindAll.mock.calls[0][0].where
-      const exactReceivedOpSymbol = Object.getOwnPropertySymbols(exactWhere.received)[0]
-      expect(exactWhere.received[exactReceivedOpSymbol]).toEqual([
-        new Date('2026-06-04T11:45:00.000Z'),
-        new Date('2026-06-04T11:45:59.999Z')
-      ])
-
-      const fallbackWhere = mockFindAll.mock.calls[1][0].where
-      const fallbackReceivedOpSymbol = Object.getOwnPropertySymbols(fallbackWhere.received)[0]
-      expect(fallbackWhere.received[fallbackReceivedOpSymbol]).toEqual([
-        new Date('2026-06-04T11:40:00.000Z'),
-        new Date('2026-06-04T11:50:00.999Z')
-      ])
+      expect(mockDb.tables.statement).toHaveBeenCalledTimes(4)
+      expect(result.total).toBe(1)
+      expect(result.statements).toHaveLength(1)
     })
 
     test('uses offset parameter when provided', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const { rowsBuilder } = mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
+      await handler({ query: { offset: '10' } }, createResponseToolkit())
 
-      await handler({ query: { offset: '10' } })
-
-      expect(mockFindAll).toHaveBeenCalledWith({
-        where: undefined,
-        limit: 100,
-        offset: 10
-      })
+      expect(rowsBuilder.offset).toHaveBeenCalledWith(10)
+      expect(rowsBuilder.limit).toHaveBeenCalledWith(100)
     })
 
     test('prioritizes continuationToken over offset', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const { rowsBuilder } = mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
+      await handler({ query: { continuationToken: '20', offset: '10' } }, createResponseToolkit())
 
-      await handler({ query: { continuationToken: '20', offset: '10' } })
-
-      expect(mockFindAll).toHaveBeenCalledWith({
-        where: undefined,
-        limit: 100,
-        offset: 20
-      })
+      expect(rowsBuilder.offset).toHaveBeenCalledWith(20)
     })
 
     test('uses custom limit when provided', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const { rowsBuilder } = mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
+      await handler({ query: { limit: '25' } }, createResponseToolkit())
 
-      await handler({ query: { limit: '25' } })
-
-      expect(mockFindAll).toHaveBeenCalledWith({
-        where: undefined,
-        limit: 25,
-        offset: 0
-      })
+      expect(rowsBuilder.limit).toHaveBeenCalledWith(25)
+      expect(rowsBuilder.offset).toHaveBeenCalledWith(0)
     })
 
     test('returns continuation token when more results available', async () => {
@@ -740,59 +501,31 @@ describe('statements route', () => {
         frn: '123',
         received: '2020-01-01T00:00:00.000Z'
       })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({ count: 150, rows: mockResults })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(150, mockResults)
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const result = await handler({ query: {} })
+      const result = await handler({ query: {} }, createResponseToolkit())
 
       expect(result.continuationToken).toBe('100')
     })
 
     test('returns null continuation token when no more results', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({
-            count: 1,
-            rows: [{
-              filename: 'file.pdf',
-              schemeId: '1',
-              marketingYear: '2023',
-              frn: '123',
-              received: '2020-01-01T00:00:00.000Z'
-            }]
-          })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(1, [{
+        filename: 'file.pdf',
+        schemeId: '1',
+        marketingYear: '2023',
+        frn: '123',
+        received: '2020-01-01T00:00:00.000Z'
+      }])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      const result = await handler({ query: {} })
+      const result = await handler({ query: {} }, createResponseToolkit())
 
       expect(result.continuationToken).toBeNull()
     })
 
     test('returns error response when database query fails', async () => {
+      const countBuilder = createQueryBuilder().rejects(new Error('DB error'))
+      mockDb.tables.statement.mockReturnValueOnce(countBuilder)
+
       const mockResponse = {
         code: jest.fn().mockReturnValue({
           output: {
@@ -808,22 +541,6 @@ describe('statements route', () => {
         response: jest.fn().mockReturnValue(mockResponse)
       }
 
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockRejectedValue(new Error('DB error'))
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
-
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
       await handler({ query: {} }, h)
 
       expect(h.response).toHaveBeenCalledWith({
@@ -834,46 +551,17 @@ describe('statements route', () => {
     })
 
     test('logs handler invocation with query parameters', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({ count: 0, rows: [] })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      await handler({ query: { frn: '123' } })
+      await handler({ query: { frn: '123' } }, createResponseToolkit())
 
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Handler called with query:', { frn: '123' })
     })
 
     test('logs query execution details', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      await handler({ query: { limit: '10', offset: '5' } })
+      await handler({ query: { limit: '10', offset: '5' } }, createResponseToolkit())
 
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Executing query with:', {
         criteria: {},
@@ -883,45 +571,17 @@ describe('statements route', () => {
     })
 
     test('logs result count', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({ count: 2, rows: [{}, {}] })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(2, [{}, {}])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      await handler({ query: {} })
+      await handler({ query: {} }, createResponseToolkit())
 
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Query returned', 2, 'results')
     })
 
     test('logs response details', async () => {
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: jest.fn().mockResolvedValue({ count: 1, rows: [{}] })
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      mockStatementQuery(1, [{}])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
-
-      await handler({ query: {} })
+      await handler({ query: {} }, createResponseToolkit())
 
       expect(consoleInfoSpy).toHaveBeenCalledWith('[STATEMENTS] Returning response with:', {
         statementCount: 1,
@@ -933,30 +593,13 @@ describe('statements route', () => {
     })
 
     test('applies combined filters with pagination', async () => {
-      const mockFindAll = jest.fn().mockResolvedValue({ count: 0, rows: [] })
-      jest.resetModules()
-      jest.doMock('../../../../app/data', () => ({
-        statement: {
-          findAndCountAll: mockFindAll
-        },
-        sequelize: {
-          Op: {
-            like: Symbol('like'),
-            between: Symbol('between')
-          }
-        }
-      }))
+      const { rowsBuilder } = mockStatementQuery(0, [])
 
-      const { routes } = require('../../../../app/server/routes/statements')
-      const handler = routes.find(r => r.path === '/statements').handler
+      await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } }, createResponseToolkit())
 
-      await handler({ query: { frn: '123', limit: '10', continuationToken: '20' } })
-
-      expect(mockFindAll).toHaveBeenCalledWith({
-        where: { frn: 123 },
-        limit: 10,
-        offset: 20
-      })
+      expect(rowsBuilder.where).toHaveBeenCalledWith({ frn: 123 })
+      expect(rowsBuilder.limit).toHaveBeenCalledWith(10)
+      expect(rowsBuilder.offset).toHaveBeenCalledWith(20)
     })
   })
 })

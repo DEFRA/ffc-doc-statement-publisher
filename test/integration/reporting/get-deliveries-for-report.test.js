@@ -1,20 +1,16 @@
-const db = require('../../../app/data')
-const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
-const QueryStream = require('pg-query-stream')
+const mockRaw = jest.fn()
 
-jest.mock('../../../app/data')
-jest.mock('pg-query-stream')
+jest.mock('../../../app/database', () => ({
+  client: { raw: (...args) => mockRaw(...args) }
+}))
+
+const getDeliveriesForReport = require('../../../app/reporting/get-deliveries-for-report')
 
 describe('getDeliveriesForReport', () => {
-  let mockClient
   let mockStream
 
   beforeEach(() => {
     jest.clearAllMocks()
-
-    mockClient = {
-      query: jest.fn()
-    }
 
     mockStream = {
       on: jest.fn((event, callback) => {
@@ -28,8 +24,7 @@ describe('getDeliveriesForReport', () => {
       })
     }
 
-    db.sequelize.connectionManager.getConnection.mockResolvedValue(mockClient)
-    mockClient.query.mockReturnValue(mockStream)
+    mockRaw.mockReturnValue({ stream: jest.fn(() => mockStream) })
   })
 
   const mockDeliveries = [
@@ -41,18 +36,13 @@ describe('getDeliveriesForReport', () => {
     const schemeName = 'TEST'
     const start = new Date('2024-12-01T00:00:00Z')
     const end = new Date('2024-12-31T23:59:59Z')
-    const transaction = {}
 
-    const stream = await getDeliveriesForReport(schemeName, start, end, transaction)
+    const stream = await getDeliveriesForReport(schemeName, start, end)
 
-    // Check that QueryStream was instantiated correctly
-    expect(QueryStream).toHaveBeenCalledWith(
+    expect(mockRaw).toHaveBeenCalledWith(
       expect.stringContaining('SELECT d.*, s.*'),
       [schemeName, start, end]
     )
-
-    expect(db.sequelize.connectionManager.getConnection).toHaveBeenCalled()
-    expect(mockClient.query).toHaveBeenCalledWith(expect.any(QueryStream))
 
     expect(stream).toBe(mockStream)
 

@@ -1,56 +1,55 @@
-const { findStatements } = require('../../../app/retention/find-statements')
-const db = require('../../../app/data')
+const { createKnexMock } = require('../../helpers/mock-knex')
 
-jest.mock('../../../app/data', () => ({
-  statement: {
-    findAll: jest.fn()
-  }
+const mockDb = createKnexMock(['statement'])
+
+jest.mock('../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
+
+const { findStatements } = require('../../../app/retention/find-statements')
 
 describe('findStatements', () => {
   const documentReference = 'DOC-REF-123'
   const filename = 'statement-file.pdf'
-  const mockTransaction = { id: 'transaction-object' }
+  const mockTransaction = mockDb.trx
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves()
   })
 
-  test('calls db.statement.findAll with correct parameters including transaction', async () => {
+  test('selects statementId matching documentReference and filename, including transaction', async () => {
     const mockResult = [
       { statementId: 1 },
       { statementId: 2 }
     ]
-    db.statement.findAll.mockResolvedValue(mockResult)
+    mockDb.builder.resolves(mockResult)
 
     const result = await findStatements(documentReference, filename, mockTransaction)
 
-    expect(db.statement.findAll).toHaveBeenCalledTimes(1)
-    expect(db.statement.findAll).toHaveBeenCalledWith({
-      attributes: ['statementId'],
-      where: { documentReference, filename },
-      transaction: mockTransaction
-    })
+    expect(mockDb.tables.statement).toHaveBeenCalledTimes(1)
+    expect(mockDb.tables.statement).toHaveBeenCalledWith(mockTransaction)
+    expect(mockDb.builder.select).toHaveBeenCalledWith('statementId')
+    expect(mockDb.builder.where).toHaveBeenCalledWith({ documentReference, filename })
     expect(result).toBe(mockResult)
   })
 
   test('passes undefined transaction if not provided', async () => {
     const mockResult = []
-    db.statement.findAll.mockResolvedValue(mockResult)
+    mockDb.builder.resolves(mockResult)
 
     const result = await findStatements(documentReference, filename)
 
-    expect(db.statement.findAll).toHaveBeenCalledWith({
-      attributes: ['statementId'],
-      where: { documentReference, filename },
-      transaction: undefined
-    })
+    expect(mockDb.tables.statement).toHaveBeenCalledWith(undefined)
     expect(result).toBe(mockResult)
   })
 
-  test('propagates errors from db.statement.findAll', async () => {
+  test('propagates errors from the query', async () => {
     const error = new Error('DB failure')
-    db.statement.findAll.mockRejectedValue(error)
+    mockDb.builder.rejects(error)
 
     await expect(findStatements(documentReference, filename, mockTransaction)).rejects.toThrow('DB failure')
   })
