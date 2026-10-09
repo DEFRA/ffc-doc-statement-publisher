@@ -20,10 +20,6 @@ const { delivery: DELIVERIES, statement: STATEMENTS, failure: FAILURES } = requi
 const MONTH_GROUP_EXPRESSION = `COALESCE(EXTRACT(MONTH FROM "${DELIVERIES}"."completed"), EXTRACT(MONTH FROM "${DELIVERIES}"."requested"))`
 const YEAR_GROUP_EXPRESSION = `COALESCE(EXTRACT(YEAR FROM "${DELIVERIES}"."completed"), EXTRACT(YEAR FROM "${DELIVERIES}"."requested"))`
 
-// Joined tables are referenced by their real table names (via constants/tables.js)
-// rather than the former ORM model-name aliases ("delivery"/"statement"/"failure");
-// the "statement." prefixed output keys below are kept so create-save-metrics.js's
-// result readers (`result['statement.schemeName']` etc) do not need to change.
 const buildWhereClauseForDateRange = (period, startDate, endDate, useSchemeYear) => {
   if (useSchemeYear || !startDate || !endDate) {
     return () => {}
