@@ -1,68 +1,54 @@
 const { EMAIL } = require('../../../app/constants/methods')
-const db = require('../../../app/data')
-const { getOutstandingDeliveries, processAllOutstandingDeliveries } = require('../../../app/monitoring/get-outstanding-deliveries')
+const { createKnexMock } = require('../../helpers/mock-knex')
 
-jest.mock('../../../app/data', () => ({
-  Sequelize: { Op: { not: Symbol('not'), gt: Symbol('gt') } },
-  delivery: { findAll: jest.fn() },
-  statement: {}
+const mockDb = createKnexMock(['delivery'])
+
+jest.mock('../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
+const { getOutstandingDeliveries, processAllOutstandingDeliveries } = require('../../../app/monitoring/get-outstanding-deliveries')
+
 describe('processGetOutstandingDeliveries', () => {
+  beforeEach(() => {
+    mockDb.builder.resolves([])
+  })
+
   afterEach(() => {
     jest.clearAllMocks()
   })
 
-  test('should call findAll with default parameters', async () => {
+  test('queries with default parameters', async () => {
     await getOutstandingDeliveries()
-    expect(db.delivery.findAll).toHaveBeenCalledWith({
-      where: {
-        deliveryId: { [db.Sequelize.Op.gt]: 0 },
-        reference: { [db.Sequelize.Op.not]: null },
-        method: EMAIL,
-        completed: null
-      },
-      limit: 100,
-      order: [['deliveryId', 'ASC']]
-    })
+
+    expect(mockDb.builder.where).toHaveBeenCalledWith('deliveryId', '>', 0)
+    expect(mockDb.builder.whereNotNull).toHaveBeenCalledWith('reference')
+    expect(mockDb.builder.where).toHaveBeenCalledWith({ method: EMAIL, completed: null })
+    expect(mockDb.builder.limit).toHaveBeenCalledWith(100)
+    expect(mockDb.builder.orderBy).toHaveBeenCalledWith('deliveryId', 'asc')
   })
 
-  test.each([
-    {
-      params: { limit: 50, lastProcessedId: 10 },
-      expectedWhere: {
-        deliveryId: { [db.Sequelize.Op.gt]: 10 }
-      },
-      expectedLimit: 50
-    },
-    {
-      params: { includeStatement: true },
-      expectedInclude: true
-    }
-  ])('should call findAll with custom parameters %#', async ({ params, expectedWhere, expectedLimit, expectedInclude }) => {
-    await getOutstandingDeliveries(params)
-    const call = db.delivery.findAll.mock.calls[0][0]
+  test('applies a custom limit and lastProcessedId', async () => {
+    await getOutstandingDeliveries({ limit: 50, lastProcessedId: 10 })
 
-    if (expectedWhere) {
-      expect(call.where).toEqual(expect.objectContaining({
-        ...expectedWhere,
-        method: EMAIL,
-        reference: { [db.Sequelize.Op.not]: null },
-        completed: null
-      }))
-    }
+    expect(mockDb.builder.where).toHaveBeenCalledWith('deliveryId', '>', 10)
+    expect(mockDb.builder.limit).toHaveBeenCalledWith(50)
+  })
 
-    if (expectedLimit) {
-      expect(call.limit).toBe(expectedLimit)
-    }
+  test('joins the statement row when includeStatement is set', async () => {
+    await getOutstandingDeliveries({ includeStatement: true })
 
-    if (expectedInclude) {
-      expect(call.include).toEqual([{
-        model: db.statement,
-        as: 'statement',
-        required: false
-      }])
-    }
+    expect(mockDb.builder.leftJoin).toHaveBeenCalledWith('statements', 'statements.statementId', 'deliveries.statementId')
+    expect(mockDb.builder.select).toHaveBeenCalledWith('deliveries.*', expect.anything())
+  })
+
+  test('does not join when includeStatement is not set', async () => {
+    await getOutstandingDeliveries()
+
+    expect(mockDb.builder.leftJoin).not.toHaveBeenCalled()
   })
 
   describe('processAllOutstandingDeliveries', () => {

@@ -1,16 +1,16 @@
-const db = require('../data')
+const db = require('../database')
 const getPersonalisation = require('../publishing/get-personalisation')
 const publish = require('../publishing/publish')
 
 const rescheduleDelivery = async (delivery) => {
-  const transaction = await db.sequelize.transaction()
+  const transaction = await db.transaction()
   try {
     const timestamp = new Date()
-    const statement = await db.statement.findOne({ where: { statementId: delivery.statementId }, transaction })
+    const statement = (await db.statement(transaction).where({ statementId: delivery.statementId }).first()) ?? null
     const personalisation = getPersonalisation(statement.schemeName, statement.schemeShortName, statement.schemeYear, statement.schemeFrequency, statement.businessName)
     const response = await publish(statement.emailTemplate, statement.email, statement.filename, personalisation)
-    await db.delivery.create({ statementId: delivery.statementId, method: delivery.method, reference: response.data.id, requested: timestamp }, { transaction })
-    await db.delivery.update({ completed: timestamp }, { where: { deliveryId: delivery.deliveryId }, transaction })
+    await db.delivery(transaction).insert({ statementId: delivery.statementId, method: delivery.method, reference: response.data.id, requested: timestamp })
+    await db.delivery(transaction).where({ deliveryId: delivery.deliveryId }).update({ completed: timestamp })
     await transaction.commit()
   } catch (err) {
     await transaction.rollback()

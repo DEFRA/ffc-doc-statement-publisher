@@ -1,13 +1,12 @@
-const db = require('../data')
+const { report } = require('../database')
 
 const completeReport = async (reportId, lastDeliveryId, transaction) => {
-  await db.report.update(
-    {
+  await report(transaction ?? undefined)
+    .where({ reportId })
+    .update({
       sent: new Date(),
       lastDeliveryId
-    },
-    { where: { reportId } },
-    { transaction })
+    })
 }
 
 module.exports = completeReport

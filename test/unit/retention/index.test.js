@@ -1,7 +1,5 @@
-jest.mock('../../../app/data', () => ({
-  sequelize: {
-    transaction: jest.fn()
-  }
+jest.mock('../../../app/database', () => ({
+  transaction: jest.fn()
 }))
 
 jest.mock('../../../app/retention/find-statements', () => ({
@@ -34,7 +32,7 @@ const { removeFailures } = require('../../../app/retention/remove-failures')
 const { removeDeliveries } = require('../../../app/retention/remove-deliveries')
 const { removeStatements } = require('../../../app/retention/remove-statements')
 const { deleteStatement } = require('../../../app/storage')
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 
 const { removeAgreementData } = require('../../../app/retention')
 
@@ -52,7 +50,7 @@ describe('removeAgreementData', () => {
       commit: jest.fn().mockResolvedValue(),
       rollback: jest.fn().mockResolvedValue()
     }
-    db.sequelize.transaction.mockResolvedValue(transaction)
+    db.transaction.mockResolvedValue(transaction)
   })
 
   test('commits and returns early if no statements found', async () => {
@@ -60,7 +58,7 @@ describe('removeAgreementData', () => {
 
     await removeAgreementData(retentionData)
 
-    expect(db.sequelize.transaction).toHaveBeenCalledTimes(1)
+    expect(db.transaction).toHaveBeenCalledTimes(1)
     expect(findStatements).toHaveBeenCalledWith(
       retentionData.documentReference,
       retentionData.filename,
@@ -95,7 +93,7 @@ describe('removeAgreementData', () => {
 
     await removeAgreementData(retentionData)
 
-    expect(db.sequelize.transaction).toHaveBeenCalledTimes(1)
+    expect(db.transaction).toHaveBeenCalledTimes(1)
 
     expect(findStatements).toHaveBeenCalledWith(
       retentionData.documentReference,

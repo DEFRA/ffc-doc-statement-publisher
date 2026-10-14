@@ -1,4 +1,4 @@
-const db = require('../../data')
+const { returnedLetter } = require('../../database')
 const config = require('../../config')
 const { HTTP_OK, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR } = require('../../constants/statuses')
 
@@ -19,7 +19,7 @@ module.exports = {
     const { notification_id: notificationId, reference, date_sent: dateSent, upload_letter_file_name: uploadLetterFileName } = request.payload
 
     try {
-      await db.returnedLetter.create({
+      await returnedLetter().insert({
         notificationId,
         reference: reference || null,
         dateSent: dateSent ? new Date(dateSent) : null,
