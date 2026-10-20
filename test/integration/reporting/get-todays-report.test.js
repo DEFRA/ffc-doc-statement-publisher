@@ -1,4 +1,5 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
+const { truncate } = require('../../helpers/truncate')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
 const { mockReport1 } = require('../../mocks/report')
 
@@ -7,13 +8,13 @@ describe('getTodaysReport', () => {
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
 
-    await db.sequelize.truncate({ cascade: true })
-    await db.report.bulkCreate([{ ...mockReport1, ...{ sent: new Date() } }])
+    await truncate()
+    await db.report().insert([{ ...mockReport1, ...{ sent: new Date() } }])
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test('returns reports sent today for the specified scheme name', async () => {
@@ -33,7 +34,6 @@ describe('getTodaysReport', () => {
 
   test('does not return reports for a different scheme name', async () => {
     const result = await getTodaysReport('DifferentSchemeName')
-    console.log('whahahah', result)
     expect(result.length).toBe(0)
   })
 })

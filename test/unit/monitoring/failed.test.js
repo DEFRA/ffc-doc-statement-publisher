@@ -1,8 +1,8 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const { mockTransaction } = require('../../mocks/objects/data')
 const { EMAIL, LETTER } = require('../../../app/constants/methods')
 
-jest.mock('../../../app/data')
+jest.mock('../../../app/database')
 jest.mock('../../../app/monitoring/get-statement-by-statement-id')
 jest.mock('../../../app/messaging/send-crm-message')
 jest.mock('../../../app/monitoring/complete-delivery')
@@ -40,7 +40,7 @@ describe('processFailed', () => {
       reason: 'TEST_FAILURE'
     }
 
-    db.sequelize.transaction.mockResolvedValue(mockTransaction())
+    db.transaction.mockResolvedValue(mockTransaction())
     getStatementByStatementId.mockResolvedValue(mockStatement)
     sendCrmMessage.mockResolvedValue(undefined)
     completeDelivery.mockResolvedValue(undefined)
@@ -50,7 +50,7 @@ describe('processFailed', () => {
 
   test('starts a transaction', async () => {
     await failed(delivery, failure)
-    expect(db.sequelize.transaction).toHaveBeenCalled()
+    expect(db.transaction).toHaveBeenCalled()
   })
 
   test('gets statement by ID with transaction', async () => {
@@ -80,8 +80,8 @@ describe('processFailed', () => {
   })
 
   test('creates failure record with transaction', async () => {
-    const timestamp = Date.now()
-    jest.spyOn(Date, 'now').mockReturnValue(timestamp)
+    const timestamp = new Date()
+    const dateSpy = jest.spyOn(global, 'Date').mockImplementation(() => timestamp)
 
     await failed(delivery, failure)
     expect(createFailure).toHaveBeenCalledWith(
@@ -90,6 +90,8 @@ describe('processFailed', () => {
       timestamp,
       mockTransaction()
     )
+
+    dateSpy.mockRestore()
   })
 
   describe('delivery method behavior', () => {

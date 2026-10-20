@@ -1,12 +1,8 @@
-const db = require('../data')
+const { report } = require('../database')
 
 const removeFailedReport = async (reportId) => {
   if (reportId) {
-    await db.report.destroy({
-      where: {
-        reportId
-      }
-    })
+    await report().where({ reportId }).del()
   }
 }
 

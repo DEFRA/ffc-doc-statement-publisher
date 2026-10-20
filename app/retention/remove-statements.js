@@ -1,12 +1,7 @@
-const db = require('../data')
+const { statement } = require('../database')
 
 const removeStatements = async (statementIds, transaction) => {
-  await db.statement.destroy({
-    where: {
-      statementId: { [db.Sequelize.Op.in]: statementIds }
-    },
-    transaction
-  })
+  await statement(transaction ?? undefined).whereIn('statementId', statementIds).del()
 }
 
 module.exports = {

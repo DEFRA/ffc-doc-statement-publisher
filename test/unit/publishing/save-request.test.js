@@ -1,5 +1,6 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
 const config = require('../../../app/config')
+const { truncate } = require('../../helpers/truncate')
 const { mockGetSender, mockSender } = require('../../mocks/modules/sender-cache')
 const saveRequest = require('../../../app/publishing/save-request')
 
@@ -23,11 +24,11 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
 
   afterEach(async () => {
     jest.clearAllMocks()
-    await db.sequelize.truncate({ cascade: true })
+    await truncate()
   })
 
   afterAll(async () => {
-    await db.sequelize.close()
+    await db.close()
   })
 
   describe.each([
@@ -48,7 +49,7 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
 
       test('should save 1 statement', async () => {
         await saveRequest(request, reference, method, { reason })
-        const statements = await db.statement.findAll()
+        const statements = await db.statement()
         expect(statements.length).toBe(1)
       })
 
@@ -60,13 +61,13 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'documentReference', column: 'documentReference' }
       ])('should save request key $key to statement column $column', async ({ key, column }) => {
         await saveRequest(request, reference, method, { reason })
-        const statement = await db.statement.findOne()
+        const statement = await db.statement().first()
         expect(statement[column]).toBe(request[key])
       })
 
       test('should save statement with frn', async () => {
         await saveRequest(request, reference, method, { reason })
-        const statement = await db.statement.findOne()
+        const statement = await db.statement().first()
         expect(statement.frn).toBe(String(request.frn))
       })
 
@@ -79,20 +80,20 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
         { key: 'postcode', column: 'postcode' }
       ])('should save address $key to $column', async ({ key, column }) => {
         await saveRequest(request, reference, method, { reason })
-        const statement = await db.statement.findOne()
+        const statement = await db.statement().first()
         expect(statement[column]).toBe(request.address[key])
       })
 
       test('should save 1 delivery', async () => {
         await saveRequest(request, reference, method, { reason })
-        const delivery = await db.delivery.findAll()
+        const delivery = await db.delivery()
         expect(delivery.length).toBe(1)
       })
 
       test('should save delivery with correct details', async () => {
         await saveRequest(request, reference, method, { reason })
-        const statement = await db.statement.findOne()
-        const delivery = await db.delivery.findOne()
+        const statement = await db.statement().first()
+        const delivery = await db.delivery().first()
         expect(delivery.statementId).toBe(statement.statementId)
         expect(delivery.method).toBe(method)
         expect(delivery.requested).toStrictEqual(SYSTEM_TIME)
@@ -102,11 +103,11 @@ describe('Save statement and delivery and send to CRM and save failure if so', (
 
       test('should save failure if reason exists', async () => {
         await saveRequest(request, reference, method, { reason })
-        const failures = await db.failure.findAll()
+        const failures = await db.failure()
         if (currentReason) {
           expect(failures.length).toBe(1)
-          const delivery = await db.delivery.findOne()
-          const failure = await db.failure.findOne()
+          const delivery = await db.delivery().first()
+          const failure = await db.failure().first()
           expect(failure.deliveryId).toBe(delivery.deliveryId)
           expect(failure.reason).toBe(currentReason)
           expect(failure.failed).toStrictEqual(SYSTEM_TIME)

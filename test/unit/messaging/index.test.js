@@ -13,7 +13,7 @@ jest.mock('../../../app/messaging/service-bus', () => ({
   closeSenders: jest.fn()
 }))
 
-jest.mock('../../../app/data', () => ({}))
+jest.mock('../../../app/database', () => ({}))
 jest.mock('../../../app/alert', () => ({
   sendAlert: jest.fn()
 }))

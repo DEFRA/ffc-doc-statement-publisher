@@ -1,55 +1,45 @@
-const { removeFailures } = require('../../../app/retention/remove-failures')
-const db = require('../../../app/data')
+const { createKnexMock } = require('../../helpers/mock-knex')
 
-jest.mock('../../../app/data', () => ({
-  Sequelize: {
-    Op: {
-      in: 'IN_OPERATOR'
-    }
-  },
-  failure: {
-    destroy: jest.fn()
-  }
+const mockDb = createKnexMock(['failure'])
+
+jest.mock('../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
+
+const { removeFailures } = require('../../../app/retention/remove-failures')
 
 describe('removeFailures', () => {
   const deliveryIds = [100, 200, 300]
-  const mockTransaction = { id: 'transaction-object' }
+  const mockTransaction = mockDb.trx
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDb.builder.resolves(3)
   })
 
-  test('calls db.failure.destroy with correct parameters including transaction', async () => {
-    db.failure.destroy.mockResolvedValue(3) // optional: number of rows deleted
-
+  test('deletes failures with deliveryId in the given list, including transaction', async () => {
     await removeFailures(deliveryIds, mockTransaction)
 
-    expect(db.failure.destroy).toHaveBeenCalledTimes(1)
-    expect(db.failure.destroy).toHaveBeenCalledWith({
-      where: {
-        deliveryId: { [db.Sequelize.Op.in]: deliveryIds }
-      },
-      transaction: mockTransaction
-    })
+    expect(mockDb.tables.failure).toHaveBeenCalledTimes(1)
+    expect(mockDb.tables.failure).toHaveBeenCalledWith(mockTransaction)
+    expect(mockDb.builder.whereIn).toHaveBeenCalledWith('deliveryId', deliveryIds)
+    expect(mockDb.builder.del).toHaveBeenCalledTimes(1)
   })
 
   test('passes undefined transaction if not provided', async () => {
-    db.failure.destroy.mockResolvedValue(0)
+    mockDb.builder.resolves(0)
 
     await removeFailures(deliveryIds)
 
-    expect(db.failure.destroy).toHaveBeenCalledWith({
-      where: {
-        deliveryId: { [db.Sequelize.Op.in]: deliveryIds }
-      },
-      transaction: undefined
-    })
+    expect(mockDb.tables.failure).toHaveBeenCalledWith(undefined)
   })
 
-  test('propagates errors from db.failure.destroy', async () => {
+  test('propagates errors from the delete', async () => {
     const error = new Error('DB failure')
-    db.failure.destroy.mockRejectedValue(error)
+    mockDb.builder.rejects(error)
 
     await expect(removeFailures(deliveryIds, mockTransaction)).rejects.toThrow('DB failure')
   })

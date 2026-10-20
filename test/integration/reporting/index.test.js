@@ -1,4 +1,5 @@
-const db = require('../../../app/data')
+const db = require('../../../app/database')
+const { truncate } = require('../../helpers/truncate')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
 const { sendReport } = require('../../../app/reporting/send-report')
 const config = require('../../../app/config')
@@ -31,14 +32,14 @@ describe('start', () => {
 
   beforeAll(async () => {
     jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-    await db.sequelize.truncate({ cascade: true })
-    await db.statement.bulkCreate([mockStatement1, mockStatement2])
-    await db.delivery.bulkCreate([mockDelivery1, mockDelivery2])
+    await truncate()
+    await db.statement().insert([mockStatement1, mockStatement2])
+    await db.delivery().insert([mockDelivery1, mockDelivery2])
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test('should process scheme when report is due', async () => {

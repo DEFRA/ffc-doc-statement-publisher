@@ -1,15 +1,10 @@
-const db = require('../data')
+const { delivery } = require('../database')
 
 const completeDelivery = async (deliveryId, transaction) => {
   try {
-    const [updatedRows] = await db.delivery.update(
-      { completed: new Date() },
-      {
-        where: { deliveryId },
-        transaction,
-        returning: true
-      }
-    )
+    const updatedRows = await delivery(transaction ?? undefined)
+      .where({ deliveryId })
+      .update({ completed: new Date() })
 
     return updatedRows > 0
   } catch (error) {

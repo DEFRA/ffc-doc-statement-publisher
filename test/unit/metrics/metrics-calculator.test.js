@@ -15,26 +15,6 @@ jest.mock('../../../app/metrics/create-save-metrics', () => ({
   saveMetrics: jest.fn()
 }))
 
-jest.mock('../../../app/data', () => ({
-  delivery: {
-    findAll: jest.fn()
-  },
-  statement: {},
-  failure: {},
-  metric: {
-    upsert: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
-    create: jest.fn()
-  },
-  sequelize: {
-    fn: jest.fn((fnName, ...args) => `${fnName}(${args.join(',')})`),
-    literal: jest.fn((sql) => sql),
-    col: jest.fn((col) => col)
-  }
-}))
-
-const db = require('../../../app/data')
 const { calculateDateRange, calculateAllMetrics, calculateMetricsForPeriod, calculateYearlyMetrics, calculateHistoricalMetrics } = require('../../../app/metrics/metrics-calculator')
 const { getDateRangeForAll, getDateRangeForYTD, getDateRangeForYear, getDateRangeForMonthInYear, getDateRangeForRelativePeriod } = require('../../../app/metrics/get-metrics-data')
 const { buildWhereClauseForDateRange, fetchMetricsData } = require('../../../app/metrics/build-metrics')
@@ -49,11 +29,6 @@ describe('metrics-calculator', () => {
     jest.clearAllMocks()
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-    db.delivery.findAll.mockResolvedValue([])
-    db.metric.upsert.mockResolvedValue({})
-    db.metric.findOne.mockResolvedValue(null)
-    db.metric.update.mockResolvedValue([1])
-    db.metric.create.mockResolvedValue({})
   })
 
   afterEach(() => {

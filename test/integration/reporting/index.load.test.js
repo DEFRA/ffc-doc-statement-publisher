@@ -1,5 +1,6 @@
-const { v4: uuidv4 } = require('uuid')
-const db = require('../../../app/data')
+const { randomUUID: uuidv4 } = require('node:crypto')
+const db = require('../../../app/database')
+const { truncate } = require('../../helpers/truncate')
 const getTodaysReport = require('../../../app/reporting/get-todays-report')
 const { sendReport } = require('../../../app/reporting/send-report')
 const config = require('../../../app/config')
@@ -10,6 +11,7 @@ jest.mock('../../../app/reporting/send-report')
 const { start } = require('../../../app/reporting/index')
 const currentTimestamp = Math.floor(Date.now() / 1000)
 const numberOfRecords = 10000
+const BATCH_CHUNK_SIZE = 1000
 
 const generateMockStatements = (count) => {
   const mockScheme = {
@@ -84,19 +86,22 @@ describe('load test for reporting', () => {
   })
 
   beforeAll(async () => {
-    jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
-    await db.sequelize.truncate({ cascade: true })
+    // Fake timers are applied after the bulk inserts below, not before: tarn (Knex's
+    // connection pool) schedules its acquire/idle bookkeeping with real setTimeout, and
+    // freezing that mid-batch-insert stalls the pool indefinitely.
+    await truncate()
     const mockStatements = generateMockStatements(numberOfRecords)
-    await db.statement.bulkCreate(mockStatements)
+    await db.client.batchInsert('statements', mockStatements, BATCH_CHUNK_SIZE)
     const mockDeliveries = generateMockDeliveries(mockStatements)
-    await db.delivery.bulkCreate(mockDeliveries)
+    await db.client.batchInsert('deliveries', mockDeliveries, BATCH_CHUNK_SIZE)
     const mockFailures = generateMockFailures(mockDeliveries, Math.floor(numberOfRecords / 4))
-    await db.failure.bulkCreate(mockFailures)
+    await db.client.batchInsert('failures', mockFailures, BATCH_CHUNK_SIZE)
+    jest.useFakeTimers().setSystemTime(new Date(2022, 7, 5, 15, 30, 10, 120))
   })
 
   afterAll(async () => {
-    await db.sequelize.truncate({ cascade: true })
-    await db.sequelize.close()
+    await truncate()
+    await db.close()
   })
 
   test('should process large number of records efficiently', async () => {

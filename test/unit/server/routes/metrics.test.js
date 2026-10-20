@@ -1,22 +1,37 @@
-const metricsRoutes = require('../../../../app/server/routes/metrics')
+const { createKnexMock, createQueryBuilder } = require('../../../helpers/mock-knex')
 
-jest.mock('../../../../app/data', () => ({
-  sequelize: {
-    fn: jest.fn((fnName, col) => `${fnName}(${col})`),
-    col: jest.fn((col) => col)
-  },
-  metric: {
-    findOne: jest.fn(),
-    findAll: jest.fn()
-  }
+const mockDb = createKnexMock(['metric'])
+
+jest.mock('../../../../app/database', () => ({
+  client: mockDb.knex,
+  transaction: mockDb.transaction,
+  close: mockDb.close,
+  ...mockDb.tables
 }))
 
 jest.mock('../../../../app/metrics/metrics-calculator', () => ({
   calculateMetricsForPeriod: jest.fn()
 }))
 
-const db = require('../../../../app/data')
+const { METRIC_SELECT, toMetricRow } = require('../../../../app/metrics/metric-columns')
 const { calculateMetricsForPeriod } = require('../../../../app/metrics/metrics-calculator')
+const metricsRoutes = require('../../../../app/server/routes/metrics')
+
+// Queues up the two sequential `metric()` calls fetchMetrics makes: the max-snapshot
+// lookup, then (only if maxDate is truthy) the rows select. Returns the two builders
+// so a test can assert on their individual `.where`/`.select`/`.orderBy` calls.
+const mockFetchMetrics = (maxDate, rows) => {
+  const snapshotBuilder = createQueryBuilder().resolves({ maxDate })
+  mockDb.tables.metric.mockReturnValueOnce(snapshotBuilder)
+
+  let rowsBuilder
+  if (maxDate) {
+    rowsBuilder = createQueryBuilder().resolves(rows ?? [])
+    mockDb.tables.metric.mockReturnValueOnce(rowsBuilder)
+  }
+
+  return { snapshotBuilder, rowsBuilder }
+}
 
 describe('metrics routes', () => {
   let mockRequest
@@ -42,11 +57,6 @@ describe('metrics routes', () => {
 
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
-    db.metric.findOne.mockResolvedValue({
-      maxDate: '2024-06-15'
-    })
-
-    db.metric.findAll.mockResolvedValue([])
     calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
 
     route = metricsRoutes[0]
@@ -95,7 +105,6 @@ describe('metrics routes', () => {
           ['all'], ['ytd'], ['year'], ['monthInYear'], ['month'], ['week'], ['day']
         ])('accepts valid period: %s', async (period) => {
           mockRequest.query.period = period
-          db.metric.findAll.mockResolvedValue([])
 
           if (period === 'year') {
             mockRequest.query.schemeYear = '2024'
@@ -103,10 +112,6 @@ describe('metrics routes', () => {
           if (period === 'monthInYear') {
             mockRequest.query.schemeYear = '2024'
             mockRequest.query.month = '6'
-            calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          }
-          if (period === 'week' || period === 'day' || period === 'month' || period === 'ytd') {
-            calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
           }
 
           await route.handler(mockRequest, mockH)
@@ -115,25 +120,12 @@ describe('metrics routes', () => {
         })
 
         test('defaults to "all" period when not provided', async () => {
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder, rowsBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'all'
-            },
-            raw: true
-          })
-          expect(db.metric.findAll).toHaveBeenCalledWith({
-            where: {
-              snapshotDate: '2024-06-15',
-              periodType: 'all'
-            },
-            order: [['schemeName', 'ASC']],
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'all' }))
+          expect(rowsBuilder.where).toHaveBeenCalledWith(toMetricRow({ snapshotDate: '2024-06-15', periodType: 'all' }))
         })
       })
 
@@ -234,8 +226,6 @@ describe('metrics routes', () => {
         test('calls calculateMetricsForPeriod with correct parameters', async () => {
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '6'
-          calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
 
@@ -264,13 +254,12 @@ describe('metrics routes', () => {
             mockRequest.query.schemeYear = '2024'
             mockRequest.query.month = month
             calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-            db.metric.findAll.mockResolvedValue([])
+            mockFetchMetrics('2024-06-15', [])
 
             await route.handler(mockRequest, mockH)
 
             expect(mockResponse.code).toHaveBeenCalledWith(200)
-            jest.clearAllMocks()
-            mockResponse.code.mockReturnThis()
+            mockResponse.code.mockClear()
           }
         })
       })
@@ -291,7 +280,6 @@ describe('metrics routes', () => {
         test('accepts year period with valid schemeYear', async () => {
           mockRequest.query.period = 'year'
           mockRequest.query.schemeYear = '2024'
-          db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
 
@@ -304,8 +292,6 @@ describe('metrics routes', () => {
           ['week'], ['day'], ['month'], ['ytd']
         ])('calls calculateMetricsForPeriod for %s period', async (period) => {
           mockRequest.query.period = period
-          calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          db.metric.findAll.mockResolvedValue([])
 
           await route.handler(mockRequest, mockH)
 
@@ -335,18 +321,13 @@ describe('metrics routes', () => {
           mockRequest.query.period = period
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '6'
-          calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          db.metric.findAll.mockResolvedValue([])
+
+          const { snapshotBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: period
-            },
-            raw: true
-          })
+          expect(snapshotBuilder.max).toHaveBeenCalledWith('snapshot_date as maxDate')
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: period }))
         })
       })
 
@@ -356,88 +337,46 @@ describe('metrics routes', () => {
         })
 
         test('fetches metrics with correct where clause for default period', async () => {
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder, rowsBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'all'
-            },
-            raw: true
-          })
-          expect(db.metric.findAll).toHaveBeenCalledWith({
-            where: {
-              snapshotDate: '2024-06-15',
-              periodType: 'all'
-            },
-            order: [['schemeName', 'ASC']],
-            raw: true
-          })
+          expect(snapshotBuilder.max).toHaveBeenCalledWith('snapshot_date as maxDate')
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'all' }))
+
+          expect(rowsBuilder.select).toHaveBeenCalledWith(METRIC_SELECT)
+          expect(rowsBuilder.where).toHaveBeenCalledWith(toMetricRow({ snapshotDate: '2024-06-15', periodType: 'all' }))
+          expect(rowsBuilder.orderBy).toHaveBeenCalledWith('scheme_name', 'asc')
         })
 
         test('includes schemeYear in where clause when provided', async () => {
           mockRequest.query.schemeYear = '2024'
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder, rowsBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'all',
-              schemeYear: 2024
-            },
-            raw: true
-          })
-          expect(db.metric.findAll).toHaveBeenCalledWith({
-            where: {
-              snapshotDate: '2024-06-15',
-              periodType: 'all',
-              schemeYear: 2024
-            },
-            order: [['schemeName', 'ASC']],
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'all', schemeYear: 2024 }))
+          expect(rowsBuilder.where).toHaveBeenCalledWith(toMetricRow({ snapshotDate: '2024-06-15', periodType: 'all', schemeYear: 2024 }))
         })
 
         test('includes month in where clause for monthInYear', async () => {
           mockRequest.query.period = 'monthInYear'
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '6'
-          calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder, rowsBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'monthInYear',
-              schemeYear: 2024,
-              monthInYear: 6
-            },
-            raw: true
-          })
-          expect(db.metric.findAll).toHaveBeenCalledWith({
-            where: {
-              snapshotDate: '2024-06-15',
-              periodType: 'monthInYear',
-              schemeYear: 2024,
-              monthInYear: 6
-            },
-            order: [['schemeName', 'ASC']],
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'monthInYear', schemeYear: 2024, monthInYear: 6 }))
+          expect(rowsBuilder.where).toHaveBeenCalledWith(toMetricRow({ snapshotDate: '2024-06-15', periodType: 'monthInYear', schemeYear: 2024, monthInYear: 6 }))
         })
 
         test('returns empty response when no snapshot found', async () => {
-          db.metric.findOne.mockResolvedValue({ maxDate: null })
+          mockFetchMetrics(null)
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findAll).not.toHaveBeenCalled()
+          expect(mockDb.tables.metric).toHaveBeenCalledTimes(1)
           expect(mockH.response).toHaveBeenCalledWith({
             totalStatements: 0,
             totalPrintPost: 0,
@@ -449,7 +388,7 @@ describe('metrics routes', () => {
         })
 
         test('returns formatted response with metrics data', async () => {
-          db.metric.findAll.mockResolvedValue([
+          mockFetchMetrics('2024-06-15', [
             {
               schemeName: 'SFI',
               schemeYear: '2024',
@@ -507,7 +446,7 @@ describe('metrics routes', () => {
         })
 
         test('filters out null schemeName entries', async () => {
-          db.metric.findAll.mockResolvedValue([
+          mockFetchMetrics('2024-06-15', [
             {
               schemeName: 'SFI',
               schemeYear: '2024',
@@ -552,7 +491,7 @@ describe('metrics routes', () => {
         })
 
         test('handles empty metrics array', async () => {
-          db.metric.findAll.mockResolvedValue([])
+          mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
@@ -569,9 +508,10 @@ describe('metrics routes', () => {
       })
 
       describe('error handling', () => {
-        test('handles database errors during findOne', async () => {
+        test('handles database errors during the max-snapshot lookup', async () => {
           const error = new Error('Database error')
-          db.metric.findOne.mockRejectedValue(error)
+          const snapshotBuilder = createQueryBuilder().rejects(error)
+          mockDb.tables.metric.mockReturnValueOnce(snapshotBuilder)
 
           await route.handler(mockRequest, mockH)
 
@@ -583,9 +523,11 @@ describe('metrics routes', () => {
           expect(mockResponse.code).toHaveBeenCalledWith(500)
         })
 
-        test('handles database errors during findAll', async () => {
+        test('handles database errors during the rows fetch', async () => {
           const error = new Error('Query failed')
-          db.metric.findAll.mockRejectedValue(error)
+          const snapshotBuilder = createQueryBuilder().resolves({ maxDate: '2024-06-15' })
+          const rowsBuilder = createQueryBuilder().rejects(error)
+          mockDb.tables.metric.mockReturnValueOnce(snapshotBuilder).mockReturnValueOnce(rowsBuilder)
 
           await route.handler(mockRequest, mockH)
 
@@ -598,9 +540,10 @@ describe('metrics routes', () => {
         })
 
         test('handles errors during metrics processing', async () => {
-          db.metric.findAll.mockImplementation(() => {
-            throw new Error('Processing failed')
-          })
+          const snapshotBuilder = createQueryBuilder().resolves({ maxDate: '2024-06-15' })
+          const rowsBuilder = createQueryBuilder().resolves([])
+          rowsBuilder.select.mockImplementationOnce(() => { throw new Error('Processing failed') })
+          mockDb.tables.metric.mockReturnValueOnce(snapshotBuilder).mockReturnValueOnce(rowsBuilder)
 
           await route.handler(mockRequest, mockH)
 
@@ -617,76 +560,48 @@ describe('metrics routes', () => {
         test('parses schemeYear as integer', async () => {
           mockRequest.query.period = 'year'
           mockRequest.query.schemeYear = '2023'
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'year',
-              schemeYear: 2023
-            },
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'year', schemeYear: 2023 }))
         })
 
         test('parses month as integer', async () => {
           mockRequest.query.period = 'monthInYear'
           mockRequest.query.schemeYear = '2024'
           mockRequest.query.month = '6'
-          calculateMetricsForPeriod.mockResolvedValue({ inserted: 0, updated: 0 })
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'monthInYear',
-              schemeYear: 2024,
-              monthInYear: 6
-            },
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'monthInYear', schemeYear: 2024, monthInYear: 6 }))
         })
 
         test('handles null schemeYear correctly', async () => {
           mockRequest.query.period = 'all'
           mockRequest.query.schemeYear = null
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'all'
-            },
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'all' }))
         })
 
         test('handles falsy schemeYear string', async () => {
           mockRequest.query.period = 'all'
           mockRequest.query.schemeYear = ''
-          db.metric.findAll.mockResolvedValue([])
+          const { snapshotBuilder } = mockFetchMetrics('2024-06-15', [])
 
           await route.handler(mockRequest, mockH)
 
-          expect(db.metric.findOne).toHaveBeenCalledWith({
-            attributes: [['MAX(snapshot_date)', 'maxDate']],
-            where: {
-              periodType: 'all'
-            },
-            raw: true
-          })
+          expect(snapshotBuilder.where).toHaveBeenCalledWith(toMetricRow({ periodType: 'all' }))
         })
       })
 
       describe('totals calculation', () => {
         test('calculates totals correctly', async () => {
-          db.metric.findAll.mockResolvedValue([
+          mockFetchMetrics('2024-06-15', [
             {
               schemeName: 'A',
               schemeYear: '2024',
@@ -723,7 +638,7 @@ describe('metrics routes', () => {
         })
 
         test('handles zero values in totals', async () => {
-          db.metric.findAll.mockResolvedValue([
+          mockFetchMetrics('2024-06-15', [
             {
               schemeName: 'A',
               schemeYear: '2024',
