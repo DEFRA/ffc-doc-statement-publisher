@@ -54,7 +54,7 @@ services:
       - docs
 
   ffc-doc-statement-publisher-postgres:
-    image: postgres:11.4-alpine
+    image: postgres:16.5-alpine
     environment:
       POSTGRES_DB: ffc_doc_statement_publisher
       POSTGRES_PASSWORD: ppp
